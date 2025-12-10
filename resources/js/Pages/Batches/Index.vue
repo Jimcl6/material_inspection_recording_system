@@ -63,10 +63,32 @@
                 <td>{{ b.JobNumber }}</td>
                 <td>{{ b.TotalQty }}</td>
                 <td class="text-end">
-                  <a class="btn btn-sm btn-outline-primary me-2" :href="`batches/${b.BatchID}`">View</a>
-                  <a class="btn btn-sm btn-outline-secondary me-2" :href="`batches/${b.BatchID}/edit`">Edit</a>
-                  <button class="btn btn-sm btn-outline-success me-2" @click.prevent="openCheckpoint(b.BatchID)">Add Checkpoint</button>
-                  <button class="btn btn-sm btn-outline-danger" @click.prevent="destroyBatch(b.BatchID)">Delete</button>
+                  <div class="dropdown dropup d-inline-block position-static">
+                    <button
+                      class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      data-bs-display="static"
+                      data-bs-boundary="viewport"
+                      aria-expanded="false">
+                      Actions
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li>
+                        <a class="dropdown-item" :href="`batches/${b.BatchID}`">View</a>
+                      </li>
+                      <li>
+                        <button class="dropdown-item" @click.prevent="openEdit(b)">Edit</button>
+                      </li>
+                      <li>
+                        <button class="dropdown-item" @click.prevent="openCheckpoint(b.BatchID)">Add Checkpoint</button>
+                      </li>
+                      <li><hr class="dropdown-divider" /></li>
+                      <li>
+                        <button class="dropdown-item text-danger" @click.prevent="destroyBatch(b.BatchID)">Delete</button>
+                      </li>
+                    </ul>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -85,6 +107,7 @@
     </div>
     <NewBatchModal v-model="showNew" @created="onCreated" />
     <CheckpointModal v-model="showCheckpoint" :batch-id="newBatchId" @saved="refreshList" />
+    <EditBatchModal v-model="showEdit" :batch="selectedBatch" @updated="refreshList" />
   </div>
 </template>
 
@@ -94,10 +117,11 @@ const props = defineProps({
   filters: Object,
 });
 
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import NewBatchModal from './NewBatchModal.vue'
 import CheckpointModal from './CheckpointModal.vue'
+import EditBatchModal from './EditBatchModal.vue'
 
 const filters = reactive({
   q: props.filters?.q || '',
@@ -112,6 +136,8 @@ const showCheckpoint = ref(false)
 const newBatchId = ref(null)
 let shouldOpenCheckpoint = false
 const page = usePage()
+const showEdit = ref(false)
+const selectedBatch = ref(null)
 
 function applyFilters() {
   router.get(window.location.pathname, { ...filters }, { preserveState: true, replace: true })
@@ -148,4 +174,17 @@ function openCheckpoint(batchId) {
 function refreshList() {
   router.get(window.location.pathname, { ...filters }, { preserveState: true, preserveScroll: true, replace: true })
 }
+
+function openEdit(batch) {
+  selectedBatch.value = { ...batch }
+  showEdit.value = true
+}
+
+onMounted(() => {
+  const flashed = page?.props?.flash
+  if (flashed?.edit_batch && flashed?.edit_batch_id) {
+    selectedBatch.value = flashed.edit_batch
+    showEdit.value = true
+  }
+})
 </script>

@@ -181,8 +181,9 @@ class ProductionBatchController extends Controller
 
     public function edit(ProductionBatch $batch)
     {
-        return Inertia::render('Batches/Edit', [
-            'batch' => [
+        return redirect()->route('batches.index')
+            ->with('edit_batch_id', $batch->BatchID)
+            ->with('edit_batch', [
                 'BatchID' => $batch->BatchID,
                 'ProductionDate' => $batch->ProductionDate,
                 'LetterCode' => $batch->LetterCode,
@@ -192,8 +193,7 @@ class ProductionBatchController extends Controller
                 'JobNumber' => $batch->JobNumber,
                 'TotalQty' => $batch->TotalQty,
                 'Remarks' => $batch->Remarks,
-            ],
-        ]);
+            ]);
     }
 
     public function update(Request $request, ProductionBatch $batch)
@@ -210,6 +210,11 @@ class ProductionBatchController extends Controller
         ]);
 
         $batch->update($data);
+
+        if ($request->boolean('stay')) {
+            return redirect()->route('batches.index')->with('success', 'Batch updated.');
+        }
+
         return redirect()->route('batches.show', ['batch' => $batch->BatchID])
             ->with('success', 'Batch updated.');
     }

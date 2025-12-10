@@ -31,6 +31,8 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'new_batch_id' => fn () => $request->session()->get('new_batch_id'),
+                'edit_batch_id' => fn () => $request->session()->get('edit_batch_id'),
+                'edit_batch' => fn () => $request->session()->get('edit_batch'),
             ],
         ]);
     }
