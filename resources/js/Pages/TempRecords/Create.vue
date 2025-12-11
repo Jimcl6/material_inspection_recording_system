@@ -5,11 +5,11 @@
     <div class="jumbotron jumbotron-fluid">
       <div class="container">
         <h1 class="display-4">New Temperature Record</h1>
-        <p class="lead">This is a modified jumbotron that occupies the entire horizontal space of its parent.</p>
+        
       </div>
     </div>
 
-    <a href="/temp-records" class="btn mb-3 btn-danger"> Back / Cancel </a>
+    <a href="/temp-records" class="btn mb-3 btn-danger "> Back / Cancel </a>
     <div class="card">
       <div class="card-header"><strong>New Temperature Record</strong></div>
       <div class="card-body">
