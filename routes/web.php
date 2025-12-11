@@ -4,6 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductionBatchController;
 use App\Http\Controllers\InspectionCheckpointController;
 use App\Http\Controllers\InspectionSampleController;
+use App\Http\Controllers\TorqueRecordController;
+use App\Http\Controllers\TempRecordController;
+use App\Http\Controllers\ModificationLogController;
+use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,7 +20,14 @@ use App\Http\Controllers\InspectionSampleController;
 |
 */
 
-Route::get('/', [ProductionBatchController::class, 'index'])->name('batches.index');
+// Home -> Dashboard
+Route::get('/', function () { return Inertia::render('Dashboard/Index'); })->name('home');
+
+// Dashboard
+Route::get('/dashboard', function () { return Inertia::render('Dashboard/Index'); })->name('dashboard');
+
+// Batches index now lives at /batches
+Route::get('/batches', [ProductionBatchController::class, 'index'])->name('batches.index');
 
 // Static routes first
 Route::get('/batches/create', [ProductionBatchController::class, 'create'])->name('batches.create');
@@ -48,3 +59,8 @@ Route::post('/checkpoints/{checkpoint:CheckpointID}/samples', [InspectionSampleC
 Route::put('/samples/{sample:SampleID}', [InspectionSampleController::class, 'update'])
     ->whereNumber('sample')->name('samples.update');
 Route::delete('/samples/{sample:SampleID}', [InspectionSampleController::class, 'destroy'])->name('samples.destroy');
+
+// New modules
+Route::resource('torque-records', TorqueRecordController::class);
+Route::resource('temp-records', TempRecordController::class);
+Route::resource('modification-logs', ModificationLogController::class);
