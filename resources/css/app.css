@@ -1,1 +1,4 @@
 /* App styles. Add Bootstrap overrides here if needed. */
+.btn {
+    margin: auto 5px;
+}

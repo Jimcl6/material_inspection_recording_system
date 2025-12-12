@@ -1,6 +1,5 @@
 <template>
   <div class="container py-4">
-    <a href="/torque-records" class="btn btn-link p-0 mb-3">← Back to Torque Records</a>
 
     <div class="card">
       <div class="card-header"><strong>New Torque Record</strong></div>
@@ -36,34 +35,35 @@
               <div class="card-body">
                 <div class="row g-3">
                   <div class="col-12 col-md-4">
-                    <label class="form-label">Solder Model</label>
-                    <input v-model="form.driver_model" type="text" maxlength="100" class="form-control" />
+                    <!-- <label class="form-label">Solder Model</label> -->
+                    <input v-model="form.driver_model" type="text" maxlength="100" class="form-control" placeholder="Solder Model:" />
                   </div>
                   <div class="col-12 col-md-4">
-                    <label class="form-label">Line Assigned</label>
-                    <input v-model="form.line_assigned" type="text" maxlength="100" class="form-control" />
+                    <!-- <label class="form-label">Line Assigned</label> -->
+                    <input v-model="form.line_assigned" type="text" maxlength="100" class="form-control" placeholder="Line Assigned:"/>
                   </div>
                   <div class="col-12 col-md-4">
-                    <label class="form-label">Control No</label>
-                    <input v-model="form.control_no" type="text" maxlength="50" class="form-control" />
+                    <!-- <label class="form-label">Control No</label> -->
+                    <input v-model="form.control_no" type="text" maxlength="50" class="form-control" placeholder="Control No:" />
                   </div>
                   <div class="col-12 col-md-4">
-                    <label class="form-label">Screw Type</label>
-                    <input v-model="form.screw_type" type="text" maxlength="50" class="form-control" />
+                    <!-- <label class="form-label">Screw Type</label> -->
+                    <input v-model="form.screw_type" type="text" maxlength="50" class="form-control" placeholder="Screw Type:"/>
                   </div>
                   <div class="col-12 col-md-4">
-                    <label class="form-label">Process Assigned</label>
-                    <input v-model="form.process_assigned" type="text" maxlength="100" class="form-control" />
+                    <!-- <label class="form-label">Process Assigned</label> -->
+                    <input v-model="form.process_assigned" type="text" maxlength="100" class="form-control" placeholder="Process Assigned:"/>
                   </div>
                   <div class="col-12 col-md-4">
-                    <label class="form-label">Person in Charge</label>
-                    <input v-model="form.person_in_charge" type="text" maxlength="100" class="form-control" />
+                    <!-- <label class="form-label">Person in Charge</label> -->
+                    <input v-model="form.person_in_charge" type="text" maxlength="100" class="form-control" placeholder="Person in Charge:"/>
                   </div>
                   <div class="col-12 col-md-4">
-                    <label class="form-label">Equipment Type</label>
+                    <!-- <label class="form-label">Equipment Type</label> -->
                     <select v-model="form.driver_type" class="form-select" required>
                       <option value="" disabled>Select...</option>
-                      <option v-for="et in equipmentTypes" :key="et" :value="et">{{ et }}</option>
+                      <option value="Manual">Manual</option>
+                      <option value="Automatic">Automatic</option>
                     </select>
                   </div>
                 </div>
@@ -85,11 +85,11 @@
                       <div class="row g-2">
                         <div class="col-6">
                           <label class="form-label">Time (AM)</label>
-                          <input v-model="form.time_am" type="time" class="form-control" />
+                          <input v-model="form.time_am" type="time" class="form-control" placeholder="Time (AM) HH:MM"/>
                         </div>
                         <div class="col-6">
-                          <label class="form-label">Temp (AM)</label>
-                          <input v-model="form.torque_am" type="text" maxlength="20" class="form-control" />
+                          <label class="form-label">Torque (AM)</label>
+                          <input v-model="form.torque_am" type="text" maxlength="20" class="form-control" placeholder="Torque (AM)"/>
                         </div>
                       </div>
                     </div>
@@ -98,11 +98,11 @@
                       <div class="row g-2">
                         <div class="col-6">
                           <label class="form-label">Time (PM)</label>
-                          <input v-model="form.time_pm" type="time" class="form-control" />
+                          <input v-model="form.time_pm" type="time" class="form-control" placeholder="Time (PM) HH:MM"/>
                         </div>
                         <div class="col-6">
-                          <label class="form-label">Temp (PM)</label>
-                          <input v-model="form.torque_pm" type="text" maxlength="20" class="form-control" />
+                          <label class="form-label">Torque (PM)</label>
+                          <input v-model="form.torque_pm" type="text" maxlength="20" class="form-control" placeholder="Torque (PM)"/>
                         </div>
                       </div>
                     </div>
@@ -147,13 +147,15 @@
                 </div>
               </div>
 
-              <div class="col-6 d-flex justify-content-end">
+              <div class="col-6 d-flex justify-content-end ">
                 <div class="card border-0">
-                  <div class="card-header bg-white border-0"></div>
                   <div class="card-body">
-                    <button class="btn btn-outline-primary btn-lg" :disabled="form.processing">Save</button>
-                    <div class="text-danger small" v-if="form.errors && Object.keys(form.errors).length">
-                      <div v-for="(msg, key) in form.errors" :key="key">{{ msg }}</div>
+                    <div class="align-items-center">
+                      <button type="button" class="btn btn-danger btn-lg"><a href="/torque-records" class="text-decoration-none text-reset">Cancel</a></button>
+                      <button type="button" class="btn btn-outline-primary btn-lg" :disabled="form.processing">Save</button>
+                      <div class="text-danger small" v-if="form.errors && Object.keys(form.errors).length">
+                        <div v-for="(msg, key) in form.errors" :key="key">{{ msg }}</div>
+                      </div>
                     </div>
                   </div>
                 </div> 
