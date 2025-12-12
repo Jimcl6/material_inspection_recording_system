@@ -5,13 +5,24 @@
     <div class="jumbotron jumbotron-fluid">
       <div class="container">
         <h1 class="display-4">New Temperature Record</h1>
-        
       </div>
     </div>
-
-    <a href="/temp-records" class="btn mb-3 btn-danger "> Back / Cancel </a>
     <div class="card">
-      <div class="card-header"><strong>New Temperature Record</strong></div>
+      <div class="card-header">
+        <div class="row d-flex justify-content-between">
+          <div class="col-6">
+            <strong>New Temperature Record</strong>
+          </div>
+          <div class="col-6">
+            <div class="container d-flex justify-content-end">
+              <buton class="btn btn-danger btn-sm"><a href="/temp-records" class="text-decoration-none text-white"> Back / Cancel </a></buton>
+              <button class="btn btn-outline-primary btn-sm" :disabled="form.processing">Save</button>
+              <div class="text-danger small" v-if="form.errors && Object.keys(form.errors).length">
+                <div v-for="(msg, key) in form.errors" :key="key">{{ msg }}</div>
+              </div>
+            </div>
+          </div>
+      </div></div>
       <div class="card-body">
         <form class="row g-3" @submit.prevent="submit">
           <!-- Groupbox 1: Model Series -->
@@ -45,7 +56,7 @@
                 <div class="row g-3">
                   <div class="col-12 col-md-4">
                     <label class="form-label">Solder Model</label>
-                    <input v-model="form.solder_model" type="text" maxlength="100" class="form-control" />
+                    <input v-model="form.solder_model" type="text" maxlength="100" class="form-control" placeholder="Solder Model"/>
                   </div>
                   <div class="col-12 col-md-4">
                     <label class="form-label">Line Assigned</label>
@@ -155,10 +166,7 @@
                 <div class="card border-0">
                   <div class="card-header bg-white border-0"></div>
                   <div class="card-body">
-                    <button class="btn btn-outline-primary btn-lg" :disabled="form.processing">Save</button>
-                    <div class="text-danger small" v-if="form.errors && Object.keys(form.errors).length">
-                      <div v-for="(msg, key) in form.errors" :key="key">{{ msg }}</div>
-                    </div>
+                    
                   </div>
                 </div> 
               </div>

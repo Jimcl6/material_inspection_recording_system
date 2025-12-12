@@ -1,30 +1,34 @@
 <template>
   <div class="container py-4">
-    <a href="/temp-records" class="btn btn-link p-0 mb-3">← Back to Temperature Records</a>
+    
     <div class="card">
-      <div class="card-header d-flex align-items-center justify-content-between">
+      <div class="card-header d-inline-flex align-items-center justify-content-between">
         <strong>Temperature Record #{{ record.id }}</strong>
-        <a class="btn btn-sm btn-outline-secondary" :href="`/temp-records/${record.id}/edit`">Edit</a>
+        <div class="container d-flex justify-content-end">
+          <a href="/temp-records" class="btn btn-sm btn-danger text-decoration-none text-white">Back</a>
+          <a class="btn btn-sm btn-outline-secondary" :href="`/temp-records/${record.id}/edit`">Edit</a>
+        </div>
       </div>
       <div class="card-body">
         <div class="row g-3">
           <div class="col-12 my-2">
             <div class="card">
-              <div class="card-header"><h6 class="mb-2">Model Series</h6></div>
+              <div class="card-header">
+                <div class="container">
+                  <div class="row">
+                    <div class="col-6"><h6 class="mb-2">Model Series</h6></div>
+                    <div class="col-6"><h6 class="mb-2">Date</h6></div>
+                  </div>
+                </div>
+            </div>
               <div class="card-body">
                 <div class="container">
                   <div class="row">
                     <div class="col-6 col-md-6">
-                      <dl class="row mb-0">
-                        <dt class="col-sm-5">Model Series</dt>
-                        <dd class="col-sm-7">{{ record.model_series }}</dd>
-                      </dl>
+                      <dd class="col-sm-6">{{ record.model_series }}</dd>
                     </div>
                     <div class="col-6 col-md-6">
-                      <dl class="row mb-0">
-                        <dt class="col-sm-5">Date</dt>
-                        <dd class="col-sm-7">{{ record.date }}</dd>
-                      </dl>
+                      <dd class="col-sm-6">{{ record.date }}</dd>
                     </div>
                   </div>
                 </div>
@@ -55,35 +59,50 @@
           </div>
 
           <div class="col-12">
-            <h6 class="mb-2">Temperature Record</h6>
-            <div class="row">
-              <div class="col-12 col-lg-6">
-                <dl class="row mb-0">
-                  <dt class="col-sm-5">Time (AM)</dt>
-                  <dd class="col-sm-7">{{ record.time_am }}</dd>
-                  <dt class="col-sm-5">Temp (AM)</dt>
-                  <dd class="col-sm-7">{{ record.temp_am }}</dd>
-                </dl>
-              </div>
-              <div class="col-12 col-lg-6">
-                <dl class="row mb-0">
-                  <dt class="col-sm-5">Time (PM)</dt>
-                  <dd class="col-sm-7">{{ record.time_pm }}</dd>
-                  <dt class="col-sm-5">Temp (PM)</dt>
-                  <dd class="col-sm-7">{{ record.temp_pm }}</dd>
-                </dl>
+            <div class="card">
+              <div class="card-header"><h6 class="mb-2">Temperature Record</h6></div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-12 col-lg-6">
+                    <dl class="row mb-0">
+                      <dt class="col-sm-5">Time (AM)</dt>
+                      <dd class="col-sm-7">{{ record.time_am }}</dd>
+                      <dt class="col-sm-5">Temp (AM)</dt>
+                      <dd class="col-sm-7">{{ record.temp_am }}</dd>
+                    </dl>
+                  </div>
+                  <div class="col-12 col-lg-6">
+                    <dl class="row mb-0">
+                      <dt class="col-sm-5">Time (PM)</dt>
+                      <dd class="col-sm-7">{{ record.time_pm }}</dd>
+                      <dt class="col-sm-5">Temp (PM)</dt>
+                      <dd class="col-sm-7">{{ record.temp_pm }}</dd>
+                    </dl>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           <div class="col-12">
-            <h6 class="mb-2">Remarks</h6>
-            <p class="mb-0">{{ record.col_remarks }}</p>
-          </div>
-
-          <div class="col-12">
-            <h6 class="mb-2">Checked By</h6>
-            <p class="mb-0">{{ record.checked_by }}</p>
+            <div class="card">
+              <div class="card-header">
+                <div class="row">
+                  <div class="col-6"><h6 class="mb-2">Remarks</h6></div>
+                  <div class="col-6"><h6 class="mb-2">Checked By</h6></div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-6">
+                    <p class="mb-0">{{ record.col_remarks }}</p>
+                  </div>
+                  <div class="col-6">
+                    <p class="mb-0">{{ record.checked_by }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
