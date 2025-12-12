@@ -8,37 +8,50 @@
       </div>
       <div class="card-body">
         <div class="row g-3">
-          <div class="col-12 col-md-6">
-            <h6 class="mb-2">Model Series</h6>
-            <dl class="row mb-0">
-              <dt class="col-sm-5">Model Series</dt>
-              <dd class="col-sm-7">{{ record.model_series }}</dd>
-            </dl>
-          </div>
-          <div class="col-12 col-md-6">
-            <h6 class="mb-2">Date</h6>
-            <dl class="row mb-0">
-              <dt class="col-sm-5">Date</dt>
-              <dd class="col-sm-7">{{ record.date }}</dd>
-            </dl>
+          <div class="col-12 my-2">
+            <div class="card">
+              <div class="card-header"><h6 class="mb-2">Model Series</h6></div>
+              <div class="card-body">
+                <div class="container">
+                  <div class="row">
+                    <div class="col-6 col-md-6">
+                      <dl class="row mb-0">
+                        <dt class="col-sm-5">Model Series</dt>
+                        <dd class="col-sm-7">{{ record.model_series }}</dd>
+                      </dl>
+                    </div>
+                    <div class="col-6 col-md-6">
+                      <dl class="row mb-0">
+                        <dt class="col-sm-5">Date</dt>
+                        <dd class="col-sm-7">{{ record.date }}</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="col-12">
-            <h6 class="mb-2">Driver Details</h6>
-            <dl class="row mb-0">
-              <dt class="col-sm-4">Solder Model</dt>
-              <dd class="col-sm-8">{{ record.solder_model }}</dd>
-              <dt class="col-sm-4">Line Assigned</dt>
-              <dd class="col-sm-8">{{ record.line_assigned }}</dd>
-              <dt class="col-sm-4">Control No</dt>
-              <dd class="col-sm-8">{{ record.control_no }}</dd>
-              <dt class="col-sm-4">Process Assigned</dt>
-              <dd class="col-sm-8">{{ record.process_assigned }}</dd>
-              <dt class="col-sm-4">Person in Charge</dt>
-              <dd class="col-sm-8">{{ record.person_in_charge }}</dd>
-              <dt class="col-sm-4">Equipment Type</dt>
-              <dd class="col-sm-8">{{ record.equipment_type }}</dd>
-            </dl>
+            <div class="card">
+              <div class="card-header"><h6 class="mb-2">Driver Details</h6></div>
+              <div class="card-body">
+                <dl class="row mb-0">
+                  <dt class="col-sm-4">Solder Model</dt>
+                  <dd class="col-sm-8">{{ record.solder_model }}</dd>
+                  <dt class="col-sm-4">Line Assigned</dt>
+                  <dd class="col-sm-8">{{ record.line_assigned }}</dd>
+                  <dt class="col-sm-4">Control No</dt>
+                  <dd class="col-sm-8">{{ record.control_no }}</dd>
+                  <dt class="col-sm-4">Process Assigned</dt>
+                  <dd class="col-sm-8">{{ record.process_assigned }}</dd>
+                  <dt class="col-sm-4">Person in Charge</dt>
+                  <dd class="col-sm-8">{{ record.person_in_charge }}</dd>
+                  <dt class="col-sm-4">Equipment Type</dt>
+                  <dd class="col-sm-8">{{ record.equipment_type }}</dd>
+                </dl>
+              </div>
+            </div>
           </div>
 
           <div class="col-12">
