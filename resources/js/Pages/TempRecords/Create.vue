@@ -1,12 +1,6 @@
 <template>
   <div class="container py-4">
     
-
-    <div class="jumbotron jumbotron-fluid">
-      <div class="container">
-        <h1 class="display-4">New Temperature Record</h1>
-      </div>
-    </div>
     <div class="card">
       <div class="card-header">
         <div class="row d-flex justify-content-between">
@@ -14,7 +8,7 @@
             <strong>New Temperature Record</strong>
           </div>
           <div class="col-6">
-            <div class="container d-flex justify-content-end">
+            <div class="container m-0 d-flex justify-content-end">
               <buton class="btn btn-danger btn-sm"><a href="/temp-records" class="text-decoration-none text-white"> Back / Cancel </a></buton>
               <button class="btn btn-outline-primary btn-sm" :disabled="form.processing">Save</button>
               <div class="text-danger small" v-if="form.errors && Object.keys(form.errors).length">
@@ -27,21 +21,29 @@
         <form class="row g-3" @submit.prevent="submit">
           <!-- Groupbox 1: Model Series -->
           <div class="container my-1">
-            <div class="row">
-              <fieldset class="col-6">
-                <div class="row g-3">
-                  <div class="col-12 col-md-12">
-                    <input v-model="form.model_series" type="text" class="form-control col-12" placeholder="Model Series:" required />
-                  </div>
+            <div class="card">
+              <div class="card-header"><div class="row">
+                <div class="col-6"><strong>Model Series:</strong></div>
+                <div class="col-6"><strong>Date:</strong></div>
+              </div></div>
+              <div class="card-body">
+                <div class="row">
+                  <fieldset class="col-6">
+                    <div class="row g-3">
+                      <div class="col-12 col-md-12">
+                        <input v-model="form.model_series" type="text" class="form-control col-12" placeholder="Model Series:" required />
+                      </div>
+                    </div>
+                  </fieldset>
+                  <fieldset class="col-6">
+                    <div class="row g-3">
+                      <div class="col-12 col-md-12">
+                        <input ref="dateEl" v-model="form.date" type="text" class="form-control col-12" placeholder="Date: DD/MM/YYYY" />
+                      </div>
+                    </div>
+                  </fieldset>
                 </div>
-              </fieldset>
-              <fieldset class="col-6">
-                <div class="row g-3">
-                  <div class="col-12 col-md-12">
-                    <input ref="dateEl" v-model="form.date" type="text" class="form-control col-12" placeholder="Date: DD/MM/YYYY" />
-                  </div>
-                </div>
-              </fieldset>
+              </div>
             </div>
           </div>
           <!-- Groupbox 2: Date -->
@@ -130,13 +132,19 @@
           <!-- Groupbox 5: Remarks -->
           <div class="container my-1">
             <div class="card">             
-              <div class="card-header"><strong>Remarks</strong></div>
+              <div class="card-header"><div class="row">
+                <div class="col-6"><strong>Remarks:</strong></div>
+                <div class="col-6"><strong>Checked By:</strong></div>
+              </div></div>
               <div class="card-body">
                 <fieldset class="col-12">
                   <div class="row g-3">
-                    <div class="col-12">
+                    <div class="col-6">
                       <!-- <label class="form-label">Remarks</label> -->
-                      <textarea v-model="form.col_remarks" rows="3" class="form-control" maxlength="100"></textarea>
+                      <textarea v-model="form.col_remarks" rows="1" class="form-control" maxlength="100"></textarea>
+                    </div>
+                    <div class="col-6">
+                      <input v-model="form.checked_by" type="text" class="form-control col-12" placeholder="Checked By:" />
                     </div>
                   </div>
                 </fieldset>
@@ -147,20 +155,7 @@
           <!-- Groupbox 6: Checked By -->
           <div class="container my-1">
             <div class="row">
-              <div class="col-6">
-                <div class="card">
-                  <div class="card-header">
-                    <strong class="fs-6">Checked By:</strong>
-                  </div>
-                  <div class="card-body">
-                    <div class="row g-3">
-                      <div class="col-12 col-md-12">
-                        <input v-model="form.checked_by" type="text" class="form-control col-12" placeholder="Checked By:" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              
 
               <div class="col-6 d-flex justify-content-end">
                 <div class="card border-0">
