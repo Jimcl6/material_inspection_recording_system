@@ -1,15 +1,21 @@
 import './bootstrap';
+import '../css/app.css';
+
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap';
+import { ZiggyVue } from 'ziggy-js';
 
 createInertiaApp({
     resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
     setup({ el, App, props, plugin }) {
-        const vueApp = createApp({ render: () => h(App, props) });
-        vueApp.use(plugin);
-        vueApp.mount(el);
+        const app = createApp({ render: () => h(App, props) })
+            .use(plugin)
+            .use(ZiggyVue, Ziggy);
+
+        // Add global route helper
+        app.config.globalProperties.$route = window.route;
+        
+        return app.mount(el);
     },
 });
