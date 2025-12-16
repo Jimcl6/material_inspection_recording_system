@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AnnealingCheckController;
 
 // Public routes
 Route::get('/', function () {
@@ -33,7 +34,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Add more admin routes here
     });
 
-    // Add your protected routes here
-    // Example:
-    // Route::resource('inspections', InspectionController::class);
+    // Annealing Checks
+    Route::resource('annealing-checks', AnnealingCheckController::class);
+    
+    // Additional routes for import/export
+    Route::get('annealing-checks/{annealing_check}/export', [AnnealingCheckController::class, 'export'])
+        ->name('annealing-checks.export');
+    Route::get('annealing-checks/import', [AnnealingCheckController::class, 'importForm'])
+        ->name('annealing-checks.import.form');
+    Route::post('annealing-checks/import', [AnnealingCheckController::class, 'import'])
+        ->name('annealing-checks.import');
 });

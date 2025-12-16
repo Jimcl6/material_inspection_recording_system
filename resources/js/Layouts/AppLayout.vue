@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
@@ -30,7 +30,7 @@ const showingNavigationDropdown = ref(false);
                                 <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                     Dashboard
                                 </NavLink>
-                                <NavLink :href="route('annealing-checks.index')" :active="route().current('annealing-checks.index')">
+                                <NavLink :href="route('annealing-checks.index')" :active="route().current('annealing-checks.*')">
                                     Annealing Checks
                                 </NavLink>
                                 <!-- Add more navigation links as needed -->

@@ -10,6 +10,18 @@ window._ = _;
 import axios from 'axios';
 window.axios = axios;
 
+// Set the base URL for axios
+window.axios.defaults.baseURL = '/api';
+
+// Set CSRF token as a common header
+let token = document.head.querySelector('meta[name="csrf-token"]');
+
+if (token) {
+    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
+} else {
+    console.error('CSRF token not found');
+}
+
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 /**
