@@ -52,7 +52,9 @@ class AnnealingCheckController extends Controller
      */
     public function create(): \Inertia\Response
     {
-        return Inertia::render('AnnealingChecks/Create');
+        return Inertia::render('AnnealingChecks/Create', [
+            'users' => \App\Models\User::select('id', 'name')->orderBy('name')->get()
+        ]);
     }
 
     /**
