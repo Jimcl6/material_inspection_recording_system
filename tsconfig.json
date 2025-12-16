@@ -16,7 +16,14 @@
     },
     "allowJs": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+    "typeRoots": [
+      "./node_modules/@types",
+      "./resources/js/types"
+    ]
   },
   "include": [
     "resources/js/**/*.ts",
@@ -24,5 +31,14 @@
     "resources/js/**/*.tsx",
     "resources/js/**/*.vue"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "vendor",
+    "storage",
+    "bootstrap/cache",
+    "public/build"
+  ],
+  "vueCompilerOptions": {
+    "target": 3
+  }
 }
