@@ -64,9 +64,9 @@
                                 </div>
                             </div>
                             <div class="mt-4 flex justify-end">
-                                <a href="#" class="text-sm font-medium text-green-600 hover:text-green-500">
+                                <Link :href="route('temperature-records.index')" class="text-sm font-medium text-green-600 hover:text-green-500">
                                     View All <span aria-hidden="true">&rarr;</span>
-                                </a>
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -87,9 +87,9 @@
                                 </div>
                             </div>
                             <div class="mt-4 flex justify-end">
-                                <a href="#" class="text-sm font-medium text-yellow-600 hover:text-yellow-500">
+                                <Link :href="route('torque-records.index')" class="text-sm font-medium text-yellow-600 hover:text-yellow-500">
                                     View All <span aria-hidden="true">&rarr;</span>
-                                </a>
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -109,9 +109,9 @@
                                 </div>
                             </div>
                             <div class="mt-4 flex justify-end">
-                                <a href="#" class="text-sm font-medium text-purple-600 hover:text-purple-500">
+                                <Link :href="route('production-batches.index')" class="text-sm font-medium text-purple-600 hover:text-purple-500">
                                     View All <span aria-hidden="true">&rarr;</span>
-                                </a>
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -131,9 +131,9 @@
                                 </div>
                             </div>
                             <div class="mt-4 flex justify-end">
-                                <a href="#" class="text-sm font-medium text-red-600 hover:text-red-500">
+                                <Link :href="route('modification-logs.index')" class="text-sm font-medium text-red-600 hover:text-red-500">
                                     View All <span aria-hidden="true">&rarr;</span>
-                                </a>
+                                </Link>
                             </div>
                         </div>
                     </div>

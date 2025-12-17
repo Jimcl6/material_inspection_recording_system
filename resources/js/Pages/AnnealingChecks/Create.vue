@@ -1,9 +1,59 @@
 <script setup lang="ts">
 import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { ref, computed, onMounted } from 'vue';
+import { route } from 'ziggy-js';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref } from 'vue';
 
-const { users } = usePage().props;
+interface User {
+    id: number;
+    name: string;
+}
+
+interface TemperatureReading {
+    reading_time: string;
+    temperature: string | number;
+}
+
+interface FormData {
+    item_code: string;
+    receiving_date: string;
+    supplier_lot_number: string;
+    quantity: number;
+    annealing_date: string;
+    machine_number: string;
+    machine_setting: string;
+    pic_id: string | number;
+    checked_by_id: string | number;
+    verified_by_id: string | number;
+    remarks: string;
+    temperature_readings: TemperatureReading[];
+}
+
+const page = usePage();
+const isLoading = ref(false);
+const showSuccess = ref(false);
+const users = computed(() => (page.props as { users: User[] }).users || []);
+
+// Form validation rules
+const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    if (!form.item_code) errors.item_code = 'Item code is required';
+    if (!form.receiving_date) errors.receiving_date = 'Receiving date is required';
+    if (!form.annealing_date) errors.annealing_date = 'Annealing date is required';
+    if (!form.pic_id) errors.pic_id = 'Person in charge is required';
+    
+    // Validate temperature readings
+    form.temperature_readings.forEach((reading, index) => {
+        if (!reading.temperature) {
+            errors[`temperature_readings.${index}.temperature`] = 'Temperature is required';
+        } else if (isNaN(Number(reading.temperature))) {
+            errors[`temperature_readings.${index}.temperature`] = 'Temperature must be a number';
+        }
+    });
+    
+    return errors;
+};
 
 const form = useForm({
     item_code: '',
@@ -24,44 +74,66 @@ const form = useForm({
     ]
 });
 
-const addTemperatureReading = () => {
-    form.temperature_readings.push({ reading_time: '', temperature: '' });
+const addTemperatureReading = (): void => {
+    form.temperature_readings.push({ reading_time: '08:00', temperature: '' });
 };
 
-const removeTemperatureReading = (index: number) => {
-    form.temperature_readings.splice(index, 1);
+const removeTemperatureReading = (index: number): void => {
+    if (form.temperature_readings.length > 1) {
+        form.temperature_readings.splice(index, 1);
+    }
 };
 
-const submit = () => {
-    form.post(route('annealing-checks.store'), {
+const submit = async (): Promise<void> => {
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+        form.setError(validationErrors);
+        return;
+    }
+    
+    isLoading.value = true;
+    form.post('/annealing-checks', {
         onSuccess: () => {
             form.reset();
-            // Show success message
-            window.dispatchEvent(new CustomEvent('toast', {
-                detail: {
-                    type: 'success',
-                    message: 'Annealing check created successfully!'
-                }
-            }));
+            showSuccess.value = true;
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Hide success message after 5 seconds
+            setTimeout(() => {
+                showSuccess.value = false;
+            }, 5000);
         },
-        onError: (errors) => {
+        onError: (errors: Record<string, string>) => {
             console.error('Error creating check:', errors);
-            // Show error message
-            window.dispatchEvent(new CustomEvent('toast', {
-                detail: {
-                    type: 'error',
-                    message: 'Failed to create annealing check. Please check the form for errors.'
-                }
-            }));
+            // Scroll to first error
+            const firstError = Object.keys(errors)[0];
+            if (firstError) {
+                const element = document.querySelector(`[name="${firstError}"]`);
+                element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        },
+        onFinish: () => {
+            isLoading.value = false;
         }
     });
+};
+
+// Auto-validate on field blur
+const onBlur = (field: string) => {
+    if (form.errors[field]) {
+        form.clearErrors(field);
+    }
 };
 </script>
 
 <template>
-    <Head title="Create Annealing Check" />
+    <AppLayout title="Create Annealing Check">
+        <!-- Success Message -->
+        <div v-if="showSuccess" class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+            <strong class="font-bold">Success!</strong>
+            <span class="block sm:inline"> Annealing check created successfully!</span>
+        </div>
 
-    <AppLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Create New Annealing Check
@@ -85,7 +157,12 @@ const submit = () => {
                                         v-model="form.item_code"
                                         type="text"
                                         required
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        :class="{
+                                            'border-red-500': form.errors.item_code,
+                                            'border-gray-300': !form.errors.item_code
+                                        }"
+                                        class="mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        @blur="onBlur('item_code')"
                                     />
                                     <p v-if="form.errors.item_code" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.item_code }}
@@ -187,7 +264,12 @@ const submit = () => {
                                         id="machine_setting"
                                         v-model="form.machine_setting"
                                         type="text"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        :class="{
+                                            'border-red-500': form.errors.machine_setting,
+                                            'border-gray-300': !form.errors.machine_setting
+                                        }"
+                                        class="mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        @blur="onBlur('machine_setting')"
                                     />
                                     <p v-if="form.errors.machine_setting" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.machine_setting }}
@@ -206,8 +288,11 @@ const submit = () => {
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                     >
                                         <option value="">Select PIC</option>
-                                        <!-- You'll need to populate this with actual users -->
-                                        <option v-for="user in users" :key="user.id" :value="user.id">
+                                        <option 
+                                            v-for="user in users" 
+                                            :key="user.id" 
+                                            :value="user.id"
+                                        >
                                             {{ user.name }}
                                         </option>
                                     </select>

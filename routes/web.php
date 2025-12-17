@@ -4,6 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AnnealingCheckController;
+use App\Http\Controllers\TempRecordController;
+use App\Http\Controllers\TorqueRecordController;
+use App\Http\Controllers\ProductionBatchController;
+use App\Http\Controllers\ModificationLogController;
 
 // Public routes
 Route::get('/', function () {
@@ -44,4 +48,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('annealing-checks.import.form');
     Route::post('annealing-checks/import', [AnnealingCheckController::class, 'import'])
         ->name('annealing-checks.import');
+
+    // Temperature Records
+    Route::resource('temperature-records', TempRecordController::class);
+    Route::get('temperature-records/{temperature_record}/export', [TempRecordController::class, 'export'])
+        ->name('temperature-records.export');
+    Route::get('temperature-records/import', [TempRecordController::class, 'importForm'])
+        ->name('temperature-records.import.form');
+    Route::post('temperature-records/import', [TempRecordController::class, 'import'])
+        ->name('temperature-records.import');
+
+    // Torque Records
+    Route::resource('torque-records', TorqueRecordController::class);
+    Route::get('torque-records/{torque_record}/export', [TorqueRecordController::class, 'export'])
+        ->name('torque-records.export');
+    Route::get('torque-records/import', [TorqueRecordController::class, 'importForm'])
+        ->name('torque-records.import.form');
+    Route::post('torque-records/import', [TorqueRecordController::class, 'import'])
+        ->name('torque-records.import');
+
+    // Production Batches
+    Route::resource('production-batches', ProductionBatchController::class);
+    Route::get('production-batches/{production_batch}/export', [ProductionBatchController::class, 'export'])
+        ->name('production-batches.export');
+    Route::get('production-batches/import', [ProductionBatchController::class, 'importForm'])
+        ->name('production-batches.import.form');
+    Route::post('production-batches/import', [ProductionBatchController::class, 'import'])
+        ->name('production-batches.import');
+
+    // Modification Logs (read-only)
+    Route::get('modification-logs', [ModificationLogController::class, 'index'])
+        ->name('modification-logs.index');
+    Route::get('modification-logs/{modification_log}', [ModificationLogController::class, 'show'])
+        ->name('modification-logs.show');
 });

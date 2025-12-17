@@ -23,7 +23,8 @@
     "typeRoots": [
       "./node_modules/@types",
       "./resources/js/types"
-    ]
+    ],
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "resources/js/**/*.ts",
@@ -39,6 +40,7 @@
     "public/build"
   ],
   "vueCompilerOptions": {
-    "target": 3
+    "target": 3,
+    "strictTemplates": true
   }
 }
