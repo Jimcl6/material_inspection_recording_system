@@ -33,6 +33,15 @@ const showingNavigationDropdown = ref(false);
                                 <NavLink :href="route('annealing-checks.index')" :active="route().current('annealing-checks.*')">
                                     Annealing Checks
                                 </NavLink>
+                                <NavLink :href="route('temperature-records.index')" :active="route().current('temperature-records.*')">
+                                    Temperature Records
+                                </NavLink>
+                                <NavLink :href="route('torque-records.index')" :active="route().current('torque-records.*')">
+                                    Torque Records
+                                </NavLink>
+                                <NavLink :href="route('production-batches.index')" :active="route().current('production-batches.*')">
+                                    Production Batches
+                                </NavLink>
                                 <!-- Add more navigation links as needed -->
                             </div>
                         </div>
