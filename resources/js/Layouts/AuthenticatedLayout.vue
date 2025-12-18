@@ -135,6 +135,24 @@ const showingNavigationDropdown = ref(false);
                         >
                             Annealing Checks
                         </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('temp-records.index')"
+                            :active="route().current('temp-records.*')"
+                        >
+                            Temperature Records
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('torque-records.index')"
+                            :active="route().current('torque-records.*')"
+                        >
+                            Torque Records
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('production-batches.index')"
+                            :active="route().current('production-batches.*')"
+                        >
+                            Production Batches
+                        </ResponsiveNavLink>
                     </div>
 
                     <!-- Responsive Settings Options -->
