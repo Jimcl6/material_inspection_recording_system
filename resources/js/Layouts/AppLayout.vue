@@ -33,7 +33,7 @@ const showingNavigationDropdown = ref(false);
                                 <NavLink :href="route('annealing-checks.index')" :active="route().current('annealing-checks.*')">
                                     Annealing Checks
                                 </NavLink>
-                                <NavLink :href="route('temperature-records.index')" :active="route().current('temperature-records.*')">
+                                <NavLink :href="route('temp-records.index')" :active="route().current('temp-records.*')">
                                     Temperature Records
                                 </NavLink>
                                 <NavLink :href="route('torque-records.index')" :active="route().current('torque-records.*')">
@@ -134,6 +134,18 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('annealing-checks.*')"
                         >
                             Annealing Checks
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('temp-records.index')"
+                            :active="route().current('temp-records.*')"
+                        >
+                            Temperature Records
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('torque-records.index')"
+                            :active="route().current('torque-records.*')"
+                        >
+                            Torque Records
                         </ResponsiveNavLink>
                     </div>
 

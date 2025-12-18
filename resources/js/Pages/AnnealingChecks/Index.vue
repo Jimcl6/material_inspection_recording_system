@@ -81,11 +81,29 @@ const deleteCheck = (): void => {
     });
 };
 
-const confirmDelete = (check: AnnealingCheck): void => {
-    checkToDelete.value = check;
-    showDeleteModal.value = true;
+const confirmDelete = (check) => {
+    if (confirm('Are you sure you want to delete this check?')) {
+        router.delete(route('annealing-checks.destroy', check.id), {
+            onSuccess: () => {
+                window.dispatchEvent(new CustomEvent('toast', {
+                    detail: {
+                        type: 'success',
+                        message: 'Annealing check deleted successfully!'
+                    }
+                }));
+            },
+            onError: (errors) => {
+                console.error('Error deleting check:', errors);
+                window.dispatchEvent(new CustomEvent('toast', {
+                    detail: {
+                        type: 'error',
+                        message: 'Failed to delete annealing check. Please try again.'
+                    }
+                }));
+            }
+        });
+    }
 };
-
 const searchChecks = (): void => {
     router.get(route('annealing-checks.index'), { search: search.value }, {
         preserveState: true,
