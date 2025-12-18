@@ -147,6 +147,12 @@ const showingNavigationDropdown = ref(false);
                         >
                             Torque Records
                         </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('production-batches.index')"
+                            :active="route().current('production-batches.*')"
+                        >
+                            Production Batches
+                        </ResponsiveNavLink>
                     </div>
 
                     <!-- Responsive Settings Options -->

@@ -11,6 +11,8 @@ class TorqueRecord extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'date',
+        'model_series',
         'driver_model',
         'driver_type',
         'line_assigned',
