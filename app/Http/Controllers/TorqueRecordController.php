@@ -17,11 +17,15 @@ class TorqueRecordController extends Controller
                 'driver_type' => $r->driver_type,
                 'line_assigned' => $r->line_assigned,
                 'control_no' => $r->control_no,
+                'screw_type' => $r->screw_type,
                 'process_assigned' => $r->process_assigned,
+                'person_in_charge' => $r->person_in_charge,
                 'time_am' => $r->time_am,
                 'torque_am' => $r->torque_am,
                 'time_pm' => $r->time_pm,
                 'torque_pm' => $r->torque_pm,
+                'col_remarks' => $r->col_remarks,
+                'checked_by' => $r->checked_by,
             ];
         });
 
@@ -42,11 +46,15 @@ class TorqueRecordController extends Controller
             'driver_type' => ['nullable','string','max:100'],
             'line_assigned' => ['nullable','string','max:100'],
             'control_no' => ['nullable','string','max:50'],
+            'screw_type' => ['nullable','string','max:50'],
             'process_assigned' => ['nullable','string','max:100'],
+            'person_in_charge' => ['nullable','string','max:100'],
             'time_am' => ['nullable','regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
             'torque_am' => ['nullable','string','max:20'],
             'time_pm' => ['nullable','regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
             'torque_pm' => ['nullable','string','max:20'],
+            'col_remarks' => ['nullable','string','max:100'],
+            'checked_by' => ['nullable','string','max:100'],
         ]);
 
         $rec = TorqueRecord::create($data);
@@ -74,11 +82,15 @@ class TorqueRecordController extends Controller
             'driver_type' => ['nullable','string','max:100'],
             'line_assigned' => ['nullable','string','max:100'],
             'control_no' => ['nullable','string','max:50'],
+            'screw_type' => ['nullable','string','max:50'],
             'process_assigned' => ['nullable','string','max:100'],
+            'person_in_charge' => ['nullable','string','max:100'],
             'time_am' => ['nullable','regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
             'torque_am' => ['nullable','string','max:20'],
             'time_pm' => ['nullable','regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
             'torque_pm' => ['nullable','string','max:20'],
+            'col_remarks' => ['nullable','string','max:100'],
+            'checked_by' => ['nullable','string','max:100'],
         ]);
 
         $torque_record->update($data);

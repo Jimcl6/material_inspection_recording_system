@@ -64,7 +64,7 @@
                                 </div>
                             </div>
                             <div class="mt-4 flex justify-end">
-                                <Link :href="route('temperature-records.index')" class="text-sm font-medium text-green-600 hover:text-green-500">
+                                <Link :href="route('temp-records.index')" class="text-sm font-medium text-green-600 hover:text-green-500">
                                     View All <span aria-hidden="true">&rarr;</span>
                                 </Link>
                             </div>

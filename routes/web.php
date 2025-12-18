@@ -50,13 +50,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('annealing-checks.import');
 
     // Temperature Records
-    Route::resource('temperature-records', TempRecordController::class);
-    Route::get('temperature-records/{temperature_record}/export', [TempRecordController::class, 'export'])
-        ->name('temperature-records.export');
-    Route::get('temperature-records/import', [TempRecordController::class, 'importForm'])
-        ->name('temperature-records.import.form');
-    Route::post('temperature-records/import', [TempRecordController::class, 'import'])
-        ->name('temperature-records.import');
+    Route::resource('temp-records', TempRecordController::class);
+    Route::get('temp-records/{temperature_record}/export', [TempRecordController::class, 'export'])
+        ->name('temp-records.export');
+    Route::get('temp-records/import', [TempRecordController::class, 'importForm'])
+        ->name('temp-records.import.form');
+    Route::post('temp-records/import', [TempRecordController::class, 'import'])
+        ->name('temp-records.import');
 
     // Torque Records
     Route::resource('torque-records', TorqueRecordController::class);

@@ -9,16 +9,16 @@
         </h2>
         <div class="flex space-x-2">
           <Link 
-            :href="route('temperature-records.import.form')" 
-            class="inline-flex items-center px-4 py-2 bg-gray-100 border border-transparent rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-200 focus:bg-gray-200 active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150"
+            :href="route('temp-records.import.form')" 
+            class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
           >
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
             </svg>
             Import
           </Link>
           <Link 
-            :href="route('temperature-records.create')" 
+            :href="route('temp-records.create')" 
             class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150"
           >
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -138,7 +138,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div class="flex items-center justify-end space-x-2">
                         <Link 
-                          :href="route('temperature-records.show', record.id)" 
+                          :href="route('temp-records.show', record.id)" 
                           class="p-1 text-indigo-600 hover:text-indigo-900 rounded-full hover:bg-indigo-50"
                           title="View"
                         >
@@ -148,8 +148,8 @@
                           </svg>
                         </Link>
                         <Link 
-                          :href="route('temperature-records.edit', record.id)" 
-                          class="p-1 text-yellow-600 hover:text-yellow-900 rounded-full hover:bg-yellow-50"
+                          :href="route('temp-records.edit', record.id)" 
+                          class="p-1 text-blue-600 hover:text-blue-900 rounded-full hover:bg-blue-50"
                           title="Edit"
                         >
                           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -264,7 +264,7 @@ const recordToDelete = ref(null);
 const deleteProcessing = ref(false);
 
 const searchRecords = () => {
-  router.get(route('temperature-records.index'), { search: search.value }, {
+  router.get(route('temp-records.index'), { search: search.value }, {
     preserveState: true,
     replace: true,
     preserveScroll: true
@@ -286,7 +286,7 @@ const deleteRecord = () => {
   
   deleteProcessing.value = true;
   
-  router.delete(route('temperature-records.destroy', recordToDelete.value.id), {
+  router.delete(route('temp-records.destroy', recordToDelete.value.id), {
     onSuccess: () => {
       showDeleteModal.value = false;
       recordToDelete.value = null;
@@ -301,7 +301,7 @@ const deleteRecord = () => {
 };
 
 const exportRecords = () => {
-  window.location.href = route('temperature-records.export');
+  window.location.href = route('temp-records.export');
 };
 
 const formatDate = (dateString) => {

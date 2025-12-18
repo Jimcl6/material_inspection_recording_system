@@ -165,12 +165,12 @@ class AnnealingCheckController extends Controller
      * @param  \App\Models\AnnealingCheck  $annealingCheck
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(AnnealingCheck $annealingCheck): \Illuminate\Http\RedirectResponse
+    public function destroy(AnnealingCheck $annealingCheck)
     {
         $annealingCheck->delete();
-
+        
         return redirect()->route('annealing-checks.index')
-            ->with('success', 'Annealing check deleted successfully.');
+            ->with('success', 'Annealing check deleted successfully!');
     }
 
     /**
