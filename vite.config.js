@@ -4,9 +4,12 @@ import vue from '@vitejs/plugin-vue';
 import { fileURLToPath, URL } from 'url';
 
 export default defineConfig({
+    build: {
+        chunkSizeWarningLimit: 1000,
+    },
     plugins: [
         laravel({
-            input: ['resources/js/app.ts', 'resources/css/app.css'],
+            input: ['./resources/js/app.ts', './resources/css/app.css'],
             refresh: true,
         }),
         vue({
