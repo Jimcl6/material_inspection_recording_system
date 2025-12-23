@@ -136,7 +136,7 @@ const formatTime = (timeString) => {
                                 <h4 class="text-md font-medium text-gray-900 mt-6 mb-4">Personnel</h4>
                                 <dl class="space-y-3">
                                     <div class="sm:grid sm:grid-cols-3 sm:gap-4">
-                                        <dt class="text-sm font-medium text-gray-500">PIC</dt>
+                                        <dt class="text-sm font-medium text-gray-500">Person In Charge</dt>
                                         <dd class="mt-1 text-sm text-gray-900 sm:col-span-2">
                                             {{ annealingCheck.pic?.name || 'N/A' }}
                                         </dd>

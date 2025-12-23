@@ -66,7 +66,7 @@
                     id="date"
                     ref="dateEl"
                     v-model="form.date"
-                    type="text"
+                    type="date"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     placeholder="DD/MM/YYYY"
                     required
@@ -77,28 +77,28 @@
               <!-- Solder Details -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label for="solder_model" class="block text-sm font-medium text-gray-700">
-                    Solder Model
+                  <label for="driver_model" class="block text-sm font-medium text-gray-700">
+                    Driver Model
                   </label>
                   <input
-                    id="solder_model"
-                    v-model="form.solder_model"
+                    id="driver_model"
+                    v-model="form.driver_model"
                     type="text"
                     maxlength="100"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label for="equipment_type" class="block text-sm font-medium text-gray-700">
-                    Equipment Type <span class="text-red-500">*</span>
+                  <label for="driver_type" class="block text-sm font-medium text-gray-700">
+                    Driver Type <span class="text-red-500">*</span>
                   </label>
                   <select
-                    id="equipment_type"
-                    v-model="form.equipment_type"
+                    id="driver_type"
+                    v-model="form.driver_type"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     required
                   >
-                    <option value="" disabled>Select Equipment Type</option>
+                    <option value="" disabled>Select Driver Type</option>
                     <option value="Manual">Manual</option>
                     <option value="Automatic">Automatic</option>
                   </select>
@@ -128,6 +128,18 @@
                     v-model="form.control_no"
                     type="text"
                     maxlength="50"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label for="screw_type" class="block text-sm font-medium text-gray-700">
+                    Screw Type
+                  </label>
+                  <input
+                    id="screw_type"
+                    v-model="form.screw_type"
+                    type="text"
+                    maxlength="100"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
@@ -295,21 +307,18 @@ const form = useForm({
   model_series: props.record?.model_series || '',
   driver_model: props.record?.driver_model || '',
   driver_type: props.record?.driver_type || '',
-  driver_serial_no: props.record?.driver_serial_no || '',
-  torque_wrench_model: props.record?.torque_wrench_model || '',
-  torque_wrench_sr_no: props.record?.torque_wrench_sr_no || '',
-  torque_wrench_control_no: props.record?.torque_wrench_control_no || '',
-  torque_req: props.record?.torque_req || '',
-  torque_range_min: props.record?.torque_range_min || '',
-  torque_range_max: props.record?.torque_range_max || '',
-  torque_actual: props.record?.torque_actual || '',
-  line: props.record?.line || '',
-  process: props.record?.process || '',
+  line_assigned: props.record?.line_assigned || '',
   control_no: props.record?.control_no || '',
-  vehicle_no: props.record?.vehicle_no || '',
-  remarks: props.record?.remarks || '',
+  screw_type: props.record?.screw_type || '',
+  process_assigned: props.record?.process_assigned || '',
+  person_in_charge: props.record?.person_in_charge || '',
+  time_am: props.record?.time_am || '',
+  torque_am: props.record?.torque_am || '',
+  time_pm: props.record?.time_pm || '',
+  torque_pm: props.record?.torque_pm || '',
+  col_remarks: props.record?.col_remarks || '',
   checked_by: props.record?.checked_by || '',
-  verified_by: props.record?.verified_by || ''
+  // verified_by: props.record?.verified_by || ''
 })
 
 // Watch for record changes and update form
@@ -319,21 +328,17 @@ watch(() => props.record, (newRecord) => {
     form.model_series = newRecord.model_series || ''
     form.driver_model = newRecord.driver_model || ''
     form.driver_type = newRecord.driver_type || ''
-    form.driver_serial_no = newRecord.driver_serial_no || ''
-    form.torque_wrench_model = newRecord.torque_wrench_model || ''
-    form.torque_wrench_sr_no = newRecord.torque_wrench_sr_no || ''
-    form.torque_wrench_control_no = newRecord.torque_wrench_control_no || ''
-    form.torque_req = newRecord.torque_req || ''
-    form.torque_range_min = newRecord.torque_range_min || ''
-    form.torque_range_max = newRecord.torque_range_max || ''
-    form.torque_actual = newRecord.torque_actual || ''
-    form.line = newRecord.line || ''
-    form.process = newRecord.process || ''
+    form.line_assigned = newRecord.line_assigned || ''
     form.control_no = newRecord.control_no || ''
-    form.vehicle_no = newRecord.vehicle_no || ''
-    form.remarks = newRecord.remarks || ''
+    form.screw_type = newRecord.screw_type || ''
+    form.process_assigned = newRecord.process_assigned || ''
+    form.person_in_charge = newRecord.person_in_charge || ''
+    form.time_am = newRecord.time_am || ''
+    form.torque_am = newRecord.torque_am || ''
+    form.time_pm = newRecord.time_pm || ''
+    form.torque_pm = newRecord.torque_pm || ''
+    form.col_remarks = newRecord.col_remarks || ''
     form.checked_by = newRecord.checked_by || ''
-    form.verified_by = newRecord.verified_by || ''
   }
 }, { immediate: true })
 

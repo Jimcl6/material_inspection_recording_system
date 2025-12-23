@@ -18,12 +18,19 @@ const props = defineProps({
     }
 });
 
+// Format date to YYYY-MM-DD for HTML date input
+const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+};
+
 const form = useForm({
     item_code: props.annealingCheck.item_code || '',
-    receiving_date: props.annealingCheck.receiving_date || '',
+    receiving_date: formatDateForInput(props.annealingCheck.receiving_date),
     supplier_lot_number: props.annealingCheck.supplier_lot_number || '',
     quantity: props.annealingCheck.quantity || 1,
-    annealing_date: props.annealingCheck.annealing_date || '',
+    annealing_date: formatDateForInput(props.annealingCheck.annealing_date),
     machine_number: props.annealingCheck.machine_number || '',
     machine_setting: props.annealingCheck.machine_setting || '',
     pic_id: props.annealingCheck.pic_id || '',
@@ -215,17 +222,12 @@ const submit = () => {
                                     <label for="pic_id" class="block text-sm font-medium text-gray-700">
                                         Person In Charge <span class="text-red-500">*</span>
                                     </label>
-                                    <select
+                                    <input 
                                         id="pic_id"
+                                        type="text"
                                         v-model="form.pic_id"
-                                        required
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    >
-                                        <option value="">Select PIC</option>
-                                        <option v-for="user in users" :key="user.id" :value="user.id">
-                                            {{ user.name }}
-                                        </option>
-                                    </select>
+                                        >
                                     <p v-if="form.errors.pic_id" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.pic_id }}
                                     </p>
