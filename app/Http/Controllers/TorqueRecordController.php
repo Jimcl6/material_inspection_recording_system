@@ -13,6 +13,8 @@ class TorqueRecordController extends Controller
         $records = TorqueRecord::orderByDesc('id')->paginate(10)->through(function ($r) {
             return [
                 'id' => $r->id,
+                'date' => $r->date,
+                'model_series' => $r->model_series,
                 'driver_model' => $r->driver_model,
                 'driver_type' => $r->driver_type,
                 'line_assigned' => $r->line_assigned,
@@ -42,6 +44,8 @@ class TorqueRecordController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
+            'date' => ['nullable','date'],
+            'model_series'=> ['nullable','string','max:100'],
             'driver_model' => ['nullable','string','max:100'],
             'driver_type' => ['nullable','string','max:100'],
             'line_assigned' => ['nullable','string','max:100'],
@@ -78,6 +82,8 @@ class TorqueRecordController extends Controller
     public function update(Request $request, TorqueRecord $torque_record)
     {
         $data = $request->validate([
+            'date' => ['nullable','date'],
+            'model_series'=> ['nullable','string','max:100'],
             'driver_model' => ['nullable','string','max:100'],
             'driver_type' => ['nullable','string','max:100'],
             'line_assigned' => ['nullable','string','max:100'],
