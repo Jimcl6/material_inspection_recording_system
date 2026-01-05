@@ -1,190 +1,528 @@
 <template>
-  <div class="container py-4">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-      <h1 class="h3 m-0">Production Batches</h1>
-      <button class="btn btn-primary" @click="showNew = true">New Batch</button>
-    </div>
+    <Head title="Production Batches" />
 
-    <div class="card mb-3">
-      <div class="card-body">
-        <form class="row g-2 align-items-end" @submit.prevent="applyFilters">
-          <div class="col-12 col-md-3">
-            <label class="form-label">Search</label>
-            <input v-model="filters.q" type="text" class="form-control" placeholder="QR / Lot / Job #" />
-          </div>
-          <div class="col-12 col-md-2">
-            <label class="form-label">QR Code</label>
-            <input v-model="filters.qr" type="text" class="form-control" />
-          </div>
-          <div class="col-12 col-md-2">
-            <label class="form-label">Lot</label>
-            <input v-model="filters.lot" type="text" class="form-control" />
-          </div>
-          <div class="col-6 col-md-2">
-            <label class="form-label">Date From</label>
-            <input v-model="filters.date_from" type="date" class="form-control" />
-          </div>
-          <div class="col-6 col-md-2">
-            <label class="form-label">Date To</label>
-            <input v-model="filters.date_to" type="date" class="form-control" />
-          </div>
-          <div class="col-12 col-md-1 d-grid">
-            <button class="btn btn-outline-primary">Filter</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <AppLayout>
+        <template #header>
+            <div class="flex justify-between items-center">
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                    Production Batches
+                </h2>
+                <div class="space-x-2">
+                    <Link 
+                        :href="route('production-batches.import.form')" 
+                        class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                    >
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Import
+                    </Link>
+                    <Link 
+                        :href="route('production-batches.create')" 
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                    >
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        New Batch
+                    </Link>
+                </div>
+            </div>
+        </template>
 
-    <div class="card">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-striped table-hover mb-0">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Date</th>
-                <th>Letter</th>
-                <th>QR Code</th>
-                <th>Lot</th>
-                <th>Produce Qty</th>
-                <th>Job #</th>
-                <th>Total Qty</th>
-                <th class="text-end">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="b in batches.data" :key="b.BatchID">
-                <td>{{ b.BatchID }}</td>
-                <td>{{ b.ProductionDate }}</td>
-                <td>{{ b.LetterCode }}</td>
-                <td>{{ b.QRCode }}</td>
-                <td>{{ b.MaterialLotNumber }}</td>
-                <td>{{ b.ProduceQty }}</td>
-                <td>{{ b.JobNumber }}</td>
-                <td>{{ b.TotalQty }}</td>
-                <td class="text-end">
-                  <div class="dropdown dropup d-inline-block position-static">
-                    <button
-                      class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                      type="button"
-                      data-bs-toggle="dropdown"
-                      data-bs-display="static"
-                      data-bs-boundary="viewport"
-                      aria-expanded="false">
-                      Actions
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                      <li>
-                        <a class="dropdown-item" :href="`batches/${b.BatchID}`">View</a>
-                      </li>
-                      <li>
-                        <button class="dropdown-item" @click.prevent="openEdit(b)">Edit</button>
-                      </li>
-                      <li>
-                        <button class="dropdown-item" @click.prevent="openCheckpoint(b.BatchID)">Add Checkpoint</button>
-                      </li>
-                      <li><hr class="dropdown-divider" /></li>
-                      <li>
-                        <button class="dropdown-item text-danger" @click.prevent="destroyBatch(b.BatchID)">Delete</button>
-                      </li>
-                    </ul>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="py-6">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 bg-white border-b border-gray-200">
+                        <!-- Advanced Filters -->
+                        <div class="mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                                    <input
+                                        v-model="filters.q"
+                                        type="text"
+                                        placeholder="QR / Lot / Job #"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">QR Code</label>
+                                    <input
+                                        v-model="filters.qr"
+                                        type="text"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Lot</label>
+                                    <input
+                                        v-model="filters.lot"
+                                        type="text"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+                                    <input
+                                        v-model="filters.date_from"
+                                        type="date"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+                                    <input
+                                        v-model="filters.date_to"
+                                        type="date"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                    />
+                                </div>
+                            </div>
+                            <div class="mt-4 flex space-x-2">
+                                <button 
+                                    @click="applyFilters"
+                                    class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                >
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                                    </svg>
+                                    Filter
+                                </button>
+                                <button 
+                                    @click="resetFilters"
+                                    class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                >
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                    </svg>
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            ID
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Date
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Letter
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            QR Code
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Lot
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Produce Qty
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Job #
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Total Qty
+                                        </th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr v-for="batch in batches.data" :key="batch.BatchID" class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ batch.BatchID }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">
+                                                {{ formatDate(batch.ProductionDate) }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">
+                                                {{ batch.LetterCode || 'N/A' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">
+                                                {{ batch.QRCode || 'N/A' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">
+                                                {{ batch.MaterialLotNumber || 'N/A' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">
+                                                {{ batch.ProduceQty || 0 }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">
+                                                {{ batch.JobNumber || 'N/A' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">
+                                                {{ batch.TotalQty || 0 }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <div class="flex items-center justify-end space-x-2">
+                                                <Link 
+                                                    :href="`/batches/${batch.BatchID}`" 
+                                                    class="p-1 text-indigo-600 hover:text-indigo-900 rounded-full hover:bg-indigo-50"
+                                                    title="View"
+                                                >
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                    </svg>
+                                                </Link>
+                                                <button 
+                                                    @click="openEdit(batch)" 
+                                                    class="p-1 text-blue-600 hover:text-blue-900 rounded-full hover:bg-blue-50"
+                                                    title="Edit"
+                                                >
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                    </svg>
+                                                </button>
+                                                <button 
+                                                    @click="openCheckpoint(batch.BatchID)" 
+                                                    class="p-1 text-green-600 hover:text-green-900 rounded-full hover:bg-green-50"
+                                                    title="Add Checkpoint"
+                                                >
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                                                    </svg>
+                                                </button>
+                                                <button 
+                                                    @click="confirmDelete(batch)" 
+                                                    class="p-1 text-red-600 hover:text-red-900 rounded-full hover:bg-red-50"
+                                                    title="Delete"
+                                                >
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="!batches.data.length">
+                                        <td colspan="9" class="px-6 py-4 text-center text-sm text-gray-500">
+                                            No production batches found.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="mt-4" v-if="batches.links.length > 3">
+                            <div class="flex justify-between items-center">
+                                <div class="text-sm text-gray-700">
+                                    Showing <span class="font-medium">{{ batches.from }}</span> to 
+                                    <span class="font-medium">{{ batches.to }}</span> of 
+                                    <span class="font-medium">{{ batches.total }}</span> results
+                                </div>
+                                <div class="flex space-x-1">
+                                    <template v-for="(link, index) in batches.links" :key="index">
+                                        <Link 
+                                            v-if="link.url"
+                                            :href="link.url"
+                                            v-html="link.label"
+                                            class="px-4 py-2 border rounded-md text-sm font-medium"
+                                            :class="{
+                                                'bg-indigo-50 border-indigo-500 text-indigo-600': link.active,
+                                                'bg-white border-gray-300 text-gray-500 hover:bg-gray-50': !link.active && link.url,
+                                                'text-gray-300': !link.url
+                                            }"
+                                        />
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="card-footer">
-        <nav v-if="batches.links && batches.links.length">
-          <ul class="pagination mb-0">
-            <li v-for="(l, idx) in batches.links" :key="idx" class="page-item" :class="{ active: l.active, disabled: !l.url }">
-              <a class="page-link" :href="l.url || '#'" v-html="l.label"></a>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    </div>
-    <NewBatchModal v-model="showNew" @created="onCreated" />
-    <CheckpointModal v-model="showCheckpoint" :batch-id="newBatchId" @saved="refreshList" />
-    <EditBatchModal v-model="showEdit" :batch="selectedBatch" @updated="refreshList" />
-  </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div v-if="showDeleteModal" class="fixed inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="showDeleteModal = false"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                Delete Production Batch
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">
+                                    Are you sure you want to delete batch <span class="font-medium">#{{ batchToDelete?.BatchID }}</span>? This action cannot be undone.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                        <button 
+                            type="button" 
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                            @click="deleteBatch"
+                        >
+                            Delete
+                        </button>
+                        <button 
+                            type="button" 
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                            @click="showDeleteModal = false"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <!-- <NewBatchModal v-model="showNew" @created="onCreated" /> -->
+        <!-- <CheckpointModal v-model="showCheckpoint" :batch-id="newBatchId" @saved="refreshList" /> -->
+        <!-- <EditBatchModal v-model="showEdit" :batch="selectedBatch || undefined" @updated="refreshList" /> -->
+    </AppLayout>
 </template>
 
-<script setup>
-const props = defineProps({
-  batches: Object,
-  filters: Object,
+<script setup lang="ts">
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { ref, reactive } from 'vue';
+
+// Import route helper
+declare function route(name: string, params?: any): string;
+
+type Filters = {
+    q?: string;
+    qr?: string;
+    lot?: string;
+    date_from?: string;
+    date_to?: string;
+    [key: string]: any;
+};
+
+type ProductionBatch = {
+    BatchID: number;
+    ProductionDate: string;
+    LetterCode: string;
+    QRCode: string;
+    MaterialLotNumber: string;
+    ProduceQty: number;
+    JobNumber: string;
+    TotalQty: number;
+    Remarks?: string;
+};
+
+type BatchesResponse = {
+    data: ProductionBatch[];
+    links: any[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number;
+    to: number;
+};
+
+interface Props {
+    batches: BatchesResponse;
+    filters: Filters;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    batches: () => ({
+        data: [],
+        links: [],
+        current_page: 1,
+        last_page: 1,
+        per_page: 10,
+        total: 0,
+        from: 0,
+        to: 0
+    }),
+    filters: () => ({
+        q: '',
+        qr: '',
+        lot: '',
+        date_from: '',
+        date_to: ''
+    })
 });
 
-import { reactive, ref, onMounted } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
-import NewBatchModal from './NewBatchModal.vue'
-import CheckpointModal from './CheckpointModal.vue'
-import EditBatchModal from './EditBatchModal.vue'
-
 const filters = reactive({
-  q: props.filters?.q || '',
-  qr: props.filters?.qr || '',
-  lot: props.filters?.lot || '',
-  date_from: props.filters?.date_from || '',
-  date_to: props.filters?.date_to || '',
-})
+    q: props.filters?.q || '',
+    qr: props.filters?.qr || '',
+    lot: props.filters?.lot || '',
+    date_from: props.filters?.date_from || '',
+    date_to: props.filters?.date_to || '',
+});
 
-const showNew = ref(false)
-const showCheckpoint = ref(false)
-const newBatchId = ref(null)
-let shouldOpenCheckpoint = false
-const page = usePage()
-const showEdit = ref(false)
-const selectedBatch = ref(null)
+const showNew = ref(false);
+const showCheckpoint = ref(false);
+const newBatchId = ref<string | number | undefined>(undefined);
+const showEdit = ref(false);
+const selectedBatch = ref<ProductionBatch | null>(null);
+const batchToDelete = ref<ProductionBatch | null>(null);
+const showDeleteModal = ref<boolean>(false);
+const page = usePage();
+let shouldOpenCheckpoint = false;
 
-function applyFilters() {
-  router.get(window.location.pathname, { ...filters }, { preserveState: true, replace: true })
-}
+const applyFilters = () => {
+    const query = Object.fromEntries(
+        Object.entries(filters).filter(([_, value]) => value !== '')
+    );
+    router.get(window.location.pathname, query, { preserveState: true, replace: true });
+};
 
-function destroyBatch(id) {
-  if (confirm('Delete this batch?')) {
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-    router.post(`/batches/${id}`, { _method: 'delete', _token: csrf }, { preserveScroll: true })
-  }
-}
+const resetFilters = () => {
+    Object.assign(filters, {
+        q: '',
+        qr: '',
+        lot: '',
+        date_from: '',
+        date_to: ''
+    });
+    applyFilters();
+};
 
-function onCreated(payload = {}) {
-  shouldOpenCheckpoint = !!payload.openCheckpoint
-  router.get(window.location.pathname, { ...filters }, {
-    preserveState: true,
-    preserveScroll: true,
-    replace: true,
-    onSuccess: () => {
-      const id = page?.props?.flash?.new_batch_id
-      if (id) {
-        newBatchId.value = id
-        if (shouldOpenCheckpoint) showCheckpoint.value = true
-      }
+const destroyBatch = (id: number) => {
+    if (confirm('Delete this batch?')) {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        router.post(`/batches/${id}`, { _method: 'delete', _token: csrf }, { 
+            preserveScroll: true,
+            onSuccess: () => {
+                window.dispatchEvent(new CustomEvent('toast', {
+                    detail: {
+                        type: 'success',
+                        message: 'Batch deleted successfully!'
+                    }
+                }));
+            },
+            onError: () => {
+                window.dispatchEvent(new CustomEvent('toast', {
+                    detail: {
+                        type: 'error',
+                        message: 'Failed to delete batch. Please try again.'
+                    }
+                }));
+            }
+        });
     }
-  })
-}
+};
 
-function openCheckpoint(batchId) {
-  newBatchId.value = batchId
-  showCheckpoint.value = true
-}
+const confirmDelete = (batch: ProductionBatch) => {
+    batchToDelete.value = batch;
+    showDeleteModal.value = true;
+};
 
-function refreshList() {
-  router.get(window.location.pathname, { ...filters }, { preserveState: true, preserveScroll: true, replace: true })
-}
+const deleteBatch = (): void => {
+    if (!batchToDelete.value) return;
+    
+    router.delete(`/batches/${batchToDelete.value.BatchID}`, {
+        onSuccess: (): void => {
+            showDeleteModal.value = false;
+            batchToDelete.value = null;
+            window.dispatchEvent(new CustomEvent('toast', {
+                detail: {
+                    type: 'success',
+                    message: 'Batch deleted successfully!'
+                }
+            }));
+        },
+        preserveScroll: true,
+        onError: (error: Error): void => {
+            console.error('Error deleting batch:', error);
+            showDeleteModal.value = false;
+            batchToDelete.value = null;
+            
+            window.dispatchEvent(new CustomEvent('toast', {
+                detail: {
+                    type: 'error',
+                    message: 'Failed to delete the batch. Please try again.'
+                }
+            }));
+        }
+    });
+};
 
-function openEdit(batch) {
-  selectedBatch.value = { ...batch }
-  showEdit.value = true
-}
+const onCreated = (payload: any = {}) => {
+    shouldOpenCheckpoint = !!payload.openCheckpoint;
+    const query = Object.fromEntries(
+        Object.entries(filters).filter(([_, value]) => value !== '')
+    );
+    router.get(window.location.pathname, query, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+        onSuccess: () => {
+            const id = page.props.flash?.new_batch_id;
+            if (id) {
+                newBatchId.value = id;
+                if (shouldOpenCheckpoint) showCheckpoint.value = true;
+            }
+        }
+    });
+};
 
-onMounted(() => {
-  const flashed = page?.props?.flash
-  if (flashed?.edit_batch && flashed?.edit_batch_id) {
-    selectedBatch.value = flashed.edit_batch
-    showEdit.value = true
-  }
-})
+const openCheckpoint = (batchId: number) => {
+    newBatchId.value = batchId;
+    showCheckpoint.value = true;
+};
+
+const refreshList = () => {
+    const query = Object.fromEntries(
+        Object.entries(filters).filter(([_, value]) => value !== '')
+    );
+    router.get(window.location.pathname, query, { preserveState: true, preserveScroll: true, replace: true });
+};
+
+const openEdit = (batch: ProductionBatch) => {
+    selectedBatch.value = { ...batch };
+    showEdit.value = true;
+};
+
+const formatDate = (dateString: string): string => {
+    if (!dateString) return '';
+    try {
+        const options: Intl.DateTimeFormatOptions = { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        };
+        return new Date(dateString).toLocaleDateString(undefined, options);
+    } catch (error) {
+        console.error('Error formatting date:', error);
+        return 'Invalid date';
+    }
+};
+
+// Import moduls
+import NewBatchModal from './NewBatchModal.vue';
+import CheckpointModal from './CheckpointModal.vue';
+import EditBatchModal from './EditBatchModal.vue';
 </script>

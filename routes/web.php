@@ -36,6 +36,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return view('admin.dashboard');
         })->name('admin.dashboard');
         // Add more admin routes here
+    
+    // Production Batches
+    Route::resource('production-batches', ProductionBatchController::class);
+    Route::get('production-batches/{production_batch}/export', [ProductionBatchController::class, 'export'])
+        ->name('production-batches.export');
+    Route::get('production-batches/import', [ProductionBatchController::class, 'importForm'])
+        ->name('production-batches.import.form');
+    Route::post('production-batches/import', [ProductionBatchController::class, 'import'])
+        ->name('production-batches.import');
+
+    // Modification Logs (read-only)
+    Route::get('modification-logs', [ModificationLogController::class, 'index'])
+        ->name('modification-logs.index');
+    Route::get('modification-logs/{modification_log}', [ModificationLogController::class, 'show'])
+        ->name('modification-logs.show');
     });
 
     // Annealing Checks
@@ -67,18 +82,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('torque-records/import', [TorqueRecordController::class, 'import'])
         ->name('torque-records.import');
 
-    // Production Batches
-    Route::resource('production-batches', ProductionBatchController::class);
-    Route::get('production-batches/{production_batch}/export', [ProductionBatchController::class, 'export'])
-        ->name('production-batches.export');
-    Route::get('production-batches/import', [ProductionBatchController::class, 'importForm'])
-        ->name('production-batches.import.form');
-    Route::post('production-batches/import', [ProductionBatchController::class, 'import'])
-        ->name('production-batches.import');
-
-    // Modification Logs (read-only)
-    Route::get('modification-logs', [ModificationLogController::class, 'index'])
-        ->name('modification-logs.index');
-    Route::get('modification-logs/{modification_log}', [ModificationLogController::class, 'show'])
-        ->name('modification-logs.show');
+    
 });
