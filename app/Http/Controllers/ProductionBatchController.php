@@ -102,6 +102,13 @@ class ProductionBatchController extends Controller
         return Inertia::render('Batches/Create');
     }
 
+    public function createCheckpoint(ProductionBatch $productionBatch)
+    {
+        return Inertia::render('Batches/CreateCheckpoint', [
+            'batch' => $productionBatch
+        ]);
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -170,18 +177,18 @@ class ProductionBatchController extends Controller
 
         // If stay=1 (modal flow), return to index with new_batch_id instead of show
         if ($request->boolean('stay')) {
-            return redirect()->route('batches.index')
+            return redirect()->route('production-batches.index')
                 ->with('success', 'Batch created.')
                 ->with('new_batch_id', $batch->BatchID);
         }
 
-        return redirect()->route('batches.show', ['batch' => $batch->BatchID])
+        return redirect()->route('production-batches.show', ['batch' => $batch->BatchID])
             ->with('success', 'Batch created.');
     }
 
     public function edit(ProductionBatch $batch)
     {
-        return redirect()->route('batches.index')
+        return redirect()->route('production-batches.index')
             ->with('edit_batch_id', $batch->BatchID)
             ->with('edit_batch', [
                 'BatchID' => $batch->BatchID,
@@ -212,17 +219,17 @@ class ProductionBatchController extends Controller
         $batch->update($data);
 
         if ($request->boolean('stay')) {
-            return redirect()->route('batches.index')->with('success', 'Batch updated.');
+            return redirect()->route('production-batches.index')->with('success', 'Batch updated.');
         }
 
-        return redirect()->route('batches.show', ['batch' => $batch->BatchID])
+        return redirect()->route('production-batches.show', ['batch' => $batch->BatchID])
             ->with('success', 'Batch updated.');
     }
 
     public function destroy(ProductionBatch $batch)
     {
         $batch->delete();
-        return redirect()->route('batches.index')->with('success', 'Batch deleted.');
+        return redirect()->route('production-batches.index')->with('success', 'Batch deleted.');
     }
 
     public function nextLetter(Request $request)

@@ -36,7 +36,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return view('admin.dashboard');
         })->name('admin.dashboard');
         // Add more admin routes here
-    
+    });
+
     // Production Batches
     Route::resource('production-batches', ProductionBatchController::class);
     Route::get('production-batches/{production_batch}/export', [ProductionBatchController::class, 'export'])
@@ -45,13 +46,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('production-batches.import.form');
     Route::post('production-batches/import', [ProductionBatchController::class, 'import'])
         ->name('production-batches.import');
+    
+    // Production Batch Checkpoints
+    Route::get('production-batches/{production_batch}/checkpoints/create', [ProductionBatchController::class, 'createCheckpoint'])
+        ->name('production-batches.checkpoints.create');
 
     // Modification Logs (read-only)
     Route::get('modification-logs', [ModificationLogController::class, 'index'])
         ->name('modification-logs.index');
     Route::get('modification-logs/{modification_log}', [ModificationLogController::class, 'show'])
         ->name('modification-logs.show');
-    });
 
     // Annealing Checks
     Route::resource('annealing-checks', AnnealingCheckController::class);
