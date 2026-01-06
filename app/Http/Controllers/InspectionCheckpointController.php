@@ -54,10 +54,10 @@ class InspectionCheckpointController extends Controller
         }
 
         if ($request->boolean('stay')) {
-            return redirect()->route('batches.index')->with('success', 'Checkpoint created.');
+            return redirect()->route('production-batches.index')->with('success', 'Checkpoint created.');
         }
 
-        return redirect()->route('batches.show', ['batch' => $batch->BatchID])
+        return redirect()->route('production-bathces.show', ['batch' => $batch->BatchID])
             ->with('success', 'Checkpoint created.');
     }
 
