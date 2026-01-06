@@ -39,7 +39,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Production Batches
-    Route::resource('production-batches', ProductionBatchController::class);
+    Route::get('production-batches', [ProductionBatchController::class, 'index'])
+        ->name('production-batches.index');
+    Route::get('production-batches/create', [ProductionBatchController::class, 'create'])
+        ->name('production-batches.create');
+    Route::post('production-batches', [ProductionBatchController::class, 'store'])
+        ->name('production-batches.store');
+    Route::get('production-batches/{production_batch}', [ProductionBatchController::class, 'show'])
+        ->name('production-batches.show');
+    Route::get('production-batches/{production_batch}/edit', [ProductionBatchController::class, 'edit'])
+        ->name('production-batches.edit');
+    Route::put('production-batches/{production_batch}', [ProductionBatchController::class, 'update'])
+        ->name('production-batches.update');
+    Route::delete('production-batches/{production_batch}', [ProductionBatchController::class, 'destroy'])
+        ->name('production-batches.destroy');
     Route::get('production-batches/{production_batch}/export', [ProductionBatchController::class, 'export'])
         ->name('production-batches.export');
     Route::get('production-batches/import', [ProductionBatchController::class, 'importForm'])
@@ -50,6 +63,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Production Batch Checkpoints
     Route::get('production-batches/{production_batch}/checkpoints/create', [ProductionBatchController::class, 'createCheckpoint'])
         ->name('production-batches.checkpoints.create');
+    Route::post('production-batches/{production_batch}/checkpoints', [ProductionBatchController::class, 'storeCheckpoint'])
+        ->name('production-batches.checkpoints.store');
 
     // Modification Logs (read-only)
     Route::get('modification-logs', [ModificationLogController::class, 'index'])

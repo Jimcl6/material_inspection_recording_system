@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InspectionCheckpoint extends Model
 {
-    protected $table = 'InspectionCheckpoints';
+    protected $table = 'inspection_checkpoints';
     protected $primaryKey = 'CheckpointID';
     public $timestamps = false;
 
