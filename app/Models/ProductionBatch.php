@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProductionBatch extends Model
 {
-    protected $table = 'ProductionBatches';
+    protected $table = 'productionbatches';
     protected $primaryKey = 'BatchID';
     public $timestamps = true;
     const CREATED_AT = 'CreatedAt';

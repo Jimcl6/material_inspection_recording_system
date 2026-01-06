@@ -109,6 +109,48 @@ class ProductionBatchController extends Controller
         ]);
     }
 
+    public function storeCheckpoint(Request $request, ProductionBatch $productionBatch)
+    {
+        $data = $request->validate([
+            'CheckpointNumber' => ['required', 'integer', 'min:1'],
+            'InspectorName_First' => ['nullable', 'string', 'max:255'],
+            'Judgement_First' => ['nullable', 'string', 'max:255'],
+            'InspectorName_Last' => ['nullable', 'string', 'max:255'],
+            'Judgement_Last' => ['nullable', 'string', 'max:255'],
+            'samples' => ['nullable', 'array'],
+            'samples.*.SampleOrder' => ['nullable', 'integer', 'min:1'],
+            'samples.*.Phase' => ['nullable', 'string', 'in:FIRST,LAST'],
+            'samples.*.Value' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        // Create the checkpoint
+        $checkpoint = InspectionCheckpoint::create([
+            'BatchID' => $productionBatch->BatchID,
+            'CheckpointNumber' => $data['CheckpointNumber'],
+            'InspectorName_First' => $data['InspectorName_First'] ?? null,
+            'Judgement_First' => $data['Judgement_First'] ?? null,
+            'InspectorName_Last' => $data['InspectorName_Last'] ?? null,
+            'Judgement_Last' => $data['Judgement_Last'] ?? null,
+        ]);
+
+        // Create samples if provided
+        if (!empty($data['samples'])) {
+            foreach ($data['samples'] as $sample) {
+                if (!empty($sample['Value'])) {
+                    InspectionSample::create([
+                        'CheckpointID' => $checkpoint->CheckpointID, // Use the model's primary key
+                        'SampleOrder' => $sample['SampleOrder'] ?? 1,
+                        'Phase' => $sample['Phase'] ?? 'FIRST',
+                        'Value' => $sample['Value'],
+                    ]);
+                }
+            }
+        }
+
+        return redirect()->route('production-batches.show', $productionBatch->BatchID)
+            ->with('success', 'Checkpoint created successfully!');
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
