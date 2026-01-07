@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('inspection_samples', function (Blueprint $table) {
-            $table->id();
+            $table->bigIncrements('SampleID');
             $table->unsignedBigInteger('CheckpointID');
             $table->integer('SampleOrder');
             $table->string('Phase', 10); // 'FIRST' or 'LAST'

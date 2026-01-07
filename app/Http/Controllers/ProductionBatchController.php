@@ -39,19 +39,7 @@ class ProductionBatchController extends Controller
         $query->orderByDesc('ProductionDate')
               ->orderByDesc('BatchID');
 
-        $batches = $query->paginate(10)->through(function ($b) {
-            return [
-                'BatchID' => $b->BatchID,
-                'ProductionDate' => $b->ProductionDate,
-                'LetterCode' => $b->LetterCode,
-                'QRCode' => $b->QRCode,
-                'MaterialLotNumber' => $b->MaterialLotNumber,
-                'ProduceQty' => $b->ProduceQty,
-                'JobNumber' => $b->JobNumber,
-                'TotalQty' => $b->TotalQty,
-                'Remarks' => $b->Remarks,
-            ];
-        });
+        $batches = $query->paginate(10);
 
         return Inertia::render('Batches/Index', [
             'batches' => $batches,
@@ -65,11 +53,18 @@ class ProductionBatchController extends Controller
         ]);
     }
 
-    public function show(ProductionBatch $batch)
+    public function show($production_batch)
     {
-        $batch->load(['checkpoints' => function ($q) {
-            $q->withCount('samples');
-        }]);
+        $batch = ProductionBatch::findOrFail($production_batch);
+        
+        try {
+            $batch->load(['checkpoints' => function ($q) {
+                $q->withCount('samples');
+            }]);
+        } catch (\Exception $e) {
+            // If checkpoints relationship fails, continue without checkpoints
+            $batch->checkpoints = collect();
+        }
 
         return Inertia::render('Batches/Show', [
             'batch' => [
@@ -102,15 +97,18 @@ class ProductionBatchController extends Controller
         return Inertia::render('Batches/Create');
     }
 
-    public function createCheckpoint(ProductionBatch $productionBatch)
+    public function createCheckpoint($production_batch)
     {
+        $productionBatch = ProductionBatch::findOrFail($production_batch);
+        
         return Inertia::render('Batches/CreateCheckpoint', [
             'batch' => $productionBatch
         ]);
     }
 
-    public function storeCheckpoint(Request $request, ProductionBatch $productionBatch)
+    public function storeCheckpoint(Request $request, $production_batch)
     {
+        $productionBatch = ProductionBatch::findOrFail($production_batch);
         $data = $request->validate([
             'CheckpointNumber' => ['required', 'integer', 'min:1'],
             'InspectorName_First' => ['nullable', 'string', 'max:255'],
@@ -224,12 +222,14 @@ class ProductionBatchController extends Controller
                 ->with('new_batch_id', $batch->BatchID);
         }
 
-        return redirect()->route('production-batches.show', ['batch' => $batch->BatchID])
+        return redirect()->route('production-batches.show', ['production_batch' => $batch->BatchID])
             ->with('success', 'Batch created.');
     }
 
-    public function edit(ProductionBatch $batch)
+    public function edit($production_batch)
     {
+        $batch = ProductionBatch::findOrFail($production_batch);
+        
         return redirect()->route('production-batches.index')
             ->with('edit_batch_id', $batch->BatchID)
             ->with('edit_batch', [
@@ -245,8 +245,9 @@ class ProductionBatchController extends Controller
             ]);
     }
 
-    public function update(Request $request, ProductionBatch $batch)
+    public function update(Request $request, $production_batch)
     {
+        $batch = ProductionBatch::findOrFail($production_batch);
         $data = $request->validate([
             'ProductionDate' => ['required','date'],
             'LetterCode' => ['required','string','max:5'],
@@ -264,12 +265,13 @@ class ProductionBatchController extends Controller
             return redirect()->route('production-batches.index')->with('success', 'Batch updated.');
         }
 
-        return redirect()->route('production-batches.show', ['batch' => $batch->BatchID])
+        return redirect()->route('production-batches.show', ['production_batch' => $batch->BatchID])
             ->with('success', 'Batch updated.');
     }
 
-    public function destroy(ProductionBatch $batch)
+    public function destroy($production_batch)
     {
+        $batch = ProductionBatch::findOrFail($production_batch);
         $batch->delete();
         return redirect()->route('production-batches.index')->with('success', 'Batch deleted.');
     }

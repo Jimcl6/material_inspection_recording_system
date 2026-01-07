@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('inspection_checkpoints', function (Blueprint $table) {
-            $table->id();
+            $table->bigIncrements('CheckpointID');
             $table->unsignedBigInteger('BatchID');
             $table->integer('CheckpointNumber');
             $table->string('InspectorName_First', 255)->nullable();
