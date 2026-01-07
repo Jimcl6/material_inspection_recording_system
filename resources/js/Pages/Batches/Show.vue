@@ -42,7 +42,7 @@ const form = useForm({
 
 const submitAdd = () => {
     form.transform((data) => ({ ...data, _token: csrf }))
-        .post(`/batches/${props.batch.BatchID}/checkpoints`, {
+        .post(route('production-batches.checkpoints.store', { production_batch: props.batch.BatchID }), {
             preserveScroll: true,
             onSuccess: () => form.reset(),
         });
@@ -75,7 +75,7 @@ const formatDate = (dateString: string) => {
                 </h2>
                 <div class="space-x-2">
                     <Link
-                        :href="route('production-batches.edit', batch.BatchID)"
+                        :href="route('production-batches.edit', { production_batch: batch.BatchID })"
                         class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -145,7 +145,7 @@ const formatDate = (dateString: string) => {
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-lg font-medium text-gray-900">Checkpoints</h3>
                             <Link
-                                :href="route('production-batches.checkpoints.create', batch.BatchID)"
+                                :href="route('production-batches.checkpoints.create', { production_batch: batch.BatchID })"
                                 class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
                             >
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
