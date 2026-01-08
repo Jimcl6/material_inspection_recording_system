@@ -16,6 +16,8 @@ interface Props {
         JobNumber: string;
         TotalQty: number;
         Remarks?: string;
+        ItemName?: string;
+        ItemCode?: string;
     };
     checkpoints: Array<{
         CheckpointID: number;
@@ -42,7 +44,7 @@ const form = useForm({
 
 const submitAdd = () => {
     form.transform((data) => ({ ...data, _token: csrf }))
-        .post(route('production-batches.checkpoints.store', { production_batch: props.batch.BatchID }), {
+        .post(route('magnetism-checksheet.checkpoints.store', { magnetism_checksheet: props.batch.BatchID }), {
             preserveScroll: true,
             onSuccess: () => form.reset(),
         });
@@ -50,7 +52,7 @@ const submitAdd = () => {
 
 const destroyCheckpoint = (id: number) => {
     if (confirm('Delete this checkpoint?')) {
-        router.post(`/checkpoints/${id}`, { _method: 'delete', _token: csrf }, { preserveScroll: true });
+        router.post(`/magnetism-checksheet/${props.batch.BatchID}/checkpoints/${id}`, { _method: 'delete', _token: csrf }, { preserveScroll: true });
     }
 };
 
@@ -65,39 +67,39 @@ const formatDate = (dateString: string) => {
 </script>
 
 <template>
-    <Head title="Production Batch Details" />
+    <Head title="Magnetism Checksheet Details" />
 
     <AppLayout>
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Batch #{{ batch.BatchID }}
+                    Checksheet #{{ batch.BatchID }}
                 </h2>
                 <div class="space-x-2">
                     <Link
-                        :href="route('production-batches.edit', { production_batch: batch.BatchID })"
+                        :href="route('magnetism-checksheet.edit', { magnetism_checksheet: batch.BatchID })"
                         class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
-                        Edit Batch
+                        Edit Checksheet
                     </Link>
                     <Link
-                        :href="route('production-batches.index')"
+                        :href="route('magnetism-checksheet.index')"
                         class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                         </svg>
-                        Back to Batches
+                        Back to Checksheets
                     </Link>
                 </div>
             </div>
         </template>
 
         <div class="py-6">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto">
                 <!-- Batch Information Card -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6 bg-white border-b border-gray-200">
@@ -114,6 +116,14 @@ const formatDate = (dateString: string) => {
                             <div>
                                 <dt class="text-sm font-medium text-gray-500">QR Code</dt>
                                 <dd class="mt-1 text-sm text-gray-900">{{ batch.QRCode || 'N/A' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Item Name</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ batch.ItemName || 'N/A' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Item Code</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ batch.ItemCode || 'N/A' }}</dd>
                             </div>
                             <div>
                                 <dt class="text-sm font-medium text-gray-500">Material Lot Number</dt>
@@ -145,7 +155,7 @@ const formatDate = (dateString: string) => {
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-lg font-medium text-gray-900">Checkpoints</h3>
                             <Link
-                                :href="route('production-batches.checkpoints.create', { production_batch: batch.BatchID })"
+                                :href="route('magnetism-checksheet.checkpoints.create', { magnetism_checksheet: batch.BatchID })"
                                 class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
                             >
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -222,63 +232,69 @@ const formatDate = (dateString: string) => {
                         </div>
 
                         <!-- Checkpoints Table -->
-                        <div class="overflow-x-auto">
+                        <div class="overflow-x-auto lg:overflow-visible">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            ID
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             #
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Inspector (First)
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Judgement (First)
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Inspector (Last)
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Judgement (Last)
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Samples
                                         </th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                                            Inspector (First)
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                                            Judgement (First)
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                                            Inspector (Last)
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                                            Judgement (Last)
+                                        </th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Actions
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     <tr v-for="checkpoint in checkpoints" :key="checkpoint.CheckpointID" class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            {{ checkpoint.CheckpointID }}
+                                        <td class="px-4 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ checkpoint.CheckpointNumber }}
+                                            </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ checkpoint.CheckpointNumber }}
+                                        <td class="px-4 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">
+                                                {{ checkpoint.samples_count || 0 }}
+                                            </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ checkpoint.InspectorName_First || 'N/A' }}
+                                        <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
+                                            <div class="text-sm text-gray-900">
+                                                {{ checkpoint.InspectorName_First || 'N/A' }}
+                                            </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ checkpoint.Judgement_First || 'N/A' }}
+                                        <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
+                                            <div class="text-sm text-gray-900">
+                                                {{ checkpoint.Judgement_First || 'N/A' }}
+                                            </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ checkpoint.InspectorName_Last || 'N/A' }}
+                                        <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
+                                            <div class="text-sm text-gray-900">
+                                                {{ checkpoint.InspectorName_Last || 'N/A' }}
+                                            </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ checkpoint.Judgement_Last || 'N/A' }}
+                                        <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
+                                            <div class="text-sm text-gray-900">
+                                                {{ checkpoint.Judgement_Last || 'N/A' }}
+                                            </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ checkpoint.samples_count || 0 }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex items-center justify-end space-x-2">
                                                 <Link
-                                                    :href="`/checkpoints/${checkpoint.CheckpointID}/edit`"
+                                                    :href="route('magnetism-checksheet.checkpoints.edit', { magnetism_checksheet: batch.BatchID, checkpoint: checkpoint.CheckpointID })"
                                                     class="p-1 text-blue-600 hover:text-blue-900 rounded hover:bg-gray-100"
                                                     title="Manage"
                                                 >
@@ -299,7 +315,7 @@ const formatDate = (dateString: string) => {
                                         </td>
                                     </tr>
                                     <tr v-if="!checkpoints.length">
-                                        <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">
+                                        <td colspan="7" class="px-4 py-4 text-center text-sm text-gray-500">
                                             No checkpoints found for this batch.
                                         </td>
                                     </tr>

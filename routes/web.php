@@ -38,33 +38,41 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Add more admin routes here
     });
 
-    // Production Batches
-    Route::get('production-batches', [ProductionBatchController::class, 'index'])
-        ->name('production-batches.index');
-    Route::get('production-batches/create', [ProductionBatchController::class, 'create'])
-        ->name('production-batches.create');
-    Route::post('production-batches', [ProductionBatchController::class, 'store'])
-        ->name('production-batches.store');
-    Route::get('production-batches/{production_batch}', [ProductionBatchController::class, 'show'])
-        ->name('production-batches.show');
-    Route::get('production-batches/{production_batch}/edit', [ProductionBatchController::class, 'edit'])
-        ->name('production-batches.edit');
-    Route::put('production-batches/{production_batch}', [ProductionBatchController::class, 'update'])
-        ->name('production-batches.update');
-    Route::delete('production-batches/{production_batch}', [ProductionBatchController::class, 'destroy'])
-        ->name('production-batches.destroy');
-    Route::get('production-batches/{production_batch}/export', [ProductionBatchController::class, 'export'])
-        ->name('production-batches.export');
-    Route::get('production-batches/import', [ProductionBatchController::class, 'importForm'])
-        ->name('production-batches.import.form');
-    Route::post('production-batches/import', [ProductionBatchController::class, 'import'])
-        ->name('production-batches.import');
+    // Magnetism Checksheet
+    Route::get('magnetism-checksheet', [ProductionBatchController::class, 'index'])
+        ->name('magnetism-checksheet.index');
+    Route::get('magnetism-checksheet/create', [ProductionBatchController::class, 'create'])
+        ->name('magnetism-checksheet.create');
+    Route::post('magnetism-checksheet', [ProductionBatchController::class, 'store'])
+        ->name('magnetism-checksheet.store');
+    Route::get('magnetism-checksheet/{magnetism_checksheet}', [ProductionBatchController::class, 'show'])
+        ->name('magnetism-checksheet.show');
+    Route::get('magnetism-checksheet/{magnetism_checksheet}/edit', [ProductionBatchController::class, 'edit'])
+        ->name('magnetism-checksheet.edit');
+    Route::put('magnetism-checksheet/{magnetism_checksheet}', [ProductionBatchController::class, 'update'])
+        ->name('magnetism-checksheet.update');
+    Route::delete('magnetism-checksheet/{magnetism_checksheet}', [ProductionBatchController::class, 'destroy'])
+        ->name('magnetism-checksheet.destroy');
+    Route::get('magnetism-checksheet/{magnetism_checksheet}/export', [ProductionBatchController::class, 'export'])
+        ->name('magnetism-checksheet.export');
+    Route::get('magnetism-checksheet/import', [ProductionBatchController::class, 'importForm'])
+        ->name('magnetism-checksheet.import.form');
+    Route::post('magnetism-checksheet/import', [ProductionBatchController::class, 'import'])
+        ->name('magnetism-checksheet.import');
+    Route::get('magnetism-checksheet/next-letter', [ProductionBatchController::class, 'nextLetter'])
+        ->name('magnetism-checksheet.next-letter');
     
-    // Production Batch Checkpoints
-    Route::get('production-batches/{production_batch}/checkpoints/create', [ProductionBatchController::class, 'createCheckpoint'])
-        ->name('production-batches.checkpoints.create');
-    Route::post('production-batches/{production_batch}/checkpoints', [ProductionBatchController::class, 'storeCheckpoint'])
-        ->name('production-batches.checkpoints.store');
+    // Magnetism Checksheet Checkpoints
+    Route::get('magnetism-checksheet/{magnetism_checksheet}/checkpoints/create', [ProductionBatchController::class, 'createCheckpoint'])
+        ->name('magnetism-checksheet.checkpoints.create');
+    Route::post('magnetism-checksheet/{magnetism_checksheet}/checkpoints', [ProductionBatchController::class, 'storeCheckpoint'])
+        ->name('magnetism-checksheet.checkpoints.store');
+    Route::get('magnetism-checksheet/{magnetism_checksheet}/checkpoints/{checkpoint}/edit', [ProductionBatchController::class, 'editCheckpoint'])
+        ->name('magnetism-checksheet.checkpoints.edit');
+    Route::put('magnetism-checksheet/{magnetism_checksheet}/checkpoints/{checkpoint}', [ProductionBatchController::class, 'updateCheckpoint'])
+        ->name('magnetism-checksheet.checkpoints.update');
+    Route::delete('magnetism-checksheet/{magnetism_checksheet}/checkpoints/{checkpoint}', [ProductionBatchController::class, 'destroyCheckpoint'])
+        ->name('magnetism-checksheet.checkpoints.destroy');
 
     // Modification Logs (read-only)
     Route::get('modification-logs', [ModificationLogController::class, 'index'])

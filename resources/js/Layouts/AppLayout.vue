@@ -39,8 +39,8 @@ const showingNavigationDropdown = ref(false);
                                 <NavLink :href="route('torque-records.index')" :active="route().current('torque-records.*')">
                                     Torque Records
                                 </NavLink>
-                                <NavLink :href="route('production-batches.index')" :active="route().current('production-batches.*')">
-                                    Production Batches
+                                <NavLink :href="route('magnetism-checksheet.index')" :active="route().current('magnetism-checksheet.*')">
+                                    Magnetism Checksheet
                                 </NavLink>
                                 <!-- Add more navigation links as needed -->
                             </div>
@@ -148,10 +148,10 @@ const showingNavigationDropdown = ref(false);
                             Torque Records
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            :href="route('production-batches.index')"
-                            :active="route().current('production-batches.*')"
+                            :href="route('magnetism-checksheet.index')"
+                            :active="route().current('magnetism-checksheet.*')"
                         >
-                            Production Batches
+                            Magnetism Checksheet
                         </ResponsiveNavLink>
                     </div>
 

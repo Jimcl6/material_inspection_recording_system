@@ -1,15 +1,15 @@
 <template>
-    <Head title="Production Batches" />
+    <Head title="Magnetism Checksheet" />
 
     <AppLayout>
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Production Batches
+                    Magnetism Checksheet
                 </h2>
                 <div class="space-x-2">
                     <Link 
-                        :href="route('production-batches.import.form')" 
+                        :href="route('magnetism-checksheet.import.form')" 
                         class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -18,20 +18,20 @@
                         Import
                     </Link>
                     <Link 
-                        :href="route('production-batches.create')" 
+                        :href="route('magnetism-checksheet.create')" 
                         class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
-                        New Batch
+                        New Checksheet
                     </Link>
                 </div>
             </div>
         </template>
 
         <div class="py-6">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 bg-white border-b border-gray-200">
                         <!-- Advanced Filters -->
@@ -101,85 +101,61 @@
                             </div>
                         </div>
 
-                        <div class="overflow-x-auto">
+                        <div class="overflow-x-auto lg:overflow-visible">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            ID
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Date
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Letter
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Item Name
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            QR Code
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                                            Letter Code
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Lot
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                                            Item Code
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                                             Produce Qty
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Job #
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Total Qty
-                                        </th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Actions
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     <tr v-for="batch in batches.data" :key="batch.BatchID" class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="px-4 py-4 whitespace-nowrap">
                                             <div class="text-sm font-medium text-gray-900">
-                                                {{ batch.BatchID }}
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">
                                                 {{ formatDate(batch.ProductionDate) }}
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="px-4 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">
+                                                {{ batch.ItemName || 'N/A' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
                                             <div class="text-sm text-gray-900">
                                                 {{ batch.LetterCode || 'N/A' }}
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
                                             <div class="text-sm text-gray-900">
-                                                {{ batch.QRCode || 'N/A' }}
+                                                {{ batch.ItemCode || 'N/A' }}
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">
-                                                {{ batch.MaterialLotNumber || 'N/A' }}
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
                                             <div class="text-sm text-gray-900">
                                                 {{ batch.ProduceQty || 0 }}
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">
-                                                {{ batch.JobNumber || 'N/A' }}
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">
-                                                {{ batch.TotalQty || 0 }}
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex items-center justify-end space-x-2">
                                                 <Link
-                                                    :href="route('production-batches.show', batch.BatchID)"
+                                                    :href="route('magnetism-checksheet.show', { magnetism_checksheet: batch.BatchID })"
                                                     class="p-1 text-indigo-600 hover:text-indigo-900 rounded hover:bg-gray-100"
                                                     title="View"
                                                 >
@@ -189,7 +165,7 @@
                                                     </svg>
                                                 </Link>
                                                 <Link
-                                                    :href="route('production-batches.edit', batch.BatchID)"
+                                                    :href="route('magnetism-checksheet.edit', { magnetism_checksheet: batch.BatchID })"
                                                     class="p-1 text-blue-600 hover:text-blue-900 rounded hover:bg-gray-100"
                                                     title="Edit"
                                                 >
@@ -198,7 +174,7 @@
                                                     </svg>
                                                 </Link>
                                                 <Link
-                                                    :href="route('production-batches.checkpoints.create', batch.BatchID)"
+                                                    :href="route('magnetism-checksheet.checkpoints.create', { magnetism_checksheet: batch.BatchID })"
                                                     class="p-1 text-green-600 hover:text-green-900 rounded hover:bg-gray-100"
                                                     title="Add Checkpoint"
                                                 >
@@ -273,11 +249,11 @@
                         </div>
                         <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                             <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                Delete Production Batch
+                                Delete Magnetism Checksheet
                             </h3>
                             <div class="mt-2">
                                 <p class="text-sm text-gray-500">
-                                    Are you sure you want to delete batch <span class="font-medium">#{{ batchToDelete?.BatchID }}</span>? This action cannot be undone.
+                                    Are you sure you want to delete checksheet <span class="font-medium">#{{ batchToDelete?.BatchID }}</span>? This action cannot be undone.
                                 </p>
                             </div>
                         </div>
@@ -336,6 +312,8 @@ type ProductionBatch = {
     JobNumber: string;
     TotalQty: number;
     Remarks?: string;
+    ItemName?: string;
+    ItemCode?: string;
 };
 
 type BatchesResponse = {
@@ -411,15 +389,15 @@ const resetFilters = () => {
 };
 
 const destroyBatch = (id: number) => {
-    if (confirm('Delete this batch?')) {
+    if (confirm('Delete this checksheet?')) {
         const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        router.post(`/batches/${id}`, { _method: 'delete', _token: csrf }, { 
+        router.post(`/magnetism-checksheet/${id}`, { _method: 'delete', _token: csrf }, { 
             preserveScroll: true,
             onSuccess: () => {
                 window.dispatchEvent(new CustomEvent('toast', {
                     detail: {
                         type: 'success',
-                        message: 'Batch deleted successfully!'
+                        message: 'Checksheet deleted successfully!'
                     }
                 }));
             },
@@ -427,7 +405,7 @@ const destroyBatch = (id: number) => {
                 window.dispatchEvent(new CustomEvent('toast', {
                     detail: {
                         type: 'error',
-                        message: 'Failed to delete batch. Please try again.'
+                        message: 'Failed to delete checksheet. Please try again.'
                     }
                 }));
             }
@@ -443,27 +421,27 @@ const confirmDelete = (batch: ProductionBatch) => {
 const deleteBatch = (): void => {
     if (!batchToDelete.value) return;
     
-    router.delete(`/batches/${batchToDelete.value.BatchID}`, {
+    router.delete(`/magnetism-checksheet/${batchToDelete.value.BatchID}`, {
         onSuccess: (): void => {
             showDeleteModal.value = false;
             batchToDelete.value = null;
             window.dispatchEvent(new CustomEvent('toast', {
                 detail: {
                     type: 'success',
-                    message: 'Batch deleted successfully!'
+                    message: 'Checksheet deleted successfully!'
                 }
             }));
         },
         preserveScroll: true,
         onError: (error: Error): void => {
-            console.error('Error deleting batch:', error);
+            console.error('Error deleting checksheet:', error);
             showDeleteModal.value = false;
             batchToDelete.value = null;
             
             window.dispatchEvent(new CustomEvent('toast', {
                 detail: {
                     type: 'error',
-                    message: 'Failed to delete the batch. Please try again.'
+                    message: 'Failed to delete Checksheet. Please try again.'
                 }
             }));
         }

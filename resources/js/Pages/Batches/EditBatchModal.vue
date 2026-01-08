@@ -20,6 +20,14 @@
               <label class="form-label">QR Code</label>
               <input v-model="form.QRCode" type="text" maxlength="20" class="form-control" required />
             </div>
+            <div class="col-12 col-md-3">
+              <label class="form-label">Item Name</label>
+              <input v-model="form.ItemName" type="text" maxlength="50" class="form-control" />
+            </div>
+            <div class="col-12 col-md-3">
+              <label class="form-label">Item Code</label>
+              <input v-model="form.ItemCode" type="text" maxlength="50" class="form-control" />
+            </div>
             <div class="col-12 col-md-4">
               <label class="form-label">Material Lot Number</label>
               <input v-model="form.MaterialLotNumber" type="text" maxlength="50" class="form-control" required />
@@ -108,6 +116,8 @@ const form = useForm({
   JobNumber: '',
   TotalQty: 0,
   Remarks: '',
+  ItemName: '',
+  ItemCode: '',
 })
 
 watch(() => props.batch, () => preload())
@@ -122,6 +132,8 @@ function preload() {
   form.JobNumber = props.batch.JobNumber || ''
   form.TotalQty = props.batch.TotalQty ?? 0
   form.Remarks = props.batch.Remarks || ''
+  form.ItemName = props.batch.ItemName || ''
+  form.ItemCode = props.batch.ItemCode || ''
 }
 
 function focusFirst() {
@@ -139,7 +151,7 @@ function submit() {
   if (!props.batch) return
   const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
   form.transform((data) => ({ ...data, _token: csrf, stay: 1 }))
-      .put(`/batches/${props.batch.BatchID}`, {
+      .put(`/magnetism-checksheet/${props.batch.BatchID}`, {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
