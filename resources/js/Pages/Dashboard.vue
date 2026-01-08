@@ -94,7 +94,7 @@
                         </div>
                     </div>
 
-                    <!-- Production Batches -->
+                    <!-- Magnetism Checksheet -->
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-purple-500">
                         <div class="p-6">
                             <div class="flex items-center">
@@ -104,12 +104,12 @@
                                     </svg>
                                 </div>
                                 <div class="ml-4">
-                                    <h3 class="text-lg font-medium text-gray-900">Production Batches</h3>
-                                    <p class="text-sm text-gray-500">Track and manage production batches</p>
+                                    <h3 class="text-lg font-medium text-gray-900">Magnetism Checksheet</h3>
+                                    <p class="text-sm text-gray-500">Track and manage magnetism checksheets</p>
                                 </div>
                             </div>
                             <div class="mt-4 flex justify-end">
-                                <Link :href="route('production-batches.index')" class="text-sm font-medium text-purple-600 hover:text-purple-500">
+                                <Link :href="route('magnetism-checksheet.index')" class="text-sm font-medium text-purple-600 hover:text-purple-500">
                                     View All <span aria-hidden="true">&rarr;</span>
                                 </Link>
                             </div>

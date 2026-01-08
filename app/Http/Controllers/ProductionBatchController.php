@@ -53,9 +53,9 @@ class ProductionBatchController extends Controller
         ]);
     }
 
-    public function show($production_batch)
+    public function show($magnetism_checksheet)
     {
-        $batch = ProductionBatch::findOrFail($production_batch);
+        $batch = ProductionBatch::findOrFail($magnetism_checksheet);
         
         try {
             $batch->load(['checkpoints' => function ($q) {
@@ -77,6 +77,8 @@ class ProductionBatchController extends Controller
                 'JobNumber' => $batch->JobNumber,
                 'TotalQty' => $batch->TotalQty,
                 'Remarks' => $batch->Remarks,
+                'ItemName' => $batch->ItemName,
+                'ItemCode' => $batch->ItemCode,
             ],
             'checkpoints' => $batch->checkpoints->map(function ($cp) {
                 return [
@@ -97,18 +99,18 @@ class ProductionBatchController extends Controller
         return Inertia::render('Batches/Create');
     }
 
-    public function createCheckpoint($production_batch)
+    public function createCheckpoint($magnetism_checksheet)
     {
-        $productionBatch = ProductionBatch::findOrFail($production_batch);
+        $productionBatch = ProductionBatch::findOrFail($magnetism_checksheet);
         
         return Inertia::render('Batches/CreateCheckpoint', [
             'batch' => $productionBatch
         ]);
     }
 
-    public function storeCheckpoint(Request $request, $production_batch)
+    public function storeCheckpoint(Request $request, $magnetism_checksheet)
     {
-        $productionBatch = ProductionBatch::findOrFail($production_batch);
+        $productionBatch = ProductionBatch::findOrFail($magnetism_checksheet);
         $data = $request->validate([
             'CheckpointNumber' => ['required', 'integer', 'min:1'],
             'InspectorName_First' => ['nullable', 'string', 'max:255'],
@@ -145,8 +147,99 @@ class ProductionBatchController extends Controller
             }
         }
 
-        return redirect()->route('production-batches.show', $productionBatch->BatchID)
+        return redirect()->route('magnetism-checksheet.show', $productionBatch->BatchID)
             ->with('success', 'Checkpoint created successfully!');
+    }
+
+    public function editCheckpoint($magnetism_checksheet, $checkpoint)
+    {
+        $productionBatch = ProductionBatch::findOrFail($magnetism_checksheet);
+        $checkpoint = InspectionCheckpoint::with('samples')
+            ->where('BatchID', $productionBatch->BatchID)
+            ->findOrFail($checkpoint);
+        
+        return Inertia::render('Batches/EditCheckpoint', [
+            'batch' => $productionBatch,
+            'checkpoint' => [
+                'CheckpointID' => $checkpoint->CheckpointID,
+                'CheckpointNumber' => $checkpoint->CheckpointNumber,
+                'InspectorName_First' => $checkpoint->InspectorName_First,
+                'Judgement_First' => $checkpoint->Judgement_First,
+                'InspectorName_Last' => $checkpoint->InspectorName_Last,
+                'Judgement_Last' => $checkpoint->Judgement_Last,
+                'samples' => $checkpoint->samples->map(function ($sample) {
+                    return [
+                        'SampleID' => $sample->SampleID,
+                        'SampleOrder' => $sample->SampleOrder,
+                        'Phase' => $sample->Phase,
+                        'Value' => $sample->Value,
+                    ];
+                }),
+            ],
+        ]);
+    }
+
+    public function updateCheckpoint(Request $request, $magnetism_checksheet, $checkpoint)
+    {
+        $productionBatch = ProductionBatch::findOrFail($magnetism_checksheet);
+        $checkpoint = InspectionCheckpoint::where('BatchID', $productionBatch->BatchID)
+            ->findOrFail($checkpoint);
+        
+        $data = $request->validate([
+            'CheckpointNumber' => ['required', 'integer', 'min:1'],
+            'InspectorName_First' => ['nullable', 'string', 'max:255'],
+            'Judgement_First' => ['nullable', 'string', 'max:255'],
+            'InspectorName_Last' => ['nullable', 'string', 'max:255'],
+            'Judgement_Last' => ['nullable', 'string', 'max:255'],
+            'samples' => ['nullable', 'array'],
+            'samples.*.SampleID' => ['nullable', 'integer'],
+            'samples.*.SampleOrder' => ['nullable', 'integer', 'min:1'],
+            'samples.*.Phase' => ['nullable', 'string', 'in:FIRST,LAST'],
+            'samples.*.Value' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        // Update the checkpoint
+        $checkpoint->update([
+            'CheckpointNumber' => $data['CheckpointNumber'],
+            'InspectorName_First' => $data['InspectorName_First'] ?? null,
+            'Judgement_First' => $data['Judgement_First'] ?? null,
+            'InspectorName_Last' => $data['InspectorName_Last'] ?? null,
+            'Judgement_Last' => $data['Judgement_Last'] ?? null,
+        ]);
+
+        // Update samples
+        if (isset($data['samples'])) {
+            // Delete existing samples for this checkpoint
+            InspectionSample::where('CheckpointID', $checkpoint->CheckpointID)->delete();
+            
+            // Create new samples
+            foreach ($data['samples'] as $sample) {
+                if (!empty($sample['Value'])) {
+                    InspectionSample::create([
+                        'CheckpointID' => $checkpoint->CheckpointID,
+                        'SampleOrder' => $sample['SampleOrder'] ?? 1,
+                        'Phase' => $sample['Phase'] ?? 'FIRST',
+                        'Value' => $sample['Value'],
+                    ]);
+                }
+            }
+        }
+
+        return redirect()->route('magnetism-checksheet.show', $productionBatch->BatchID)
+            ->with('success', 'Checkpoint updated successfully!');
+    }
+
+    public function destroyCheckpoint($magnetism_checksheet, $checkpoint)
+    {
+        $productionBatch = ProductionBatch::findOrFail($magnetism_checksheet);
+        $checkpoint = InspectionCheckpoint::where('BatchID', $productionBatch->BatchID)
+            ->findOrFail($checkpoint);
+        
+        // Delete the checkpoint and its samples (cascade delete should handle samples)
+        $checkpoint->delete();
+
+        return redirect()->route('magnetism-checksheet.show', $productionBatch->BatchID)
+            ->with('success', 'Checkpoint deleted successfully!');
     }
 
     public function store(Request $request)
@@ -160,6 +253,8 @@ class ProductionBatchController extends Controller
             'JobNumber' => ['required','string','max:50'],
             'TotalQty' => ['required','integer','min:0'],
             'Remarks' => ['nullable','string'],
+            'ItemName' => ['nullable','string','max:50'],
+            'ItemCode' => ['nullable','string','max:50'],
         ]);
 
         // Auto-generate letter if missing or set to AUTO
@@ -217,22 +312,21 @@ class ProductionBatchController extends Controller
 
         // If stay=1 (modal flow), return to index with new_batch_id instead of show
         if ($request->boolean('stay')) {
-            return redirect()->route('production-batches.index')
+            return redirect()->route('magnetism-checksheet.index')
                 ->with('success', 'Batch created.')
                 ->with('new_batch_id', $batch->BatchID);
         }
 
-        return redirect()->route('production-batches.show', ['production_batch' => $batch->BatchID])
+        return redirect()->route('magnetism-checksheet.show', ['magnetism_checksheet' => $batch->BatchID])
             ->with('success', 'Batch created.');
     }
 
-    public function edit($production_batch)
+    public function edit($magnetism_checksheet)
     {
-        $batch = ProductionBatch::findOrFail($production_batch);
+        $batch = ProductionBatch::findOrFail($magnetism_checksheet);
         
-        return redirect()->route('production-batches.index')
-            ->with('edit_batch_id', $batch->BatchID)
-            ->with('edit_batch', [
+        return Inertia::render('Batches/Edit', [
+            'batch' => [
                 'BatchID' => $batch->BatchID,
                 'ProductionDate' => $batch->ProductionDate,
                 'LetterCode' => $batch->LetterCode,
@@ -242,12 +336,15 @@ class ProductionBatchController extends Controller
                 'JobNumber' => $batch->JobNumber,
                 'TotalQty' => $batch->TotalQty,
                 'Remarks' => $batch->Remarks,
-            ]);
+                'ItemName' => $batch->ItemName,
+                'ItemCode' => $batch->ItemCode,
+            ],
+        ]);
     }
 
-    public function update(Request $request, $production_batch)
+    public function update(Request $request, $magnetism_checksheet)
     {
-        $batch = ProductionBatch::findOrFail($production_batch);
+        $batch = ProductionBatch::findOrFail($magnetism_checksheet);
         $data = $request->validate([
             'ProductionDate' => ['required','date'],
             'LetterCode' => ['required','string','max:5'],
@@ -257,23 +354,25 @@ class ProductionBatchController extends Controller
             'JobNumber' => ['required','string','max:50'],
             'TotalQty' => ['required','integer','min:0'],
             'Remarks' => ['nullable','string'],
+            'ItemName' => ['nullable','string','max:50'],
+            'ItemCode' => ['nullable','string','max:50'],
         ]);
 
         $batch->update($data);
 
         if ($request->boolean('stay')) {
-            return redirect()->route('production-batches.index')->with('success', 'Batch updated.');
+            return redirect()->route('magnetism-checksheet.index')->with('success', 'Batch updated.');
         }
 
-        return redirect()->route('production-batches.show', ['production_batch' => $batch->BatchID])
+        return redirect()->route('magnetism-checksheet.show', ['magnetism_checksheet' => $batch->BatchID])
             ->with('success', 'Batch updated.');
     }
 
-    public function destroy($production_batch)
+    public function destroy($magnetism_checksheet)
     {
-        $batch = ProductionBatch::findOrFail($production_batch);
+        $batch = ProductionBatch::findOrFail($magnetism_checksheet);
         $batch->delete();
-        return redirect()->route('production-batches.index')->with('success', 'Batch deleted.');
+        return redirect()->route('magnetism-checksheet.index')->with('success', 'Batch deleted.');
     }
 
     public function nextLetter(Request $request)

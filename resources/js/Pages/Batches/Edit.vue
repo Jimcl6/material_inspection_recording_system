@@ -17,6 +17,8 @@ interface Props {
         JobNumber: string;
         TotalQty: number;
         Remarks?: string;
+        ItemName?: string;
+        ItemCode?: string;
     };
 }
 
@@ -31,6 +33,8 @@ const form = useForm({
     JobNumber: '',
     TotalQty: 0,
     Remarks: '',
+    ItemName: '',
+    ItemCode: '',
 });
 
 // Preload form data when batch prop changes
@@ -44,6 +48,8 @@ const preload = () => {
     form.JobNumber = props.batch.JobNumber || '';
     form.TotalQty = props.batch.TotalQty ?? 0;
     form.Remarks = props.batch.Remarks || '';
+    form.ItemName = props.batch.ItemName || '';
+    form.ItemCode = props.batch.ItemCode || '';
 };
 
 // Initialize form data
@@ -53,12 +59,12 @@ const submit = () => {
     if (!props.batch) return;
     const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     form.transform((data) => ({ ...data, _token: csrf }))
-        .put(`/batches/${props.batch.BatchID}`, {
+        .put(`/magnetism-checksheet/${props.batch.BatchID}`, {
             onSuccess: () => {
                 window.dispatchEvent(new CustomEvent('toast', {
                     detail: {
                         type: 'success',
-                        message: 'Batch updated successfully!'
+                        message: 'Checksheet updated successfully!'
                     }
                 }));
             }
@@ -67,40 +73,40 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Edit Production Batch" />
+    <Head title="Edit Magnetism Checksheet" />
 
     <AppLayout>
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Edit Batch #{{ batch.BatchID }}
+                    Edit Magnetism Checksheet #{{ batch.BatchID }}
                 </h2>
                 <div class="space-x-2">
                     <Link
-                        :href="route('production-batches.show', batch.BatchID)"
+                        :href="route('magnetism-checksheet.show', batch.BatchID)"
                         class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                         </svg>
-                        View Batch
+                        View Checksheet
                     </Link>
                     <Link
-                        :href="route('production-batches.index')"
+                        :href="route('magnetism-checksheet.index')"
                         class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                         </svg>
-                        Back to Batches
+                        Back to Checksheets
                     </Link>
                 </div>
             </div>
         </template>
 
         <div class="py-6">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 bg-white border-b border-gray-200">
                         <form @submit.prevent="submit" class="space-y-6">
@@ -135,6 +141,24 @@ const submit = () => {
                                             maxlength="20"
                                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                             required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                                        <input
+                                            v-model="form.ItemName"
+                                            type="text"
+                                            maxlength="50"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Item Code</label>
+                                        <input
+                                            v-model="form.ItemCode"
+                                            type="text"
+                                            maxlength="50"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                         />
                                     </div>
                                     <div>
@@ -206,7 +230,7 @@ const submit = () => {
                                 </div>
                                 <div class="flex space-x-3">
                                     <Link
-                                        :href="route('production-batches.show', batch.BatchID)"
+                                        :href="route('magnetism-checksheet.show', batch.BatchID)"
                                         class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150"
                                     >
                                         Cancel
@@ -219,7 +243,7 @@ const submit = () => {
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                         </svg>
-                                        Update Batch
+                                        Update Checksheet
                                     </button>
                                 </div>
                             </div>

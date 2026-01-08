@@ -22,6 +22,8 @@ class ProductionBatch extends Model
         'JobNumber',
         'TotalQty',
         'Remarks',
+        'ItemName',
+        'ItemCode',
     ];
 
     public function checkpoints(): HasMany
