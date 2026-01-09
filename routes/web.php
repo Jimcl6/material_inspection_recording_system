@@ -74,11 +74,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('magnetism-checksheet/{magnetism_checksheet}/checkpoints/{checkpoint}', [ProductionBatchController::class, 'destroyCheckpoint'])
         ->name('magnetism-checksheet.checkpoints.destroy');
 
-    // Modification Logs (read-only)
+    // Modification Logs
     Route::get('modification-logs', [ModificationLogController::class, 'index'])
         ->name('modification-logs.index');
+    Route::get('modification-logs/create', [ModificationLogController::class, 'create'])
+        ->name('modification-logs.create');
+    Route::post('modification-logs', [ModificationLogController::class, 'store'])
+        ->name('modification-logs.store');
     Route::get('modification-logs/{modification_log}', [ModificationLogController::class, 'show'])
         ->name('modification-logs.show');
+    Route::get('modification-logs/{modification_log}/edit', [ModificationLogController::class, 'edit'])
+        ->name('modification-logs.edit');
+    Route::put('modification-logs/{modification_log}', [ModificationLogController::class, 'update'])
+        ->name('modification-logs.update');
+    Route::delete('modification-logs/{modification_log}', [ModificationLogController::class, 'destroy'])
+        ->name('modification-logs.destroy');
 
     // Annealing Checks
     Route::resource('annealing-checks', AnnealingCheckController::class);
