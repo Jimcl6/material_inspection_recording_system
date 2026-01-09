@@ -42,6 +42,9 @@ const showingNavigationDropdown = ref(false);
                                 <NavLink :href="route('magnetism-checksheet.index')" :active="route().current('magnetism-checksheet.*')">
                                     Magnetism Checksheet
                                 </NavLink>
+                                <NavLink :href="route('modification-logs.index')" :active="route().current('modification-logs.*')">
+                                    Modification Logs
+                                </NavLink>
                                 <!-- Add more navigation links as needed -->
                             </div>
                         </div>
@@ -152,6 +155,12 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('magnetism-checksheet.*')"
                         >
                             Magnetism Checksheet
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('modification-logs.index')"
+                            :active="route().current('modification-logs.*')"
+                        >
+                            Modification Logs
                         </ResponsiveNavLink>
                     </div>
 
