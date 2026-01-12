@@ -175,7 +175,7 @@
 <script setup>
 import { defineProps } from 'vue';
 import { Link } from '@inertiajs/vue3';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+// import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
