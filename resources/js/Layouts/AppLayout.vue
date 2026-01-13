@@ -45,6 +45,9 @@ const showingNavigationDropdown = ref(false);
                                 <NavLink :href="route('modification-logs.index')" :active="route().current('modification-logs.*')">
                                     Modification Logs
                                 </NavLink>
+                                <NavLink :href="route('material-monitoring-checksheets.index')" :active="route().current('material-monitoring-checksheets.*')">
+                                    Mtrl Monitoring Checksheet
+                                </NavLink>
                                 <!-- Add more navigation links as needed -->
                             </div>
                         </div>
@@ -161,6 +164,12 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('modification-logs.*')"
                         >
                             Modification Logs
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('material-monitoring-checksheets.index')"
+                            :active="route().current('material-monitoring-checksheets.*')"
+                        >
+                            Material Parts
                         </ResponsiveNavLink>
                     </div>
 
