@@ -8,6 +8,7 @@ use App\Http\Controllers\TempRecordController;
 use App\Http\Controllers\TorqueRecordController;
 use App\Http\Controllers\ProductionBatchController;
 use App\Http\Controllers\ModificationLogController;
+use App\Http\Controllers\MaterialPartController;
 
 // Public routes
 Route::get('/', function () {
@@ -118,6 +119,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('torque-records.import.form');
     Route::post('torque-records/import', [TorqueRecordController::class, 'import'])
         ->name('torque-records.import');
+
+    // Material Parts
+    Route::resource('material-monitoring-checksheets', MaterialPartController::class);
+    Route::get('material-monitoring-checksheets/for-ai', [MaterialPartController::class, 'getForAI'])
+        ->name('material-monitoring-checksheets.for-ai');
 
     
 });
