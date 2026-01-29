@@ -7,6 +7,10 @@ const props = defineProps({
     materialTypes: {
         type: Object,
         default: () => ({})
+    },
+    subLotTitles: {
+        type: Array,
+        default: () => []
     }
 });
 
@@ -23,6 +27,26 @@ const form = useForm({
 });
 
 const newSubLot = ref('');
+const subLotTitles = ref(props.subLotTitles);
+
+const fetchSubLotTitles = async (materialType) => {
+    if (!materialType) {
+        subLotTitles.value = [];
+        return;
+    }
+    try {
+        const response = await fetch(`/api/material-types/${encodeURIComponent(materialType)}/sub-lot-titles`);
+        const data = await response.json();
+        subLotTitles.value = data.map(item => item.title);
+    } catch (error) {
+        console.error('Failed to fetch sub lot titles:', error);
+        subLotTitles.value = [];
+    }
+};
+
+const onMaterialTypeChange = () => {
+    fetchSubLotTitles(form.material_type);
+};
 
 const materialTypeOptions = Object.entries(props.materialTypes).map(([key, value]) => ({
     value: key,
@@ -96,6 +120,7 @@ const submit = () => {
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Material Type</label>
                                     <select
                                         v-model="form.material_type"
+                                        @change="onMaterialTypeChange"
                                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                         required
                                     >
@@ -201,6 +226,9 @@ const submit = () => {
                             
                             <div class="space-y-2 mb-4">
                                 <div v-for="(subLot, index) in form.sub_lot_numbers.sub_lots" :key="index" class="flex items-center space-x-2">
+                                    <div v-if="subLotTitles[index]" class="w-48 text-sm font-medium text-gray-700">
+                                        {{ subLotTitles[index] }}
+                                    </div>
                                     <input
                                         v-model="form.sub_lot_numbers.sub_lots[index]"
                                         type="text"

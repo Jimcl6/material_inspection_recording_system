@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MaterialPart;
+use App\Models\MaterialSubLotTitle;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -49,8 +50,14 @@ class MaterialPartController extends Controller
      */
     public function create()
     {
+        // Get default material type (first in list) to prepopulate titles
+        $materialTypes = MaterialPart::getMaterialTypes();
+        $defaultMaterialType = $materialTypes[0] ?? null;
+        $subLotTitles = $defaultMaterialType ? MaterialSubLotTitle::getTitlesForMaterialType($defaultMaterialType) : [];
+
         return Inertia::render('MaterialMonitoringChecksheets/Create', [
-            'materialTypes' => MaterialPart::getMaterialTypes(),
+            'materialTypes' => $materialTypes,
+            'subLotTitles' => $subLotTitles,
         ]);
     }
 
