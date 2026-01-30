@@ -42,11 +42,17 @@ class MaterialSubLotTitleSeeder extends Seeder
 
     protected function processExcelFile(string $filePath, string $materialType, ConsoleOutput $output)
     {
-        // Load the first worksheet
-        $sheet = Excel::toArray([], $filePath)[0] ?? [];
+        // Load only the first worksheet with read-only mode to minimize memory usage
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($filePath);
+        $sheet = $spreadsheet->getActiveSheet()->toArray();
 
         if (empty($sheet)) {
             $output->writeln("<comment>Skipping {$materialType}: empty worksheet</comment>");
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet, $sheet, $reader);
+            gc_collect_cycles();
             return;
         }
 
@@ -54,6 +60,9 @@ class MaterialSubLotTitleSeeder extends Seeder
         $headerRow = $this->findHeaderRow($sheet);
         if ($headerRow === null) {
             $output->writeln("<comment>Skipping {$materialType}: no header row found</comment>");
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet, $sheet, $reader);
+            gc_collect_cycles();
             return;
         }
 
@@ -67,6 +76,9 @@ class MaterialSubLotTitleSeeder extends Seeder
 
         if ($lotNumberCol === null) {
             $output->writeln("<error>Skipping {$materialType}: 'Lot Number' column not found</error>");
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet, $sheet, $reader);
+            gc_collect_cycles();
             return;
         }
 
@@ -79,6 +91,9 @@ class MaterialSubLotTitleSeeder extends Seeder
 
         if (empty($subHeaders)) {
             $output->writeln("<comment>No sub-headers found under 'Lot Number' for {$materialType}</comment>");
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet, $sheet, $reader);
+            gc_collect_cycles();
             return;
         }
 
@@ -95,6 +110,11 @@ class MaterialSubLotTitleSeeder extends Seeder
         }
 
         $output->writeln("<info>Inserted " . count($subHeaders) . " sub-lot titles for {$materialType}</info>");
+
+        // Explicitly free memory to prevent exhaustion on large files
+        $spreadsheet->disconnectWorksheets();
+        unset($spreadsheet, $sheet, $reader);
+        gc_collect_cycles();
     }
 
     protected function findHeaderRow(array $sheet): ?int
