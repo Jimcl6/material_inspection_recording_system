@@ -10,6 +10,10 @@ const props = defineProps({
     materialTypes: {
         type: Object,
         default: () => ({})
+    },
+    subLotTitles: {
+        type: Array,
+        default: () => []
     }
 });
 
@@ -132,7 +136,9 @@ const getSubLotCount = (materialPart) => {
                         <div v-if="props.materialPart.sub_lot_numbers && props.materialPart.sub_lot_numbers.sub_lots && props.materialPart.sub_lot_numbers.sub_lots.length > 0">
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <div v-for="(subLot, index) in props.materialPart.sub_lot_numbers.sub_lots" :key="index" class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                    <h4 class="text-sm font-medium text-gray-500 mb-2">Sub Lot #{{ index + 1 }}</h4>
+                                    <h4 class="text-sm font-medium text-gray-500 mb-2">
+                                        {{ props.subLotTitles[index] || `Sub Lot #${index + 1}` }}
+                                    </h4>
                                     <p class="text-lg text-gray-900 font-mono">{{ subLot }}</p>
                                 </div>
                             </div>

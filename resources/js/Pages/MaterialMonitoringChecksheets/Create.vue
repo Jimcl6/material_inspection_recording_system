@@ -14,6 +14,10 @@ const props = defineProps({
     }
 });
 
+// Debug: Log props to verify subLotTitles
+console.log('Create.vue props:', props);
+console.log('Initial subLotTitles:', props.subLotTitles);
+
 const form = useForm({
     material_type: '',
     date: '',
@@ -28,6 +32,9 @@ const form = useForm({
 
 const newSubLot = ref('');
 const subLotTitles = ref(props.subLotTitles);
+
+// Debug: Log subLotTitles changes
+console.log('subLotTitles initialized:', subLotTitles.value);
 
 const fetchSubLotTitles = async (materialType) => {
     if (!materialType) {
