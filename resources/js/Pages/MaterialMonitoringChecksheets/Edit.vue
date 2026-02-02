@@ -12,8 +12,16 @@ const props = defineProps({
     materialTypes: {
         type: Object,
         default: () => ({})
+    },
+    subLotTitles: {
+        type: Array,
+        default: () => []
     }
 });
+
+// Debug: Log props to verify subLotTitles
+console.log('Edit.vue props:', props);
+console.log('Initial subLotTitles:', props.subLotTitles);
 
 // Debug: Log what we're receiving
 console.log('Props received:', props);
@@ -34,6 +42,34 @@ const form = useForm({
 });
 
 const newSubLot = ref('');
+const subLotTitles = ref(props.subLotTitles);
+
+// Debug: Log subLotTitles changes
+console.log('Edit.vue subLotTitles initialized:', subLotTitles.value);
+
+const fetchSubLotTitles = async (materialType) => {
+    console.log('fetchSubLotTitles called with:', materialType);
+    if (!materialType) {
+        subLotTitles.value = [];
+        console.log('No material type, cleared subLotTitles');
+        return;
+    }
+    try {
+        const response = await fetch(`/api/material-types/${encodeURIComponent(materialType)}/sub-lot-titles`);
+        console.log('API response status:', response.status);
+        const data = await response.json();
+        console.log('API response data:', data);
+        subLotTitles.value = data.map(item => item.title);
+        console.log('Updated subLotTitles.value:', subLotTitles.value);
+    } catch (error) {
+        console.error('Failed to fetch sub lot titles:', error);
+        subLotTitles.value = [];
+    }
+};
+
+const onMaterialTypeChange = () => {
+    fetchSubLotTitles(form.material_type);
+};
 
 const materialTypeOptions = Object.entries(props.materialTypes).map(([key, value]) => ({
     value: key,
@@ -108,6 +144,7 @@ const submit = () => {
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Material Type</label>
                                     <select
                                         v-model="form.material_type"
+                                        @change="onMaterialTypeChange"
                                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                         required
                                     >
@@ -214,6 +251,9 @@ const submit = () => {
                             
                             <div class="space-y-2 mb-4">
                                 <div v-for="(subLot, index) in form.sub_lot_numbers.sub_lots" :key="index" class="flex items-center space-x-2">
+                                    <div v-if="subLotTitles[index]" class="w-48 text-sm font-medium text-gray-700">
+                                        {{ subLotTitles[index] }}
+                                    </div>
                                     <input
                                         v-model="form.sub_lot_numbers.sub_lots[index]"
                                         type="text"
@@ -260,6 +300,17 @@ const submit = () => {
                                     </svg>
                                     Back to List
                                 </Link>
+                                
+                                <button
+                                    type="submit"
+                                    class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                    :disabled="form.processing"
+                                >
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    Save Changes
+                                </button>
                                 
                                 <DeleteButton :material-part="props.materialPart" />
                             </div>
