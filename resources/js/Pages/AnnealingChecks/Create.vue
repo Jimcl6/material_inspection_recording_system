@@ -281,21 +281,14 @@ const onBlur = (field: string) => {
                                     <label for="pic_id" class="block text-sm font-medium text-gray-700">
                                         Person In Charge <span class="text-red-500">*</span>
                                     </label>
-                                    <select
+                                    <input
                                         id="pic_id"
                                         v-model="form.pic_id"
+                                        type="text"
                                         required
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    >
-                                        <option value="">Select PIC</option>
-                                        <option 
-                                            v-for="user in users" 
-                                            :key="user.id" 
-                                            :value="user.id"
-                                        >
-                                            {{ user.name }}
-                                        </option>
-                                    </select>
+                                        placeholder="Enter name of person in charge"
+                                    />
                                     <p v-if="form.errors.pic_id" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.pic_id }}
                                     </p>
@@ -306,16 +299,13 @@ const onBlur = (field: string) => {
                                     <label for="checked_by_id" class="block text-sm font-medium text-gray-700">
                                         Checked By
                                     </label>
-                                    <select
+                                    <input
                                         id="checked_by_id"
                                         v-model="form.checked_by_id"
+                                        type="text"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    >
-                                        <option value="">Select Checked By</option>
-                                        <option v-for="user in users" :key="user.id" :value="user.id">
-                                            {{ user.name }}
-                                        </option>
-                                    </select>
+                                        placeholder="Enter name of person who checked"
+                                    />
                                     <p v-if="form.errors.checked_by_id" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.checked_by_id }}
                                     </p>
@@ -326,16 +316,13 @@ const onBlur = (field: string) => {
                                     <label for="verified_by_id" class="block text-sm font-medium text-gray-700">
                                         Verified By
                                     </label>
-                                    <select
+                                    <input
                                         id="verified_by_id"
                                         v-model="form.verified_by_id"
+                                        type="text"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    >
-                                        <option value="">Select Verified By</option>
-                                        <option v-for="user in users" :key="user.id" :value="user.id">
-                                            {{ user.name }}
-                                        </option>
-                                    </select>
+                                        placeholder="Enter name of person who verified"
+                                    />
                                     <p v-if="form.errors.verified_by_id" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.verified_by_id }}
                                     </p>

@@ -69,6 +69,11 @@ class AnnealingCheckController extends Controller
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
 
+        // Convert user names back to IDs for database storage
+        $data['pic_id'] = $this->convertNameToId($data['pic_id'] ?? null);
+        $data['checked_by_id'] = $this->convertNameToId($data['checked_by_id'] ?? null);
+        $data['verified_by_id'] = $this->convertNameToId($data['verified_by_id'] ?? null);
+
         $temperatureReadings = $data['temperature_readings'];
         unset($data['temperature_readings']);
 
@@ -100,6 +105,38 @@ class AnnealingCheckController extends Controller
     }
 
     /**
+     * Convert user name to user ID for database storage
+     * If name doesn't exist in users table, return null
+     */
+    private function convertNameToId($name)
+    {
+        if (empty($name)) {
+            return null;
+        }
+
+        // If it's already a number, return as-is
+        if (is_numeric($name)) {
+            return (int) $name;
+        }
+
+        // Clean up the name - trim whitespace and convert to lowercase for comparison
+        $cleanName = trim(strtolower($name));
+        
+        // Try to find user by name (case-insensitive)
+        $user = \App\Models\User::whereRaw('LOWER(name) = ?', [$cleanName])->first();
+        
+        // Log the conversion attempt for debugging
+        \Log::info("Name to ID conversion:", [
+            'input_name' => $name,
+            'clean_name' => $cleanName,
+            'found_user' => $user ? $user->toArray() : null,
+            'result_id' => $user ? $user->id : null
+        ]);
+        
+        return $user ? $user->id : null;
+    }
+
+    /**
      * Show the form for editing the specified resource.
      *
      * @param  \App\Models\AnnealingCheck  $annealingCheck
@@ -110,7 +147,9 @@ class AnnealingCheckController extends Controller
         $annealingCheck->load('temperatureReadings');
         
         return Inertia::render('AnnealingChecks/Edit', [
-            'annealingCheck' => $annealingCheck
+            'annealingCheck' => $annealingCheck,
+            'temperatureReadings' => $annealingCheck->temperatureReadings,
+            'users' => \App\Models\User::select('id', 'name')->orderBy('name')->get()
         ]);
     }
 
@@ -125,6 +164,11 @@ class AnnealingCheckController extends Controller
     {
         $data = $request->validated();
         $data['updated_by'] = Auth::id();
+
+        // Convert user names back to IDs for database storage
+        $data['pic_id'] = $this->convertNameToId($data['pic_id'] ?? null);
+        $data['checked_by_id'] = $this->convertNameToId($data['checked_by_id'] ?? null);
+        $data['verified_by_id'] = $this->convertNameToId($data['verified_by_id'] ?? null);
 
         // Update main check data
         $annealingCheck->update($data);

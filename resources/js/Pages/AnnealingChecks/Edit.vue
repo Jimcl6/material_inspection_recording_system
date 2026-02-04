@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
+import { route } from 'ziggy-js';
 
 const props = defineProps({
     annealingCheck: {
@@ -25,6 +26,25 @@ const formatDateForInput = (dateString) => {
     return date.toISOString().split('T')[0];
 };
 
+// Helper to get user name by ID or return the value if it's already a name
+const getUserName = (value) => {
+    if (!value) return '';
+    
+    // If it's already a string (not a number), return as-is
+    if (typeof value === 'string' && isNaN(value)) {
+        return value;
+    }
+    
+    // If it's a number ID, find the user name
+    const userId = parseInt(value);
+    if (!isNaN(userId)) {
+        const user = props.users.find(u => u.id === userId);
+        return user ? user.name : value;
+    }
+    
+    return value;
+};
+
 const form = useForm({
     item_code: props.annealingCheck.item_code || '',
     receiving_date: formatDateForInput(props.annealingCheck.receiving_date),
@@ -33,9 +53,9 @@ const form = useForm({
     annealing_date: formatDateForInput(props.annealingCheck.annealing_date),
     machine_number: props.annealingCheck.machine_number || '',
     machine_setting: props.annealingCheck.machine_setting || '',
-    pic_id: props.annealingCheck.pic_id || '',
-    checked_by_id: props.annealingCheck.checked_by_id || '',
-    verified_by_id: props.annealingCheck.verified_by_id || '',
+    pic_id: getUserName(props.annealingCheck.pic_id),
+    checked_by_id: getUserName(props.annealingCheck.checked_by_id),
+    verified_by_id: getUserName(props.annealingCheck.verified_by_id),
     remarks: props.annealingCheck.remarks || '',
     temperature_readings: props.temperatureReadings.length > 0 
         ? [...props.temperatureReadings] 
@@ -76,6 +96,31 @@ const submit = () => {
             }));
         }
     });
+};
+
+const confirmDelete = () => {
+    if (confirm('Are you sure you want to delete this annealing check? This action cannot be undone.')) {
+        // Use Inertia's delete method
+        form.delete(route('annealing-checks.destroy', props.annealingCheck.id), {
+            onSuccess: () => {
+                window.dispatchEvent(new CustomEvent('toast', {
+                    detail: {
+                        type: 'success',
+                        message: 'Annealing check deleted successfully!'
+                    }
+                }));
+            },
+            onError: (errors) => {
+                console.error('Error deleting check:', errors);
+                window.dispatchEvent(new CustomEvent('toast', {
+                    detail: {
+                        type: 'error',
+                        message: 'Failed to delete annealing check.'
+                    }
+                }));
+            }
+        });
+    }
 };
 </script>
 
@@ -238,16 +283,13 @@ const submit = () => {
                                     <label for="checked_by_id" class="block text-sm font-medium text-gray-700">
                                         Checked By
                                     </label>
-                                    <select
+                                    <input
                                         id="checked_by_id"
                                         v-model="form.checked_by_id"
+                                        type="text"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    >
-                                        <option value="">Select Checked By</option>
-                                        <option v-for="user in users" :key="user.id" :value="user.id">
-                                            {{ user.name }}
-                                        </option>
-                                    </select>
+                                        placeholder="Enter name of person who checked"
+                                    />
                                     <p v-if="form.errors.checked_by_id" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.checked_by_id }}
                                     </p>
@@ -258,16 +300,13 @@ const submit = () => {
                                     <label for="verified_by_id" class="block text-sm font-medium text-gray-700">
                                         Verified By
                                     </label>
-                                    <select
+                                    <input
                                         id="verified_by_id"
                                         v-model="form.verified_by_id"
+                                        type="text"
                                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    >
-                                        <option value="">Select Verified By</option>
-                                        <option v-for="user in users" :key="user.id" :value="user.id">
-                                            {{ user.name }}
-                                        </option>
-                                    </select>
+                                        placeholder="Enter name of person who verified"
+                                    />
                                     <p v-if="form.errors.verified_by_id" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.verified_by_id }}
                                     </p>
