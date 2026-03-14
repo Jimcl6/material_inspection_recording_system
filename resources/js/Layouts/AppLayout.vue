@@ -48,6 +48,9 @@ const showingNavigationDropdown = ref(false);
                                 <NavLink :href="route('material-monitoring-checksheets.index')" :active="route().current('material-monitoring-checksheets.*')">
                                     Mtrl Monitoring Checksheet
                                 </NavLink>
+                                <NavLink v-if="$page.props.auth.user.role?.slug === 'admin'" :href="route('users.index')" :active="route().current('users.*')">
+                                    User Management
+                                </NavLink>
                                 <!-- Add more navigation links as needed -->
                             </div>
                         </div>
@@ -170,6 +173,13 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('material-monitoring-checksheets.*')"
                         >
                             Material Parts
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user.role?.slug === 'admin'"
+                            :href="route('users.index')"
+                            :active="route().current('users.*')"
+                        >
+                            User Management
                         </ResponsiveNavLink>
                     </div>
 

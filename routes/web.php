@@ -9,6 +9,7 @@ use App\Http\Controllers\TorqueRecordController;
 use App\Http\Controllers\ProductionBatchController;
 use App\Http\Controllers\ModificationLogController;
 use App\Http\Controllers\MaterialPartController;
+use App\Http\Controllers\UserManagementController;
 
 // Public routes
 Route::get('/', function () {
@@ -124,6 +125,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('material-monitoring-checksheets', MaterialPartController::class);
     Route::get('material-monitoring-checksheets/for-ai', [MaterialPartController::class, 'getForAI'])
         ->name('material-monitoring-checksheets.for-ai');
+
+    // User Management (Admin only)
+    Route::middleware(['auth', 'role:admin'])->group(function () {
+        // Custom routes must come BEFORE the resource route
+        Route::get('users/scanner', [UserManagementController::class, 'scanner'])
+            ->name('users.scanner');
+        Route::post('users/scan', [UserManagementController::class, 'processScan'])
+            ->name('users.scan');
+        Route::post('users/bulk-action', [UserManagementController::class, 'bulkAction'])
+            ->name('users.bulk-action');
+        
+        Route::resource('users', UserManagementController::class)->names([
+            'index' => 'users.index',
+            'create' => 'users.create',
+            'store' => 'users.store',
+            'show' => 'users.show',
+            'edit' => 'users.edit',
+            'update' => 'users.update',
+            'destroy' => 'users.destroy',
+        ]);
+    });
 
     
 });
