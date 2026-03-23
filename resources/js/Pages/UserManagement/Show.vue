@@ -1,8 +1,9 @@
 <script setup>
-import { computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { useToast } from 'vue-toastification';
+import QRCode from 'qrcode';
 import {
     UserIcon,
     EnvelopeIcon,
@@ -22,7 +23,36 @@ const toast = useToast();
 const props = defineProps({
     user: Object,
     qrStatus: Object,
-    qrImageUrl: String,
+    qrData: String,
+});
+
+const qrCanvas = ref(null);
+const qrImageDataUrl = ref(null);
+
+const generateQrCanvas = async () => {
+    if (props.qrData && qrCanvas.value) {
+        try {
+            await QRCode.toCanvas(qrCanvas.value, props.qrData, {
+                width: 250,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#ffffff',
+                },
+            });
+            qrImageDataUrl.value = qrCanvas.value.toDataURL('image/png');
+        } catch (err) {
+            console.error('Failed to generate QR code:', err);
+        }
+    }
+};
+
+onMounted(() => {
+    generateQrCanvas();
+});
+
+watch(() => props.qrData, () => {
+    generateQrCanvas();
 });
 
 const getStatusBadge = (status) => {
@@ -44,10 +74,10 @@ const getEmploymentBadge = (status) => {
 };
 
 const downloadQrCode = () => {
-    if (!props.qrImageUrl) return;
+    if (!qrImageDataUrl.value) return;
     
     const link = document.createElement('a');
-    link.href = props.qrImageUrl;
+    link.href = qrImageDataUrl.value;
     link.download = `${props.user.employee_id}_qr_code.png`;
     document.body.appendChild(link);
     link.click();
@@ -58,15 +88,11 @@ const downloadQrCode = () => {
 
 const regenerateQrCode = () => {
     router.post(
-        route('users.update', props.user.id),
-        {
-            ...props.user,
-            regenerate_qr: true,
-        },
+        route('users.regenerate-qr', props.user.id),
+        {},
         {
             onSuccess: () => {
                 toast.success('QR code regenerated successfully');
-                router.reload();
             },
             onError: () => {
                 toast.error('Failed to regenerate QR code');
@@ -311,12 +337,11 @@ const regenerateQrCode = () => {
                             <div class="p-6">
                                 <h3 class="text-lg font-medium text-gray-900 mb-4">QR Code</h3>
                                 
-                                <div v-if="qrImageUrl" class="text-center">
-                                    <img
-                                        :src="qrImageUrl"
-                                        alt="User QR Code"
+                                <div v-if="qrData" class="text-center">
+                                    <canvas
+                                        ref="qrCanvas"
                                         class="mx-auto mb-4 border-2 border-gray-200 rounded-lg"
-                                    />
+                                    ></canvas>
                                     
                                     <div class="space-y-2">
                                         <button

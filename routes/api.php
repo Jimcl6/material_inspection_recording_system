@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MaterialSubLotTitleController;
+use App\Http\Controllers\Api\MaterialTypeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,3 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::get('/material-types/{materialType}/sub-lot-titles', [MaterialSubLotTitleController::class, 'index']);
+
+// Material Type API routes
+Route::get('/material-types/{materialType}/sub-lot-fields', [MaterialTypeController::class, 'getSubLotFields']);
+Route::get('/material-types', [MaterialTypeController::class, 'getAllMaterialTypes']);
