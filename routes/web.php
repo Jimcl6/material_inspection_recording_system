@@ -135,6 +135,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('users.scan');
         Route::post('users/bulk-action', [UserManagementController::class, 'bulkAction'])
             ->name('users.bulk-action');
+        Route::post('users/{user}/regenerate-qr', [UserManagementController::class, 'regenerateQr'])
+            ->name('users.regenerate-qr');
         
         Route::resource('users', UserManagementController::class)->names([
             'index' => 'users.index',

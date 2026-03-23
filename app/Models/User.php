@@ -97,6 +97,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the activities for the user.
+     */
+    public function activities()
+    {
+        return $this->hasMany(Activity::class);
+    }
+
+    /**
      * Get full name with title
      */
     public function getFullNameAttribute(): string

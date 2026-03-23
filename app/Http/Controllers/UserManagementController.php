@@ -140,6 +140,10 @@ class UserManagementController extends Controller
                 ->with('success', 'User created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('User creation failed:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return back()->with('error', 'Failed to create user: ' . $e->getMessage());
         }
     }
@@ -160,17 +164,17 @@ class UserManagementController extends Controller
         $user->setRelation('loginHistory', $loginHistory);
 
         $qrStatus = null;
-        $qrImageUrl = null;
+        $qrData = null;
         
         if ($user->qrCode) {
             $qrStatus = $this->qrCodeService->checkQrCodeStatus($user->qrCode);
-            $qrImageUrl = $this->qrCodeService->generateQrImageUrl($user->qrCode->qr_data);
+            $qrData = $user->qrCode->qr_data;
         }
 
         return Inertia::render('UserManagement/Show', [
             'user' => $user,
             'qrStatus' => $qrStatus,
-            'qrImageUrl' => $qrImageUrl,
+            'qrData' => $qrData,
         ]);
     }
 
@@ -268,6 +272,33 @@ class UserManagementController extends Controller
                 ->with('success', 'User deactivated successfully.');
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to deactivate user: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Regenerate QR code for a user
+     */
+    public function regenerateQr(User $user)
+    {
+        try {
+            $user->load('qrCode');
+
+            $employmentStatus = $user->qrCode->employment_status ?? 'regular';
+            $hireDate = $user->qrCode->hire_date ?? null;
+            $contractEndDate = $user->qrCode->contract_end_date ?? null;
+
+            $this->qrCodeService->createOrUpdateQrCode(
+                $user,
+                $user->employee_id,
+                $employmentStatus,
+                $hireDate ? new \DateTime($hireDate) : null,
+                $contractEndDate ? new \DateTime($contractEndDate) : null
+            );
+
+            return back()->with('success', 'QR code regenerated successfully.');
+        } catch (\Exception $e) {
+            \Log::error('QR regeneration failed:', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Failed to regenerate QR code: ' . $e->getMessage());
         }
     }
 

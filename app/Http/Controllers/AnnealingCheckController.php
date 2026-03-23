@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AnnealingCheck;
-use App\Models\TemperatureReading;
+// use App\Models\TemperatureReading;
 use App\Http\Requests\StoreAnnealingCheckRequest;
 use App\Http\Requests\UpdateAnnealingCheckRequest;
 use App\Http\Requests\ImportAnnealingCheckRequest;
@@ -70,7 +70,8 @@ class AnnealingCheckController extends Controller
         $data['updated_by'] = Auth::id();
 
         // Convert user names back to IDs for database storage
-        $data['pic_id'] = $this->convertNameToId($data['pic_id'] ?? null);
+        // pic_id is required, so pass true as second parameter
+        $data['pic_id'] = $this->convertNameToId($data['pic_id'] ?? null, true);
         $data['checked_by_id'] = $this->convertNameToId($data['checked_by_id'] ?? null);
         $data['verified_by_id'] = $this->convertNameToId($data['verified_by_id'] ?? null);
 
@@ -106,12 +107,12 @@ class AnnealingCheckController extends Controller
 
     /**
      * Convert user name to user ID for database storage
-     * If name doesn't exist in users table, return null
+     * If name doesn't exist in users table, use current user for required fields
      */
-    private function convertNameToId($name)
+    private function convertNameToId($name, $isRequired = false)
     {
         if (empty($name)) {
-            return null;
+            return $isRequired ? Auth::id() : null;
         }
 
         // If it's already a number, return as-is
@@ -130,10 +131,11 @@ class AnnealingCheckController extends Controller
             'input_name' => $name,
             'clean_name' => $cleanName,
             'found_user' => $user ? $user->toArray() : null,
-            'result_id' => $user ? $user->id : null
+            'result_id' => $user ? $user->id : ($isRequired ? Auth::id() : null)
         ]);
         
-        return $user ? $user->id : null;
+        // Return user ID if found, otherwise use current user for required fields or null for optional
+        return $user ? $user->id : ($isRequired ? Auth::id() : null);
     }
 
     /**
@@ -166,7 +168,8 @@ class AnnealingCheckController extends Controller
         $data['updated_by'] = Auth::id();
 
         // Convert user names back to IDs for database storage
-        $data['pic_id'] = $this->convertNameToId($data['pic_id'] ?? null);
+        // pic_id is required, so pass true as second parameter
+        $data['pic_id'] = $this->convertNameToId($data['pic_id'] ?? null, true);
         $data['checked_by_id'] = $this->convertNameToId($data['checked_by_id'] ?? null);
         $data['verified_by_id'] = $this->convertNameToId($data['verified_by_id'] ?? null);
 

@@ -39,7 +39,7 @@ const submit = () => {
             toast.success('User created successfully');
             router.visit(route('users.index'));
         },
-        onError: () => {
+        onError: (errors) => {
             toast.error('Please check the form for errors');
         },
     });

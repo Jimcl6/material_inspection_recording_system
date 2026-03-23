@@ -164,28 +164,30 @@
                 <!-- Recent Activity Section -->
                 <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
                     <div class="p-6 border-b border-gray-200">
-                        <h3 class="text-lg font-medium text-gray-900">Recent Activity</h3>
+                        <h3 class="text-lg font-medium text-gray-900">Today's Activity</h3>
                     </div>
-                    <div class="divide-y divide-gray-200">
-                        <div v-for="(activity, index) in recentActivity" :key="index" class="p-6 hover:bg-gray-50">
-                            <div class="flex">
-                                <div class="flex-shrink-0">
-                                    <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                        <span class="text-gray-600">{{ activity.user_initials }}</span>
+                    <div class="max-h-96 overflow-y-auto">
+                        <div v-if="recentActivity.length > 0" class="divide-y divide-gray-200">
+                            <div v-for="(activity, index) in recentActivity" :key="index" class="p-6 hover:bg-gray-50 transition-colors">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                                            <span class="text-indigo-600 font-medium">{{ activity.user_initials }}</span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="ml-4">
-                                    <div class="flex items-center">
-                                        <p class="text-sm font-medium text-gray-900">{{ activity.user_name }}</p>
-                                        <p class="ml-2 text-sm text-gray-500">{{ activity.action }}</p>
-                                        <p class="ml-auto text-sm text-gray-500">{{ activity.time_ago }}</p>
+                                    <div class="ml-4 flex-1">
+                                        <div class="flex items-center">
+                                            <p class="text-sm font-medium text-gray-900">{{ activity.user_name }}</p>
+                                            <p class="ml-2 text-sm text-gray-500">{{ activity.action }}</p>
+                                            <p class="ml-auto text-sm text-gray-500">{{ activity.time_ago }}</p>
+                                        </div>
+                                        <p class="mt-1 text-sm text-gray-500">{{ activity.details }}</p>
                                     </div>
-                                    <p class="mt-1 text-sm text-gray-500">{{ activity.details }}</p>
                                 </div>
                             </div>
                         </div>
-                        <div v-if="recentActivity.length === 0" class="p-6 text-center text-gray-500">
-                            No recent activity to display.
+                        <div v-else class="p-6 text-center text-gray-500">
+                            No activity today.
                         </div>
                     </div>
                 </div>
