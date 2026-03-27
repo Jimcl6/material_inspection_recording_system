@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { debounce } from 'lodash';
+import DataTableFilters from '@/Components/DataTableFilters.vue';
 import {
     MagnifyingGlassIcon,
     FunnelIcon,
@@ -27,27 +27,53 @@ const props = defineProps({
     positions: Array,
 });
 
-const search = ref(props.filters.search || '');
-const selectedRole = ref(props.filters.role || '');
-const selectedDepartment = ref(props.filters.department || '');
-const selectedStatus = ref(props.filters.status || '');
-const selectedEmploymentStatus = ref(props.filters.employment_status || '');
+const filterConfig = computed(() => [
+    {
+        type: 'text',
+        key: 'search',
+        label: 'Search',
+        placeholder: 'Search users...',
+    },
+    {
+        type: 'select',
+        key: 'role',
+        label: 'Role',
+        placeholder: 'All Roles',
+        options: (props.roles || []).map((r) => ({ value: r.id, label: r.name })),
+    },
+    {
+        type: 'select',
+        key: 'department',
+        label: 'Department',
+        placeholder: 'All Departments',
+        options: (props.departments || []).map((d) => ({ value: d.id, label: d.name })),
+    },
+    {
+        type: 'select',
+        key: 'status',
+        label: 'Status',
+        placeholder: 'All Status',
+        options: [
+            { value: 'active', label: 'Active' },
+            { value: 'inactive', label: 'Inactive' },
+            { value: 'suspended', label: 'Suspended' },
+        ],
+    },
+    {
+        type: 'select',
+        key: 'employment_status',
+        label: 'Employment',
+        placeholder: 'All Types',
+        options: [
+            { value: 'regular', label: 'Regular' },
+            { value: 'contractual', label: 'Contractual' },
+            { value: 'probationary', label: 'Probationary' },
+        ],
+    },
+]);
+
 const selectedUsers = ref([]);
 const showBulkActions = ref(false);
-
-watch([search, selectedRole, selectedDepartment, selectedStatus, selectedEmploymentStatus], debounce(() => {
-    router.get(
-        route('users.index'),
-        {
-            search: search.value,
-            role: selectedRole.value,
-            department: selectedDepartment.value,
-            status: selectedStatus.value,
-            employment_status: selectedEmploymentStatus.value,
-        },
-        { preserveState: true }
-    );
-}, 300));
 
 const selectAll = computed({
     get: () => selectedUsers.value.length === props.users.data.length,
@@ -142,82 +168,11 @@ const performBulkAction = (action) => {
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Filters -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                    <div class="p-6 bg-white border-b border-gray-200">
-                        <div class="flex items-center mb-4">
-                            <FunnelIcon class="w-5 h-5 text-gray-500 mr-2" />
-                            <h3 class="text-lg font-medium text-gray-900">Filters</h3>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                                <div class="relative">
-                                    <input
-                                        v-model="search"
-                                        type="text"
-                                        placeholder="Search users..."
-                                        class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                    />
-                                    <MagnifyingGlassIcon class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                                <select
-                                    v-model="selectedRole"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                >
-                                    <option value="">All Roles</option>
-                                    <option v-for="role in roles" :key="role.id" :value="role.id">
-                                        {{ role.name }}
-                                    </option>
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                                <select
-                                    v-model="selectedDepartment"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                >
-                                    <option value="">All Departments</option>
-                                    <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                                        {{ dept.name }}
-                                    </option>
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                <select
-                                    v-model="selectedStatus"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                >
-                                    <option value="">All Status</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                    <option value="suspended">Suspended</option>
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Employment</label>
-                                <select
-                                    v-model="selectedEmploymentStatus"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                >
-                                    <option value="">All Types</option>
-                                    <option value="regular">Regular</option>
-                                    <option value="contractual">Contractual</option>
-                                    <option value="probationary">Probationary</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <DataTableFilters
+                    :filters="filters"
+                    :filter-config="filterConfig"
+                    route-name="users.index"
+                />
 
                 <!-- Bulk Actions -->
                 <div

@@ -36,7 +36,7 @@ class MaterialPartController extends Controller
         $sortDirection = $request->get('direction', 'desc');
         $query->orderBy($sortField, $sortDirection);
 
-        $materialParts = $query->paginate(25)->appends($request->query());
+        $materialParts = $query->paginate(25)->withQueryString();
 
         return Inertia::render('MaterialMonitoringChecksheets/Index', [
             'materialParts' => $materialParts,
@@ -73,8 +73,7 @@ class MaterialPartController extends Controller
             'letter_code' => 'nullable|string|max:1',
             'main_lot_number' => 'nullable|string|max:50',
             'sub_lot_numbers' => 'nullable|array',
-            'sub_lot_numbers.sub_lots' => 'nullable|array',
-            'sub_lot_numbers.sub_lots.*' => 'nullable|string|max:100',
+            'sub_lot_numbers.*' => 'nullable|string|max:100',
             'produced_qty' => 'required|integer|min:0',
             'operator' => 'nullable|string|max:100',
             'job_number' => 'nullable|string|max:100',
@@ -143,8 +142,10 @@ class MaterialPartController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, MaterialPart $materialPart)
+    public function update(Request $request, $material_monitoring_checksheet)
     {
+        $materialPart = MaterialPart::findOrFail($material_monitoring_checksheet);
+
         $validated = $request->validate([
             'material_type' => 'required|string|max:50',
             'date' => 'required|date',
@@ -152,8 +153,7 @@ class MaterialPartController extends Controller
             'letter_code' => 'nullable|string|max:1',
             'main_lot_number' => 'required|string|max:50',
             'sub_lot_numbers' => 'nullable|array',
-            'sub_lot_numbers.sub_lots' => 'nullable|array',
-            'sub_lot_numbers.sub_lots.*' => 'nullable|string|max:100',
+            'sub_lot_numbers.*' => 'nullable|string|max:100',
             'produced_qty' => 'required|integer|min:0',
             'operator' => 'nullable|string|max:100',
             'job_number' => 'nullable|string|max:100',
@@ -168,8 +168,9 @@ class MaterialPartController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(MaterialPart $materialPart)
+    public function destroy($material_monitoring_checksheet)
     {
+        $materialPart = MaterialPart::findOrFail($material_monitoring_checksheet);
         $materialPart->delete();
 
         return redirect()->route('material-monitoring-checksheets.index')

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ref, reactive } from 'vue';
+import { ref, computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import DataTableFilters from '@/Components/DataTableFilters.vue';
 
 // Import route helper
 declare function route(name: string, params?: any): string;
@@ -39,11 +40,9 @@ interface LogsResponse {
 
 interface Props {
     logs: LogsResponse;
-    filters: {
-        search: string;
-        date_from: string;
-        date_to: string;
-    };
+    filters: Record<string, string>;
+    lineOptions: string[];
+    fourMOptions: string[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -57,34 +56,43 @@ const props = withDefaults(defineProps<Props>(), {
         from: 0,
         to: 0
     }),
-    filters: () => ({
-        search: '',
-        date_from: '',
-        date_to: ''
-    })
+    filters: () => ({}),
+    lineOptions: () => [],
+    fourMOptions: () => []
 });
 
-const filters = reactive({
-    search: props.filters?.search || '',
-    date_from: props.filters?.date_from || '',
-    date_to: props.filters?.date_to || '',
-});
-
-const applyFilters = () => {
-    const query = Object.fromEntries(
-        Object.entries(filters).filter(([_, value]) => value !== '')
-    );
-    router.get(window.location.pathname, query, { preserveState: true, replace: true });
-};
-
-const resetFilters = () => {
-    Object.assign(filters, {
-        search: '',
-        date_from: '',
-        date_to: ''
-    });
-    applyFilters();
-};
+const filterConfig = computed(() => [
+    {
+        type: 'text',
+        key: 'search',
+        label: 'Search',
+        placeholder: 'Model code, item, recorded by...',
+    },
+    {
+        type: 'date',
+        key: 'date_from',
+        label: 'Date From',
+    },
+    {
+        type: 'date',
+        key: 'date_to',
+        label: 'Date To',
+    },
+    {
+        type: 'select',
+        key: 'col_line',
+        label: 'Line',
+        placeholder: 'All Lines',
+        options: props.lineOptions.map((l: string) => ({ value: l, label: l })),
+    },
+    {
+        type: 'select',
+        key: 'col_4m',
+        label: '4M Category',
+        placeholder: 'All Categories',
+        options: props.fourMOptions.map((m: string) => ({ value: m, label: m })),
+    },
+]);
 
 const formatDate = (dateString: string): string => {
     if (!dateString) return 'N/A';
@@ -148,60 +156,14 @@ const confirmDelete = (log: ModificationLog) => {
 
         <div class="py-6">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <DataTableFilters
+                    :filters="filters"
+                    :filter-config="filterConfig"
+                    route-name="modification-logs.index"
+                />
+
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 bg-white border-b border-gray-200">
-                        <!-- Filters -->
-                        <div class="mb-6">
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                                    <input
-                                        v-model="filters.search"
-                                        type="text"
-                                        placeholder="Model Code, Item, Recorded By..."
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        @keyup.enter="applyFilters"
-                                    />
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
-                                    <input
-                                        v-model="filters.date_from"
-                                        type="date"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                    />
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
-                                    <input
-                                        v-model="filters.date_to"
-                                        type="date"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                    />
-                                </div>
-                                <div class="flex items-end">
-                                    <button 
-                                        @click="applyFilters"
-                                        class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                                    >
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-                                        </svg>
-                                        Filter
-                                    </button>
-                                    <button 
-                                        @click="resetFilters"
-                                        class="ml-2 inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                                    >
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                        </svg>
-                                        Reset
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Table -->
                         <div class="overflow-x-auto lg:overflow-visible">
                             <table class="min-w-full divide-y divide-gray-200">

@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DeleteButton from '@/Components/DeleteButton.vue';
 
@@ -12,19 +12,8 @@ const props = defineProps({
     materialTypes: {
         type: Object,
         default: () => ({})
-    },
-    subLotTitles: {
-        type: Array,
-        default: () => []
     }
 });
-
-// Debug: Log props to verify subLotTitles
-console.log('Edit.vue props:', props);
-console.log('Initial subLotTitles:', props.subLotTitles);
-
-// Debug: Log what we're receiving
-console.log('Props received:', props);
 
 // Handle case where materialPart might be an array or empty
 const materialPartData = Array.isArray(props.materialPart) ? {} : props.materialPart;
@@ -35,40 +24,49 @@ const form = useForm({
     item_block_code: materialPartData.item_block_code || '',
     letter_code: materialPartData.letter_code || '',
     main_lot_number: materialPartData.main_lot_number || '',
-    sub_lot_numbers: materialPartData.sub_lot_numbers || { sub_lots: [] },
+    sub_lot_numbers: materialPartData.sub_lot_numbers || {},
     produced_qty: materialPartData.produced_qty || 0,
     operator: materialPartData.operator || '',
     job_number: materialPartData.job_number || ''
 });
 
-const newSubLot = ref('');
-const subLotTitles = ref(props.subLotTitles);
+const subLotFields = ref([]);
+const subLotValues = ref({});
 
-// Debug: Log subLotTitles changes
-console.log('Edit.vue subLotTitles initialized:', subLotTitles.value);
-
-const fetchSubLotTitles = async (materialType) => {
-    console.log('fetchSubLotTitles called with:', materialType);
+const fetchSubLotFields = async (materialType) => {
     if (!materialType) {
-        subLotTitles.value = [];
-        console.log('No material type, cleared subLotTitles');
+        subLotFields.value = [];
+        subLotValues.value = {};
+        form.sub_lot_numbers = {};
         return;
     }
+    
     try {
-        const response = await fetch(`/api/material-types/${encodeURIComponent(materialType)}/sub-lot-titles`);
-        console.log('API response status:', response.status);
-        const data = await response.json();
-        console.log('API response data:', data);
-        subLotTitles.value = data.map(item => item.title);
-        console.log('Updated subLotTitles.value:', subLotTitles.value);
+        const response = await fetch(`/api/material-types/${encodeURIComponent(materialType)}/sub-lot-fields`);
+        const fields = await response.json();
+        
+        subLotFields.value = fields;
+        
+        // Initialize sub-lot values, preserving existing data where keys match
+        const existingData = form.sub_lot_numbers || {};
+        const initialValues = {};
+        fields.forEach(field => {
+            const key = field.toLowerCase().replace(/\s+/g, '_');
+            initialValues[key] = existingData[key] || '';
+        });
+        subLotValues.value = initialValues;
+        form.sub_lot_numbers = initialValues;
+        
     } catch (error) {
-        console.error('Failed to fetch sub lot titles:', error);
-        subLotTitles.value = [];
+        console.error('Failed to fetch sub lot fields:', error);
+        subLotFields.value = [];
+        subLotValues.value = {};
+        form.sub_lot_numbers = {};
     }
 };
 
 const onMaterialTypeChange = () => {
-    fetchSubLotTitles(form.material_type);
+    fetchSubLotFields(form.material_type);
 };
 
 const materialTypeOptions = Object.entries(props.materialTypes).map(([key, value]) => ({
@@ -76,29 +74,33 @@ const materialTypeOptions = Object.entries(props.materialTypes).map(([key, value
     label: value,
 }));
 
-// Debug: Log the form data and material part to see what's being loaded
-console.log('Material Part Data:', props.materialPart);
-console.log('Form Data:', form.data());
-console.log('Material Types:', props.materialTypes);
+const updateSubLotValue = (field, value) => {
+    const key = field.toLowerCase().replace(/\s+/g, '_');
+    subLotValues.value[key] = value;
+    form.sub_lot_numbers[key] = value;
+};
 
-const addSubLot = () => {
-    if (newSubLot.value.trim()) {
-        form.sub_lot_numbers.sub_lots.push(newSubLot.value.trim());
-        newSubLot.value = '';
+// Load sub-lot fields for the current material type on mount
+onMounted(() => {
+    if (form.material_type) {
+        fetchSubLotFields(form.material_type);
     }
-};
-
-const removeSubLot = (index) => {
-    form.sub_lot_numbers.sub_lots.splice(index, 1);
-};
+});
 
 const submit = () => {
     // Remove empty sub-lots before submitting
-    form.sub_lot_numbers.sub_lots = form.sub_lot_numbers.sub_lots.filter(lot => lot.trim());
+    const cleanedSubLots = {};
+    Object.keys(form.sub_lot_numbers).forEach(key => {
+        if (form.sub_lot_numbers[key] && form.sub_lot_numbers[key].trim()) {
+            cleanedSubLots[key] = form.sub_lot_numbers[key].trim();
+        }
+    });
     
     // If no sub-lots, set to null
-    if (form.sub_lot_numbers.sub_lots.length === 0) {
+    if (Object.keys(cleanedSubLots).length === 0) {
         form.sub_lot_numbers = null;
+    } else {
+        form.sub_lot_numbers = cleanedSubLots;
     }
     
     // Submit using Inertia's form
@@ -249,42 +251,29 @@ const submit = () => {
                         <div class="p-6 bg-white border-b border-gray-200">
                             <h3 class="text-lg font-medium text-gray-900 mb-4">Sub Lot Numbers</h3>
                             
-                            <div class="space-y-2 mb-4">
-                                <div v-for="(subLot, index) in form.sub_lot_numbers.sub_lots" :key="index" class="flex items-center space-x-2">
-                                    <div v-if="subLotTitles[index]" class="w-48 text-sm font-medium text-gray-700">
-                                        {{ subLotTitles[index] }}
+                            <div v-if="subLotFields.length > 0" class="space-y-4">
+                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    <div v-for="field in subLotFields" :key="field">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            {{ field }}
+                                        </label>
+                                        <input
+                                            :value="subLotValues[field.toLowerCase().replace(/\s+/g, '_')]"
+                                            @input="updateSubLotValue(field, $event.target.value)"
+                                            type="text"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                            :placeholder="'Enter ' + field.toLowerCase() + ' Lot #'"
+                                        />
                                     </div>
-                                    <input
-                                        v-model="form.sub_lot_numbers.sub_lots[index]"
-                                        type="text"
-                                        class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        placeholder="Enter sub lot number"
-                                    />
-                                    <button
-                                        type="button"
-                                        @click="removeSubLot(index)"
-                                        class="inline-flex items-center px-3 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                                    >
-                                        Remove
-                                    </button>
                                 </div>
                             </div>
-
-                            <div class="flex items-center space-x-2">
-                                <input
-                                    v-model="newSubLot"
-                                    @keyup.enter="addSubLot"
-                                    type="text"
-                                    class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                    placeholder="Enter sub lot number and press Add"
-                                />
-                                <button
-                                    type="button"
-                                    @click="addSubLot"
-                                    class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                                >
-                                    Add Sub Lot
-                                </button>
+                            
+                            <div v-else-if="form.material_type" class="text-gray-500 text-sm">
+                                No sub-lot fields defined for this material type.
+                            </div>
+                            
+                            <div v-else class="text-gray-500 text-sm">
+                                Please select a material type to see sub-lot fields.
                             </div>
                         </div>
 

@@ -10,9 +10,41 @@ use Carbon\Carbon;
 
 class TempRecordController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $records = TempRecord::orderByDesc('id')->paginate(10)->through(function ($r) {
+        $query = TempRecord::query();
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('model_series', 'like', "%{$search}%")
+                  ->orWhere('solder_model', 'like', "%{$search}%")
+                  ->orWhere('control_no', 'like', "%{$search}%")
+                  ->orWhere('person_in_charge', 'like', "%{$search}%")
+                  ->orWhere('checked_by', 'like', "%{$search}%");
+            });
+        }
+
+        // Date range filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('date', '<=', $request->date_to);
+        }
+
+        // Equipment type filter
+        if ($request->filled('equipment_type')) {
+            $query->where('equipment_type', $request->equipment_type);
+        }
+
+        // Line assigned filter
+        if ($request->filled('line_assigned')) {
+            $query->where('line_assigned', $request->line_assigned);
+        }
+
+        $records = $query->orderByDesc('id')->paginate(10)->withQueryString()->through(function ($r) {
             return [
                 'id' => $r->id,
                 'date' => $r->date,
@@ -33,6 +65,17 @@ class TempRecordController extends Controller
 
         return Inertia::render('TempRecords/Index', [
             'records' => $records,
+            'filters' => $request->only(['search', 'date_from', 'date_to', 'equipment_type', 'line_assigned']),
+            'equipmentTypes' => TempRecord::whereNotNull('equipment_type')
+                ->where('equipment_type', '!=', '')
+                ->distinct()
+                ->orderBy('equipment_type')
+                ->pluck('equipment_type'),
+            'lineOptions' => TempRecord::whereNotNull('line_assigned')
+                ->where('line_assigned', '!=', '')
+                ->distinct()
+                ->orderBy('line_assigned')
+                ->pluck('line_assigned'),
         ]);
     }
 

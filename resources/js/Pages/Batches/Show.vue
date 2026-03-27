@@ -118,7 +118,7 @@ const formatDate = (dateString: string) => {
                                 <dd class="mt-1 text-sm text-gray-900">{{ batch.QRCode || 'N/A' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-500">Item Name</dt>
+                                <dt class="text-sm font-medium text-gray-500">Item Description</dt>
                                 <dd class="mt-1 text-sm text-gray-900">{{ batch.ItemName || 'N/A' }}</dd>
                             </div>
                             <div>
@@ -134,7 +134,7 @@ const formatDate = (dateString: string) => {
                                 <dd class="mt-1 text-sm text-gray-900">{{ batch.ProduceQty || 0 }}</dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-500">Job Number</dt>
+                                <dt class="text-sm font-medium text-gray-500">Job Order #</dt>
                                 <dd class="mt-1 text-sm text-gray-900">{{ batch.JobNumber || 'N/A' }}</dd>
                             </div>
                             <div>

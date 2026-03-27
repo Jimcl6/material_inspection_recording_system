@@ -8,9 +8,42 @@ use Inertia\Inertia;
 
 class TorqueRecordController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $records = TorqueRecord::orderByDesc('id')->paginate(10)->through(function ($r) {
+        $query = TorqueRecord::query();
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('model_series', 'like', "%{$search}%")
+                  ->orWhere('driver_model', 'like', "%{$search}%")
+                  ->orWhere('control_no', 'like', "%{$search}%")
+                  ->orWhere('screw_type', 'like', "%{$search}%")
+                  ->orWhere('person_in_charge', 'like', "%{$search}%")
+                  ->orWhere('checked_by', 'like', "%{$search}%");
+            });
+        }
+
+        // Date range filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('date', '<=', $request->date_to);
+        }
+
+        // Driver model filter
+        if ($request->filled('driver_model')) {
+            $query->where('driver_model', $request->driver_model);
+        }
+
+        // Line assigned filter
+        if ($request->filled('line_assigned')) {
+            $query->where('line_assigned', $request->line_assigned);
+        }
+
+        $records = $query->orderByDesc('id')->paginate(10)->withQueryString()->through(function ($r) {
             return [
                 'id' => $r->id,
                 'date' => $r->date,
@@ -33,6 +66,17 @@ class TorqueRecordController extends Controller
 
         return Inertia::render('TorqueRecords/Index', [
             'records' => $records,
+            'filters' => $request->only(['search', 'date_from', 'date_to', 'driver_model', 'line_assigned']),
+            'driverModels' => TorqueRecord::whereNotNull('driver_model')
+                ->where('driver_model', '!=', '')
+                ->distinct()
+                ->orderBy('driver_model')
+                ->pluck('driver_model'),
+            'lineOptions' => TorqueRecord::whereNotNull('line_assigned')
+                ->where('line_assigned', '!=', '')
+                ->distinct()
+                ->orderBy('line_assigned')
+                ->pluck('line_assigned'),
         ]);
     }
 

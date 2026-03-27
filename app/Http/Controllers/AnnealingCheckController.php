@@ -27,8 +27,8 @@ class AnnealingCheckController extends Controller
         $query = AnnealingCheck::with(['pic', 'checkedBy', 'verifiedBy', 'temperatureReadings'])
             ->latest();
 
-        // Apply filters
-        if ($request->has('search')) {
+        // Search filter
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('item_code', 'like', "%{$search}%")
@@ -37,11 +37,29 @@ class AnnealingCheckController extends Controller
             });
         }
 
-        $annealingChecks = $query->paginate(15);
+        // Date range filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('annealing_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('annealing_date', '<=', $request->date_to);
+        }
+
+        // Machine number filter
+        if ($request->filled('machine_number')) {
+            $query->where('machine_number', $request->machine_number);
+        }
+
+        $annealingChecks = $query->paginate(15)->withQueryString();
 
         return Inertia::render('AnnealingChecks/Index', [
             'annealingChecks' => $annealingChecks,
-            'filters' => $request->only(['search'])
+            'filters' => $request->only(['search', 'date_from', 'date_to', 'machine_number']),
+            'machineNumbers' => AnnealingCheck::whereNotNull('machine_number')
+                ->where('machine_number', '!=', '')
+                ->distinct()
+                ->orderBy('machine_number')
+                ->pluck('machine_number'),
         ]);
     }
 
