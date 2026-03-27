@@ -32,7 +32,12 @@ class MaterialPart extends Model
      */
     public function getSubLotNumbersArray(): array
     {
-        return $this->sub_lot_numbers['sub_lots'] ?? [];
+        $data = $this->sub_lot_numbers;
+        if (!$data) return [];
+        // Handle old array format
+        if (isset($data['sub_lots'])) return $data['sub_lots'];
+        // New keyed object format
+        return array_filter($data, fn($v) => $v && trim($v) !== '');
     }
 
     /**

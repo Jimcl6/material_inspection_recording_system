@@ -251,7 +251,7 @@ const submit = () => {
                                             @input="updateSubLotValue(field, $event.target.value)"
                                             type="text"
                                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                            :placeholder="'Enter ' + field.toLowerCase()"
+                                            :placeholder="'Enter ' + field.toLowerCase() + 'Lot #'"
                                         />
                                     </div>
                                 </div>

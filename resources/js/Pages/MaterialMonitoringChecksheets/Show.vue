@@ -27,10 +27,34 @@ const formatDate = (dateString) => {
 };
 
 const getSubLotCount = (materialPart) => {
-    if (!materialPart.sub_lot_numbers || !materialPart.sub_lot_numbers.sub_lots) {
+    if (!materialPart.sub_lot_numbers) {
         return 0;
     }
-    return materialPart.sub_lot_numbers.sub_lots.length;
+    // Handle old array format (sub_lots key) and new keyed object format
+    if (materialPart.sub_lot_numbers.sub_lots) {
+        return materialPart.sub_lot_numbers.sub_lots.length;
+    }
+    return Object.keys(materialPart.sub_lot_numbers).filter(
+        key => materialPart.sub_lot_numbers[key] && materialPart.sub_lot_numbers[key].trim()
+    ).length;
+};
+
+const getSubLotEntries = (materialPart) => {
+    if (!materialPart.sub_lot_numbers) return [];
+    // Handle old array format
+    if (materialPart.sub_lot_numbers.sub_lots) {
+        return materialPart.sub_lot_numbers.sub_lots.map((val, i) => ({
+            label: props.subLotTitles[i] || `Sub Lot #${i + 1}`,
+            value: val
+        }));
+    }
+    // New keyed object format
+    return Object.entries(materialPart.sub_lot_numbers)
+        .filter(([, val]) => val && val.trim())
+        .map(([key, val]) => ({
+            label: key.replace(/_/g, ' ').toUpperCase(),
+            value: val
+        }));
 };
 </script>
 
@@ -133,13 +157,13 @@ const getSubLotCount = (materialPart) => {
                     <div class="p-6 bg-white border-b border-gray-200">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Sub Lot Numbers</h3>
                         
-                        <div v-if="props.materialPart.sub_lot_numbers && props.materialPart.sub_lot_numbers.sub_lots && props.materialPart.sub_lot_numbers.sub_lots.length > 0">
+                        <div v-if="getSubLotCount(props.materialPart) > 0">
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <div v-for="(subLot, index) in props.materialPart.sub_lot_numbers.sub_lots" :key="index" class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <div v-for="(entry, index) in getSubLotEntries(props.materialPart)" :key="index" class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                                     <h4 class="text-sm font-medium text-gray-500 mb-2">
-                                        {{ props.subLotTitles[index] || `Sub Lot #${index + 1}` }}
+                                        {{ entry.label }}
                                     </h4>
-                                    <p class="text-lg text-gray-900 font-mono">{{ subLot }}</p>
+                                    <p class="text-lg text-gray-900 font-mono">{{ entry.value }}</p>
                                 </div>
                             </div>
                         </div>

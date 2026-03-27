@@ -1,5 +1,5 @@
 <script setup>
-// import { Link } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 
 const props = defineProps({
     materialPart: {
@@ -10,31 +10,7 @@ const props = defineProps({
 
 const confirmDelete = () => {
     if (confirm(`Are you sure you want to delete this material part?\n\nMaterial Type: ${props.materialPart.material_type}\nLot Number: ${props.materialPart.main_lot_number}\nItem Block: ${props.materialPart.item_block_code}`)) {
-        // Use Inertia to submit delete form
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = route('material-monitoring-checksheets.destroy', props.materialPart.id);
-        
-        // Add CSRF token
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        if (csrfToken) {
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = csrfToken;
-            form.appendChild(csrfInput);
-        }
-        
-        // Add method override for DELETE
-        const methodInput = document.createElement('input');
-        methodInput.type = 'hidden';
-        methodInput.name = '_method';
-        methodInput.value = 'DELETE';
-        form.appendChild(methodInput);
-        
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
+        router.delete(route('material-monitoring-checksheets.destroy', props.materialPart.id));
     }
 };
 </script>

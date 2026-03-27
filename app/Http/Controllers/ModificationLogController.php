@@ -37,15 +37,31 @@ class ModificationLogController extends Controller
             $query->whereDate('prod_date', '<=', $request->input('date_to'));
         }
 
+        // Filter by line
+        if ($request->filled('col_line')) {
+            $query->where('col_line', $request->col_line);
+        }
+
+        // Filter by 4M category
+        if ($request->filled('col_4m')) {
+            $query->where('col_4m', $request->col_4m);
+        }
+
         $logs = $query->paginate(15)->withQueryString();
 
         return Inertia::render('ModificationLogs/Index', [
             'logs' => $logs,
-            'filters' => [
-                'search' => $request->input('search', ''),
-                'date_from' => $request->input('date_from', ''),
-                'date_to' => $request->input('date_to', ''),
-            ],
+            'filters' => $request->only(['search', 'date_from', 'date_to', 'col_line', 'col_4m']),
+            'lineOptions' => ModificationLog::whereNotNull('col_line')
+                ->where('col_line', '!=', '')
+                ->distinct()
+                ->orderBy('col_line')
+                ->pluck('col_line'),
+            'fourMOptions' => ModificationLog::whereNotNull('col_4m')
+                ->where('col_4m', '!=', '')
+                ->distinct()
+                ->orderBy('col_4m')
+                ->pluck('col_4m'),
         ]);
     }
 

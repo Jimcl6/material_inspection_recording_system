@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import DataTableFilters from '@/Components/DataTableFilters.vue';
 import DeleteButton from '@/Components/DeleteButton.vue';
 
 const props = defineProps({
@@ -19,11 +20,6 @@ const props = defineProps({
     }
 });
 
-const search = ref(props.filters?.search || '');
-const materialType = ref(props.filters?.material_type || '');
-const dateFrom = ref(props.filters?.date_from || '');
-const dateTo = ref(props.filters?.date_to || '');
-
 const materialTypeOptions = computed(() => {
     if (!props.materialTypes) return [];
     return Object.entries(props.materialTypes).map(([key, value]) => ({
@@ -31,6 +27,32 @@ const materialTypeOptions = computed(() => {
         label: value,
     }));
 });
+
+const filterConfig = computed(() => [
+    {
+        type: 'text',
+        key: 'search',
+        label: 'Search',
+        placeholder: 'Search by lot number...',
+    },
+    {
+        type: 'date',
+        key: 'date_from',
+        label: 'Date From',
+    },
+    {
+        type: 'date',
+        key: 'date_to',
+        label: 'Date To',
+    },
+    {
+        type: 'select',
+        key: 'material_type',
+        label: 'Material Type',
+        placeholder: 'All Types',
+        options: materialTypeOptions.value,
+    },
+]);
 
 const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -42,10 +64,16 @@ const formatDate = (dateString) => {
 };
 
 const getSubLotCount = (materialPart) => {
-    if (!materialPart.sub_lot_numbers || !materialPart.sub_lot_numbers.sub_lots) {
+    if (!materialPart.sub_lot_numbers) {
         return 0;
     }
-    return materialPart.sub_lot_numbers.sub_lots.length;
+    // Handle old array format (sub_lots key) and new keyed object format
+    if (materialPart.sub_lot_numbers.sub_lots) {
+        return materialPart.sub_lot_numbers.sub_lots.length;
+    }
+    return Object.keys(materialPart.sub_lot_numbers).filter(
+        key => materialPart.sub_lot_numbers[key] && materialPart.sub_lot_numbers[key].trim()
+    ).length;
 };
 </script>
 
@@ -72,68 +100,11 @@ const getSubLotCount = (materialPart) => {
 
         <div class="py-6">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Filters -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                    <div class="p-6 bg-white border-b border-gray-200">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Filters</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Material Type</label>
-                                <select
-                                    v-model="materialType"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                >
-                                    <option value="">All Types</option>
-                                    <option
-                                        v-for="type in materialTypeOptions"
-                                        :key="type.value"
-                                        :value="type.value"
-                                    >
-                                        {{ type.label }}
-                                    </option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
-                                <input
-                                    v-model="dateFrom"
-                                    type="date"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
-                                <input
-                                    v-model="dateTo"
-                                    type="date"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                                <input
-                                    v-model="search"
-                                    type="text"
-                                    placeholder="Search by lot number..."
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                />
-                            </div>
-                            <div class="flex items-end">
-                                <Link
-                                    :href="route('material-monitoring-checksheets.index', {
-                                        material_type: materialType,
-                                        date_from: dateFrom,
-                                        date_to: dateTo,
-                                        search: search
-                                    })"
-                                    class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                                >
-                                    Apply Filters
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <DataTableFilters
+                    :filters="filters"
+                    :filter-config="filterConfig"
+                    route-name="material-monitoring-checksheets.index"
+                />
 
                 <!-- Results Table -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">

@@ -32,49 +32,14 @@
 
     <div class="py-6">
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <DataTableFilters
+            :filters="filters"
+            :filter-config="filterConfig"
+            route-name="temp-records.index"
+        />
+
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
           <div class="p-6 bg-white border-b border-gray-200">
-            <!-- Search and Filter -->
-            <div class="flex justify-between items-center mb-6">
-              <div class="w-1/3">
-                <div class="relative">
-                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                    </svg>
-                  </div>
-                  <input
-                    v-model="search"
-                    type="text"
-                    class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="Search records..."
-                    @keyup.enter="searchRecords"
-                  />
-                  <button
-                    v-if="search"
-                    @click="resetSearch"
-                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                    type="button"
-                  >
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <div class="flex items-center space-x-2">
-                <button
-                  @click="exportRecords"
-                  class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                  </svg>
-                  Export
-                </button>
-              </div>
-            </div>
-
             <!-- Records Table -->
             <div class="overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200">
@@ -238,9 +203,10 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import DataTableFilters from '@/Components/DataTableFilters.vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
@@ -252,29 +218,54 @@ const props = defineProps({
   },
   filters: {
     type: Object,
-    default: () => ({
-      search: ''
-    })
+    default: () => ({})
+  },
+  equipmentTypes: {
+    type: Array,
+    default: () => []
+  },
+  lineOptions: {
+    type: Array,
+    default: () => []
   }
 });
 
-const search = ref(props.filters.search || '');
+const filterConfig = computed(() => [
+  {
+    type: 'text',
+    key: 'search',
+    label: 'Search',
+    placeholder: 'Search by model, equipment, person...',
+  },
+  {
+    type: 'date',
+    key: 'date_from',
+    label: 'Date From',
+  },
+  {
+    type: 'date',
+    key: 'date_to',
+    label: 'Date To',
+  },
+  {
+    type: 'select',
+    key: 'equipment_type',
+    label: 'Equipment Type',
+    placeholder: 'All Equipment',
+    options: props.equipmentTypes.map((t) => ({ value: t, label: t })),
+  },
+  {
+    type: 'select',
+    key: 'line_assigned',
+    label: 'Line',
+    placeholder: 'All Lines',
+    options: props.lineOptions.map((l) => ({ value: l, label: l })),
+  },
+]);
+
 const showDeleteModal = ref(false);
 const recordToDelete = ref(null);
 const deleteProcessing = ref(false);
-
-const searchRecords = () => {
-  router.get(route('temp-records.index'), { search: search.value }, {
-    preserveState: true,
-    replace: true,
-    preserveScroll: true
-  });
-};
-
-const resetSearch = () => {
-  search.value = '';
-  searchRecords();
-};
 
 const confirmDelete = (record) => {
   recordToDelete.value = record;
@@ -300,10 +291,6 @@ const deleteRecord = () => {
   });
 };
 
-const exportRecords = () => {
-  window.location.href = route('temp-records.export');
-};
-
 const formatDate = (dateString) => {
   if (!dateString) return '';
   const options = { year: 'numeric', month: 'short', day: 'numeric' };
@@ -317,12 +304,4 @@ const getTempClass = (temp) => {
   return 'bg-green-100 text-green-800';
 };
 
-// Watch for changes in the search input with debounce
-let searchTimeout = null;
-watch(search, (newValue) => {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    searchRecords();
-  }, 300);
-});
 </script>
