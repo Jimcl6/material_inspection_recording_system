@@ -10,6 +10,7 @@ use App\Http\Controllers\ProductionBatchController;
 use App\Http\Controllers\ModificationLogController;
 use App\Http\Controllers\MaterialPartController;
 use App\Http\Controllers\UserManagementController;
+use App\Models\AnnealingCheck;
 
 // Public routes
 Route::get('/', function () {
@@ -93,20 +94,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('modification-logs.destroy');
 
     // Annealing Checks
-    Route::resource('annealing-checks', AnnealingCheckController::class);
-    
-    // Additional routes for import/export
-    Route::get('annealing-checks/{annealing_check}/export', [AnnealingCheckController::class, 'export'])
-        ->name('annealing-checks.export');
+    // Import/Export routes must come BEFORE the resource route
     Route::get('annealing-checks/import', [AnnealingCheckController::class, 'importForm'])
         ->name('annealing-checks.import.form');
     Route::post('annealing-checks/import', [AnnealingCheckController::class, 'import'])
         ->name('annealing-checks.import');
-
+    Route::get('annealing-checks/export', [AnnealingCheckController::class, 'export'])
+        ->name('annealing-checks.export');
+    Route::get('annealing-checks/debug', [AnnealingCheckController::class, 'debug']);
+    
+    // Approval routes (admin/inspector only)
+    Route::middleware(['auth', 'role:admin,inspector'])->group(function () {
+        Route::get('annealing-checks/approval', [AnnealingCheckController::class, 'approval'])
+            ->name('annealing-checks.approval');
+        Route::post('annealing-checks/bulk-approve', [AnnealingCheckController::class, 'bulkApprove'])
+            ->name('annealing-checks.bulk-approve');
+        Route::post('annealing-checks/bulk-reject', [AnnealingCheckController::class, 'bulkReject'])
+            ->name('annealing-checks.bulk-reject');
+    });
+    
+    Route::resource('annealing-checks', AnnealingCheckController::class);
+    
     // Temperature Records
     Route::resource('temp-records', TempRecordController::class);
-    Route::get('temp-records/{temperature_record}/export', [TempRecordController::class, 'export'])
-        ->name('temp-records.export');
     Route::get('temp-records/import', [TempRecordController::class, 'importForm'])
         ->name('temp-records.import.form');
     Route::post('temp-records/import', [TempRecordController::class, 'import'])

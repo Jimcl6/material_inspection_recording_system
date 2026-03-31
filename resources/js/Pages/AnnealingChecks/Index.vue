@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTableFilters from '@/Components/DataTableFilters.vue';
 import { ref, computed } from 'vue';
+import { route } from 'ziggy-js';
 
 type Filters = {
     search?: string;
@@ -20,8 +21,27 @@ type AnnealingCheck = {
     quantity: number;
     annealing_date: string;
     machine_number: string;
+    machine_setting?: string;
+    temperature_setting?: number;
+    annealing_time?: string;
+    damper_setting?: string;
+    time_in?: string;
+    time_out?: string;
+    status: string;
     created_at: string;
     updated_at: string;
+    pic?: {
+        id: number;
+        name: string;
+    };
+    checkedBy?: {
+        id: number;
+        name: string;
+    };
+    verifiedBy?: {
+        id: number;
+        name: string;
+    };
 };
 
 type AnnealingChecksResponse = {
@@ -196,7 +216,7 @@ const formatDate = (dateString: string): string => {
 
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 bg-white border-b border-gray-200">
-                        <div class="overflow-x-auto">
+                    <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
@@ -211,6 +231,12 @@ const formatDate = (dateString: string): string => {
                                         </th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Machine #
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Temperature
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Annealing Time
                                         </th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status
@@ -243,8 +269,23 @@ const formatDate = (dateString: string): string => {
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                Completed
+                                            <div class="text-sm text-gray-900">
+                                                {{ check.temperature_setting || 'N/A' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">
+                                                {{ check.annealing_time || 'N/A' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span :class="{
+                                                'px-2 inline-flex text-xs leading-5 font-semibold rounded-full': true,
+                                                'bg-green-100 text-green-800': check.status === 'approved',
+                                                'bg-yellow-100 text-yellow-800': check.status === 'pending',
+                                                'bg-red-100 text-red-800': check.status === 'rejected'
+                                            }">
+                                                {{ check.status ? check.status.charAt(0).toUpperCase() + check.status.slice(1) : 'N/A' }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

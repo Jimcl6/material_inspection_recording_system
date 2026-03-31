@@ -1,10 +1,13 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+
+const page = usePage();
+const importResults = computed(() => page.props.import_results || []);
 
 const form = useForm({
     file: null,
@@ -169,6 +172,31 @@ const submit = () => {
                                     </PrimaryButton>
                                 </div>
                             </form>
+                            
+                            <!-- Import Results -->
+                            <div v-if="importResults.length > 0" class="mt-8">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Import Results</h3>
+                                <div class="space-y-4">
+                                    <div v-for="result in importResults" :key="result.sheet_name" class="bg-gray-50 rounded-lg p-4">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h4 class="font-medium text-gray-900">{{ result.sheet_name }}</h4>
+                                            <div class="flex space-x-4 text-sm">
+                                                <span class="text-green-600">{{ result.imported }} imported</span>
+                                                <span class="text-yellow-600">{{ result.skipped }} skipped</span>
+                                                <span class="text-red-600">{{ result.errors.length }} errors</span>
+                                            </div>
+                                        </div>
+                                        <div v-if="result.errors.length > 0" class="mt-2">
+                                            <details class="text-sm">
+                                                <summary class="cursor-pointer text-red-600 hover:text-red-800">View errors</summary>
+                                                <ul class="mt-2 space-y-1 text-red-600">
+                                                    <li v-for="error in result.errors" :key="error">{{ error }}</li>
+                                                </ul>
+                                            </details>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

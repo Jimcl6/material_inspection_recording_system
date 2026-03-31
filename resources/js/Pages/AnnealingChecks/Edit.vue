@@ -53,17 +53,21 @@ const form = useForm({
     annealing_date: formatDateForInput(props.annealingCheck.annealing_date),
     machine_number: props.annealingCheck.machine_number || '',
     machine_setting: props.annealingCheck.machine_setting || '',
+    temperature_setting: props.annealingCheck.temperature_setting || null,
+    annealing_time: props.annealingCheck.annealing_time || '',
+    damper_setting: props.annealingCheck.damper_setting || '',
+    time_in: props.annealingCheck.time_in || '',
+    time_out: props.annealingCheck.time_out || '',
     pic_id: getUserName(props.annealingCheck.pic_id),
     checked_by_id: getUserName(props.annealingCheck.checked_by_id),
     verified_by_id: getUserName(props.annealingCheck.verified_by_id),
     remarks: props.annealingCheck.remarks || '',
     temperature_readings: props.temperatureReadings.length > 0 
-        ? [...props.temperatureReadings] 
-        : [
-            { reading_time: '08:00', temperature: '' },
-            { reading_time: '12:00', temperature: '' },
-            { reading_time: '16:00', temperature: '' },
-        ]
+        ? props.temperatureReadings.map(tr => ({
+            reading_time: tr.reading_time || '08:00',
+            temperature: tr.temperature || ''
+        }))
+        : [{ reading_time: '08:00', temperature: '' }]
 });
 
 const addTemperatureReading = () => {
@@ -260,6 +264,92 @@ const confirmDelete = () => {
                                     <p v-if="form.errors.machine_setting" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.machine_setting }}
                                     </p>
+                                </div>
+
+                                <!-- Machine Setting Sub-fields -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
+                                    <!-- Temperature Setting -->
+                                    <div>
+                                        <label for="temperature_setting" class="block text-sm font-medium text-gray-700">
+                                            Temperature Setting (°C)
+                                        </label>
+                                        <input
+                                            id="temperature_setting"
+                                            v-model.number="form.temperature_setting"
+                                            type="number"
+                                            step="0.01"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            placeholder="e.g., 850.00"
+                                        />
+                                        <p v-if="form.errors.temperature_setting" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.temperature_setting }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Annealing Time -->
+                                    <div>
+                                        <label for="annealing_time" class="block text-sm font-medium text-gray-700">
+                                            Annealing Time
+                                        </label>
+                                        <input
+                                            id="annealing_time"
+                                            v-model="form.annealing_time"
+                                            type="time"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        />
+                                        <p v-if="form.errors.annealing_time" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.annealing_time }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Damper Setting -->
+                                    <div>
+                                        <label for="damper_setting" class="block text-sm font-medium text-gray-700">
+                                            Damper Setting
+                                        </label>
+                                        <input
+                                            id="damper_setting"
+                                            v-model="form.damper_setting"
+                                            type="text"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            placeholder="e.g., 50%"
+                                        />
+                                        <p v-if="form.errors.damper_setting" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.damper_setting }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Time In -->
+                                    <div>
+                                        <label for="time_in" class="block text-sm font-medium text-gray-700">
+                                            Time In
+                                        </label>
+                                        <input
+                                            id="time_in"
+                                            v-model="form.time_in"
+                                            type="time"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        />
+                                        <p v-if="form.errors.time_in" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.time_in }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Time Out -->
+                                    <div class="md:col-span-2">
+                                        <label for="time_out" class="block text-sm font-medium text-gray-700">
+                                            Time Out
+                                        </label>
+                                        <input
+                                            id="time_out"
+                                            v-model="form.time_out"
+                                            type="time"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 md:w-1/2"
+                                        />
+                                        <p v-if="form.errors.time_out" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.time_out }}
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <!-- PIC -->

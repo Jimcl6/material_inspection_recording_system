@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\TemperatureReading;
 use App\Models\User;
+use App\Models\ApprovalNotification;
 
 class AnnealingCheck extends Model
 {
@@ -23,6 +24,15 @@ class AnnealingCheck extends Model
         'annealing_date',
         'machine_number',
         'machine_setting',
+        'temperature_setting',
+        'annealing_time',
+        'damper_setting',
+        'time_in',
+        'time_out',
+        'status',
+        'submitted_at',
+        'approved_at',
+        'approval_notes',
         'pic_id',
         'checked_by_id',
         'verified_by_id',
@@ -35,6 +45,12 @@ class AnnealingCheck extends Model
         'receiving_date' => 'date',
         'annealing_date' => 'date',
         'quantity' => 'integer',
+        'temperature_setting' => 'decimal:2',
+        'annealing_time' => 'datetime:H:i',
+        'time_in' => 'datetime:H:i',
+        'time_out' => 'datetime:H:i',
+        'submitted_at' => 'datetime',
+        'approved_at' => 'datetime',
     ];
 
     /**
@@ -83,5 +99,13 @@ class AnnealingCheck extends Model
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * Approval notifications for this check
+     */
+    public function approvalNotifications(): HasMany
+    {
+        return $this->hasMany(ApprovalNotification::class);
     }
 }
