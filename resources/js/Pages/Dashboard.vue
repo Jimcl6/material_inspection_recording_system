@@ -27,6 +27,28 @@
 
                 <!-- Main Modules Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- Pending Approvals (Admin/Inspector only) -->
+                    <div v-if="pendingApprovalsCount !== null" class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-red-500">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-red-100">
+                                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div class="ml-4 flex-1">
+                                    <h3 class="text-lg font-medium text-gray-900">Pending Approvals</h3>
+                                    <p class="text-sm text-gray-500">{{ pendingApprovalsCount }} item(s) waiting</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex justify-end">
+                                <Link :href="route('annealing-checks.approval')" class="text-sm font-medium text-red-600 hover:text-red-500">
+                                    Review Now <span aria-hidden="true">&rarr;</span>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Annealing Checks -->
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-blue-500">
                         <div class="p-6">
@@ -206,49 +228,14 @@ const props = defineProps({
     stats: {
         type: Array,
         required: true,
-        default: () => [
-            {
-                name: 'Total Annealing Checks',
-                value: '0',
-                icon: 'svg',
-                bgColorClass: 'bg-blue-100',
-                textColorClass: 'text-blue-600',
-                change: '0%',
-                changeType: 'increase'
-            },
-            {
-                name: 'Temperature Records',
-                value: '0',
-                icon: 'svg',
-                bgColorClass: 'bg-green-100',
-                textColorClass: 'text-green-600',
-                change: '0%',
-                changeType: 'increase'
-            },
-            {
-                name: 'Torque Records',
-                value: '0',
-                icon: 'svg',
-                bgColorClass: 'bg-yellow-100',
-                textColorClass: 'text-yellow-600',
-                change: '0%',
-                changeType: 'increase'
-            },
-            {
-                name: 'Production Batches',
-                value: '0',
-                icon: 'svg',
-                bgColorClass: 'bg-purple-100',
-                textColorClass: 'text-purple-600',
-                change: '0%',
-                changeType: 'increase'
-            }
-        ]
     },
     recentActivity: {
         type: Array,
         required: true,
-        default: () => []
-    }
+    },
+    pendingApprovalsCount: {
+        type: Number,
+        default: null,
+    },
 });
 </script>

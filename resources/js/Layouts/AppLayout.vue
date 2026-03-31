@@ -8,6 +8,7 @@ import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 
 const showingNavigationDropdown = ref(false);
+const showAnnealingDropdown = ref(false);
 </script>
 
 <template>
@@ -30,9 +31,37 @@ const showingNavigationDropdown = ref(false);
                                 <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                     Dashboard
                                 </NavLink>
-                                <NavLink :href="route('annealing-checks.index')" :active="route().current('annealing-checks.*')">
-                                    Annealing Checks
-                                </NavLink>
+                                
+                                <!-- Annealing Checks Dropdown -->
+                                <div class="relative" @mouseenter="showAnnealingDropdown = true" @mouseleave="showAnnealingDropdown = false">
+                                    <button class="flex items-center text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                                            :class="{ 'bg-gray-100': route().current('annealing-checks.*') }">
+                                        Annealing Checks
+                                        <svg class="ml-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                    <div v-show="showAnnealingDropdown" class="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                                        <div class="py-1">
+                                            <NavLink :href="route('annealing-checks.index')" :active="route().current('annealing-checks.index')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                All Checks
+                                            </NavLink>
+                                            <NavLink :href="route('annealing-checks.create')" :active="route().current('annealing-checks.create')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                Add New
+                                            </NavLink>
+                                            <NavLink :href="route('annealing-checks.import.form')" :active="route().current('annealing-checks.import.form')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                Import
+                                            </NavLink>
+                                            <NavLink v-if="$page.props.auth.user.role?.slug === 'admin' || $page.props.auth.user.role?.slug === 'inspector'" 
+                                                    :href="route('annealing-checks.approval')" 
+                                                    :active="route().current('annealing-checks.approval')" 
+                                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100">
+                                                Pending Approvals
+                                            </NavLink>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <NavLink :href="route('temp-records.index')" :active="route().current('temp-records.*')">
                                     Temperature Records
                                 </NavLink>
@@ -140,9 +169,28 @@ const showingNavigationDropdown = ref(false);
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             :href="route('annealing-checks.index')"
-                            :active="route().current('annealing-checks.*')"
+                            :active="route().current('annealing-checks.index')"
                         >
-                            Annealing Checks
+                            All Checks
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('annealing-checks.create')"
+                            :active="route().current('annealing-checks.create')"
+                        >
+                            Add New
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('annealing-checks.import.form')"
+                            :active="route().current('annealing-checks.import.form')"
+                        >
+                            Import
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user.role?.slug === 'admin' || $page.props.auth.user.role?.slug === 'inspector'"
+                            :href="route('annealing-checks.approval')"
+                            :active="route().current('annealing-checks.approval')"
+                        >
+                            Pending Approvals
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             :href="route('temp-records.index')"

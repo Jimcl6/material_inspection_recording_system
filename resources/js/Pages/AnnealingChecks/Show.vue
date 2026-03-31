@@ -131,6 +131,46 @@ const formatTime = (timeString) => {
                                             {{ annealingCheck.machine_setting || 'N/A' }}
                                         </dd>
                                     </div>
+                                    <div class="sm:grid sm:grid-cols-3 sm:gap-4">
+                                        <dt class="text-sm font-medium text-gray-500">Machine Setting Details</dt>
+                                        <dd class="mt-1 text-sm text-gray-900 sm:col-span-2">
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <span class="font-medium">Temperature:</span>
+                                                    {{ annealingCheck.temperature_setting ? annealingCheck.temperature_setting + '°C' : 'N/A' }}
+                                                </div>
+                                                <div>
+                                                    <span class="font-medium">Annealing Time:</span>
+                                                    {{ annealingCheck.annealing_time || 'N/A' }}
+                                                </div>
+                                                <div>
+                                                    <span class="font-medium">Damper Setting:</span>
+                                                    {{ annealingCheck.damper_setting || 'N/A' }}
+                                                </div>
+                                                <div>
+                                                    <span class="font-medium">Time In:</span>
+                                                    {{ annealingCheck.time_in || 'N/A' }}
+                                                </div>
+                                                <div class="col-span-2">
+                                                    <span class="font-medium">Time Out:</span>
+                                                    {{ annealingCheck.time_out || 'N/A' }}
+                                                </div>
+                                            </div>
+                                        </dd>
+                                    </div>
+                                    <div class="sm:grid sm:grid-cols-3 sm:gap-4">
+                                        <dt class="text-sm font-medium text-gray-500">Status</dt>
+                                        <dd class="mt-1 text-sm text-gray-900 sm:col-span-2">
+                                            <span :class="{
+                                                'px-2 py-1 text-xs rounded-full': true,
+                                                'bg-green-100 text-green-800': annealingCheck.status === 'approved',
+                                                'bg-yellow-100 text-yellow-800': annealingCheck.status === 'pending',
+                                                'bg-red-100 text-red-800': annealingCheck.status === 'rejected'
+                                            }">
+                                                {{ annealingCheck.status ? annealingCheck.status.charAt(0).toUpperCase() + annealingCheck.status.slice(1) : 'N/A' }}
+                                            </span>
+                                        </dd>
+                                    </div>
                                 </dl>
 
                                 <h4 class="text-md font-medium text-gray-900 mt-6 mb-4">Personnel</h4>
