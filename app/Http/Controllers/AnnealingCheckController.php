@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\AnnealingCheck;
-// use App\Models\TemperatureReading;
 use App\Http\Requests\StoreAnnealingCheckRequest;
 use App\Http\Requests\UpdateAnnealingCheckRequest;
 use App\Http\Requests\ImportAnnealingCheckRequest;
@@ -13,7 +12,6 @@ use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AnnealingChecksExport;
-// use App\Imports\AnnealingChecksImport;
 use App\Imports\AnnealingChecksWithHeadersImport;
 
 class AnnealingCheckController extends Controller
@@ -343,48 +341,19 @@ class AnnealingCheckController extends Controller
      */
     public function debug()
     {
-        // Read the uploaded Excel file directly with PhpSpreadsheet to understand its structure
-        $filePath = storage_path('app/reference-excels/ANNEALING CHECKSHEET.xlsx');
-        
-        if (!file_exists($filePath)) {
-            return response()->json(['error' => 'File not found at: ' . $filePath]);
-        }
-        
-        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($filePath);
-        $spreadsheet = $reader->load($filePath);
-        
-        $result = [];
-        foreach ($spreadsheet->getSheetNames() as $index => $sheetName) {
-            $sheet = $spreadsheet->getSheet($index);
-            $highestRow = $sheet->getHighestRow();
-            $highestColumn = $sheet->getHighestColumn();
-            
-            $sheetData = [
-                'name' => $sheetName,
-                'highest_row' => $highestRow,
-                'highest_column' => $highestColumn,
-                'rows' => []
-            ];
-            
-            // Read rows 7-15 to see headers and first data rows
-            for ($row = 7; $row <= min($highestRow, 15); $row++) {
-                $rowData = [];
-                foreach (range('A', 'R') as $col) {
-                    $rowData[$col] = $sheet->getCell($col . $row)->getCalculatedValue();
-                }
-                $sheetData['rows'][$row] = $rowData;
-            }
-            
-            $result[] = $sheetData;
-            
-            // Only show first 3 sheets to keep response manageable
-            if (count($result) >= 3) break;
-        }
+        $checks = AnnealingCheck::with(['pic', 'checkedBy', 'verifiedBy'])
+            ->latest()
+            ->take(5)
+            ->get(['id', 'item_code', 'pic_id', 'status', 'created_at']);
         
         return response()->json([
-            'total_sheets' => $spreadsheet->getSheetCount(),
-            'sheet_names' => $spreadsheet->getSheetNames(),
-            'sheets' => $result,
+            'count' => AnnealingCheck::count(),
+            'latest' => $checks->toArray(),
+            'auth_user' => [
+                'id' => Auth::id(),
+                'name' => Auth::user()->name,
+                'role' => Auth::user()->role?->slug ?? 'no role'
+            ]
         ]);
     }
 

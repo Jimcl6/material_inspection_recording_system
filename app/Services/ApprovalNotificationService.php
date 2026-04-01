@@ -31,7 +31,11 @@ class ApprovalNotificationService
 
             // Send email notification
             if ($approver->email) {
-                Mail::to($approver->email)->send(new AnnealingCheckNotification($annealingCheck, $approver, $type));
+                try {
+                    Mail::to($approver->email)->send(new AnnealingCheckNotification($annealingCheck, $approver, $type));
+                } catch (\Exception $e) {
+                    \Log::warning("Failed to send email notification to {$approver->email}: " . $e->getMessage());
+                }
             }
         }
     }
