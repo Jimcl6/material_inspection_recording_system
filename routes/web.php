@@ -10,6 +10,10 @@ use App\Http\Controllers\ProductionBatchController;
 use App\Http\Controllers\ModificationLogController;
 use App\Http\Controllers\MaterialPartController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\PositionController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ActivityLogController;
 use App\Models\AnnealingCheck;
 
 // Public routes
@@ -137,7 +141,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('material-monitoring-checksheets.for-ai');
 
     // User Management (Admin only)
-    Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
         // Custom routes must come BEFORE the resource route
         Route::get('users/scanner', [UserManagementController::class, 'scanner'])
             ->name('users.scanner');
@@ -159,5 +163,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     });
 
-    
+    // Super Admin Only Routes - Department, Position, Role Management
+    Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')->group(function () {
+        // Departments
+        Route::resource('departments', DepartmentController::class);
+        Route::post('departments/{department}/toggle-status', [DepartmentController::class, 'toggleStatus'])
+            ->name('departments.toggle-status');
+
+        // Positions
+        Route::resource('positions', PositionController::class);
+        Route::post('positions/{position}/toggle-status', [PositionController::class, 'toggleStatus'])
+            ->name('positions.toggle-status');
+        Route::post('positions/{position}/permissions', [PositionController::class, 'syncPermissions'])
+            ->name('positions.sync-permissions');
+
+        // Roles
+        Route::resource('roles', RoleController::class);
+        Route::post('roles/{role}/toggle-status', [RoleController::class, 'toggleStatus'])
+            ->name('roles.toggle-status');
+        Route::post('roles/{role}/permissions', [RoleController::class, 'syncPermissions'])
+            ->name('roles.sync-permissions');
+    });
+
+    // Admin + Super Admin Routes - Activity Logs
+    Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
+        Route::get('activity-logs', [ActivityLogController::class, 'index'])
+            ->name('activity-logs.index');
+        Route::get('activity-logs/{activity}', [ActivityLogController::class, 'show'])
+            ->name('activity-logs.show');
+        Route::delete('activity-logs/{activity}', [ActivityLogController::class, 'destroy'])
+            ->name('activity-logs.destroy');
+        Route::post('activity-logs/bulk-delete', [ActivityLogController::class, 'bulkDestroy'])
+            ->name('activity-logs.bulk-destroy');
+    });
 });

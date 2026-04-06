@@ -9,6 +9,16 @@ import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 
 const showingNavigationDropdown = ref(false);
 const showAnnealingDropdown = ref(false);
+const showAdminDropdown = ref(false);
+
+const isSuperAdmin = () => {
+    return window.$page?.props?.auth?.user?.role?.slug === 'super_admin';
+};
+
+const isAdmin = () => {
+    const role = window.$page?.props?.auth?.user?.role?.slug;
+    return role === 'admin' || role === 'super_admin';
+};
 </script>
 
 <template>
@@ -77,10 +87,48 @@ const showAnnealingDropdown = ref(false);
                                 <NavLink :href="route('material-monitoring-checksheets.index')" :active="route().current('material-monitoring-checksheets.*')">
                                     Mtrl Monitoring Checksheet
                                 </NavLink>
-                                <NavLink v-if="$page.props.auth.user.role?.slug === 'admin'" :href="route('users.index')" :active="route().current('users.*')">
+                                <NavLink v-if="$page.props.auth.user.role?.slug === 'admin' || $page.props.auth.user.role?.slug === 'super_admin'" :href="route('users.index')" :active="route().current('users.*')">
                                     User Management
                                 </NavLink>
-                                <!-- Add more navigation links as needed -->
+                                
+                                <!-- Admin Dropdown (for admin and super_admin) -->
+                                <div v-if="$page.props.auth.user.role?.slug === 'admin' || $page.props.auth.user.role?.slug === 'super_admin'" 
+                                     class="relative" @mouseenter="showAdminDropdown = true" @mouseleave="showAdminDropdown = false">
+                                    <button class="flex items-center text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                                            :class="{ 'bg-gray-100': route().current('admin.*') || route().current('activity-logs.*') }">
+                                        Admin
+                                        <svg class="ml-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                    <div v-show="showAdminDropdown" class="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                                        <div class="py-1">
+                                            <NavLink v-if="$page.props.auth.user.role?.slug === 'super_admin'"
+                                                    :href="route('admin.departments.index')" 
+                                                    :active="route().current('admin.departments.*')" 
+                                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                Departments
+                                            </NavLink>
+                                            <NavLink v-if="$page.props.auth.user.role?.slug === 'super_admin'"
+                                                    :href="route('admin.positions.index')" 
+                                                    :active="route().current('admin.positions.*')" 
+                                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                Positions
+                                            </NavLink>
+                                            <NavLink v-if="$page.props.auth.user.role?.slug === 'super_admin'"
+                                                    :href="route('admin.roles.index')" 
+                                                    :active="route().current('admin.roles.*')" 
+                                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                Roles
+                                            </NavLink>
+                                            <NavLink :href="route('activity-logs.index')" 
+                                                    :active="route().current('activity-logs.*')" 
+                                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100">
+                                                Activity Logs
+                                            </NavLink>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -223,12 +271,44 @@ const showAnnealingDropdown = ref(false);
                             Material Parts
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            v-if="$page.props.auth.user.role?.slug === 'admin'"
+                            v-if="$page.props.auth.user.role?.slug === 'admin' || $page.props.auth.user.role?.slug === 'super_admin'"
                             :href="route('users.index')"
                             :active="route().current('users.*')"
                         >
                             User Management
                         </ResponsiveNavLink>
+                        
+                        <!-- Admin Section (Mobile) -->
+                        <div v-if="$page.props.auth.user.role?.slug === 'admin' || $page.props.auth.user.role?.slug === 'super_admin'" class="border-t border-gray-200 pt-2 mt-2">
+                            <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">Admin</div>
+                            <ResponsiveNavLink
+                                v-if="$page.props.auth.user.role?.slug === 'super_admin'"
+                                :href="route('admin.departments.index')"
+                                :active="route().current('admin.departments.*')"
+                            >
+                                Departments
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="$page.props.auth.user.role?.slug === 'super_admin'"
+                                :href="route('admin.positions.index')"
+                                :active="route().current('admin.positions.*')"
+                            >
+                                Positions
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="$page.props.auth.user.role?.slug === 'super_admin'"
+                                :href="route('admin.roles.index')"
+                                :active="route().current('admin.roles.*')"
+                            >
+                                Roles
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                :href="route('activity-logs.index')"
+                                :active="route().current('activity-logs.*')"
+                            >
+                                Activity Logs
+                            </ResponsiveNavLink>
+                        </div>
                     </div>
 
                     <!-- Responsive Settings Options -->

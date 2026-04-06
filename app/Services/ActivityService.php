@@ -4,19 +4,23 @@ namespace App\Services;
 
 use App\Models\Activity;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ActivityService
 {
     /**
      * Log an activity.
      */
-    public static function log(string $type, string $description, Model $subject = null, array $properties = [])
+    public static function log(string $type, string $description, Model $subject = null, array $properties = [], string $module = null)
     {
         $activity = [
             'user_id' => auth()->id(),
             'type' => $type,
+            'module' => $module ?? self::getModuleFromSubject($subject),
             'description' => $description,
             'properties' => $properties,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
         ];
 
         if ($subject) {
@@ -29,6 +33,30 @@ class ActivityService
         }
 
         Activity::create($activity);
+    }
+
+    /**
+     * Get module name from subject model
+     */
+    private static function getModuleFromSubject(?Model $subject): ?string
+    {
+        if (!$subject) {
+            return null;
+        }
+
+        $moduleMap = [
+            'App\Models\AnnealingCheck' => 'annealing',
+            'App\Models\TempRecord' => 'temperature',
+            'App\Models\TorqueRecord' => 'torque',
+            'App\Models\ProductionBatch' => 'magnetism',
+            'App\Models\User' => 'users',
+            'App\Models\Department' => 'departments',
+            'App\Models\Position' => 'positions',
+            'App\Models\Role' => 'roles',
+        ];
+
+        $className = get_class($subject);
+        return $moduleMap[$className] ?? strtolower(class_basename($subject));
     }
 
     /**
@@ -158,5 +186,161 @@ class ActivityService
             default:
                 return $activity->description;
         }
+    }
+
+    /**
+     * Get all activities for admin viewing with filters.
+     */
+    public static function getAllActivities(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        $query = Activity::with('user');
+
+        // Filter by user
+        if (!empty($filters['user_id'])) {
+            $query->where('user_id', $filters['user_id']);
+        }
+
+        // Filter by module
+        if (!empty($filters['module'])) {
+            $query->where('module', $filters['module']);
+        }
+
+        // Filter by type (action)
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+
+        // Filter by date range
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('created_at', '>=', $filters['date_from']);
+        }
+        if (!empty($filters['date_to'])) {
+            $query->whereDate('created_at', '<=', $filters['date_to']);
+        }
+
+        // Search in description
+        if (!empty($filters['search'])) {
+            $query->where('description', 'like', '%' . $filters['search'] . '%');
+        }
+
+        return $query->latest()->paginate($perPage)->withQueryString();
+    }
+
+    /**
+     * Get available modules for filtering.
+     */
+    public static function getAvailableModules(): array
+    {
+        return [
+            'annealing' => 'Annealing Checks',
+            'magnetism' => 'Magnetism Checksheet',
+            'temperature' => 'Temperature Records',
+            'torque' => 'Torque Records',
+            'users' => 'User Management',
+            'departments' => 'Departments',
+            'positions' => 'Positions',
+            'roles' => 'Roles',
+            'auth' => 'Authentication',
+        ];
+    }
+
+    /**
+     * Get available action types for filtering.
+     */
+    public static function getAvailableTypes(): array
+    {
+        return [
+            'create' => 'Create',
+            'update' => 'Update',
+            'delete' => 'Delete',
+            'login' => 'Login',
+            'logout' => 'Logout',
+            'approve' => 'Approve',
+            'reject' => 'Reject',
+            'import' => 'Import',
+            'export' => 'Export',
+        ];
+    }
+
+    /**
+     * Delete a single activity.
+     */
+    public static function deleteActivity(int $activityId): bool
+    {
+        $activity = Activity::find($activityId);
+        if ($activity) {
+            return $activity->delete();
+        }
+        return false;
+    }
+
+    /**
+     * Bulk delete activities.
+     */
+    public static function bulkDelete(array $activityIds): int
+    {
+        return Activity::whereIn('id', $activityIds)->delete();
+    }
+
+    /**
+     * Log an approval activity.
+     */
+    public static function logApprove(Model $subject, array $properties = [])
+    {
+        $modelName = class_basename($subject);
+        $identifier = method_exists($subject, 'getIdentifierAttribute') 
+            ? $subject->getIdentifierAttribute() 
+            : $subject->id;
+        self::log(
+            'approve',
+            "Approved {$modelName}: {$identifier}",
+            $subject,
+            $properties
+        );
+    }
+
+    /**
+     * Log a rejection activity.
+     */
+    public static function logReject(Model $subject, string $reason = '', array $properties = [])
+    {
+        $modelName = class_basename($subject);
+        $identifier = method_exists($subject, 'getIdentifierAttribute') 
+            ? $subject->getIdentifierAttribute() 
+            : $subject->id;
+        self::log(
+            'reject',
+            "Rejected {$modelName}: {$identifier}" . ($reason ? " - Reason: {$reason}" : ''),
+            $subject,
+            array_merge(['rejection_reason' => $reason], $properties)
+        );
+    }
+
+    /**
+     * Log an import activity.
+     */
+    public static function logImport(string $module, int $count, array $properties = [])
+    {
+        self::log(
+            'import',
+            "Imported {$count} records to {$module}",
+            null,
+            array_merge(['count' => $count], $properties),
+            $module
+        );
+    }
+
+    /**
+     * Log an export activity.
+     */
+    public static function logExport(string $module, int $count, array $properties = [])
+    {
+        self::log(
+            'export',
+            "Exported {$count} records from {$module}",
+            null,
+            array_merge(['count' => $count], $properties),
+            $module
+        );
     }
 }

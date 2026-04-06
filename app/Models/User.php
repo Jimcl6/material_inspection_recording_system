@@ -74,18 +74,52 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user has specific permission
+     * Check if user has specific permission (checks both role AND position permissions)
      */
     public function hasPermission(string $module, string $action): bool
     {
-        if (!$this->role) {
-            return false;
+        // Super admin has all permissions
+        if ($this->isSuperAdmin()) {
+            return true;
         }
 
-        return $this->role->permissions()
-            ->where('module', $module)
-            ->where('action', $action)
-            ->exists();
+        // Check role permissions first
+        if ($this->role) {
+            $hasRolePermission = $this->role->permissions()
+                ->where('module', $module)
+                ->where('action', $action)
+                ->exists();
+            
+            if ($hasRolePermission) {
+                return true;
+            }
+        }
+
+        // Check position permissions as fallback
+        if ($this->position) {
+            return $this->position->permissions()
+                ->where('module', $module)
+                ->where('action', $action)
+                ->exists();
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if user is super admin
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role && $this->role->slug === 'super_admin';
+    }
+
+    /**
+     * Check if user is admin or super admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role && in_array($this->role->slug, ['admin', 'super_admin']);
     }
 
     /**
