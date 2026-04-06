@@ -13,6 +13,7 @@ use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AnnealingChecksExport;
 use App\Imports\AnnealingChecksWithHeadersImport;
+use App\Services\ActivityService;
 
 class AnnealingCheckController extends Controller
 {
@@ -86,6 +87,15 @@ class AnnealingCheckController extends Controller
             $notificationService = new \App\Services\ApprovalNotificationService();
             $notificationService->notifyApprovers($annealingCheck, 'new_submission');
         }
+
+        // Log activity
+        ActivityService::log(
+            'create',
+            "Created annealing check for {$annealingCheck->item_name}",
+            $annealingCheck,
+            ['item_code' => $annealingCheck->item_code],
+            'annealing'
+        );
 
         return redirect()->route('annealing-checks.index')
             ->with('success', 'Annealing check created successfully and submitted for approval.');
@@ -223,6 +233,15 @@ class AnnealingCheckController extends Controller
             }
         }
 
+        // Log activity
+        ActivityService::log(
+            'update',
+            "Updated annealing check for {$annealingCheck->item_name}",
+            $annealingCheck,
+            ['item_code' => $annealingCheck->item_code],
+            'annealing'
+        );
+
         return redirect()->route('annealing-checks.index')
             ->with('success', 'Annealing check updated successfully.');
     }
@@ -235,7 +254,19 @@ class AnnealingCheckController extends Controller
      */
     public function destroy(AnnealingCheck $annealingCheck)
     {
+        $itemName = $annealingCheck->item_name;
+        $itemCode = $annealingCheck->item_code;
+        
         $annealingCheck->delete();
+
+        // Log activity
+        ActivityService::log(
+            'delete',
+            "Deleted annealing check for {$itemName}",
+            null,
+            ['item_code' => $itemCode, 'item_name' => $itemName],
+            'annealing'
+        );
         
         return redirect()->route('annealing-checks.index')
             ->with('success', 'Annealing check deleted successfully!');

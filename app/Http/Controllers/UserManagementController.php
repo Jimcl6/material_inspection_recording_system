@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\Position;
 use App\Models\UserQrCode;
 use App\Services\QrCodeService;
+use App\Services\ActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +23,7 @@ class UserManagementController extends Controller
     public function __construct(QrCodeService $qrCodeService)
     {
         $this->qrCodeService = $qrCodeService;
-        $this->middleware(['auth', 'role:admin']);
+        $this->middleware(['auth', 'role:admin,super_admin']);
     }
 
     /**
@@ -136,6 +137,15 @@ class UserManagementController extends Controller
 
             DB::commit();
 
+            // Log activity
+            ActivityService::log(
+                'create',
+                "Created user account: {$user->name}",
+                $user,
+                ['employee_id' => $user->employee_id, 'role' => $user->role?->name],
+                'users'
+            );
+
             return redirect()->route('users.index')
                 ->with('success', 'User created successfully.');
         } catch (\Exception $e) {
@@ -246,6 +256,15 @@ class UserManagementController extends Controller
 
             DB::commit();
 
+            // Log activity
+            ActivityService::log(
+                'update',
+                "Updated user account: {$user->name}",
+                $user,
+                ['employee_id' => $user->employee_id],
+                'users'
+            );
+
             return redirect()->route('users.index')
                 ->with('success', 'User updated successfully.');
         } catch (\Exception $e) {
@@ -260,6 +279,9 @@ class UserManagementController extends Controller
     public function destroy(User $user)
     {
         try {
+            $userName = $user->name;
+            $employeeId = $user->employee_id;
+            
             // Soft delete by deactivating
             $user->update(['status' => 'inactive']);
             
@@ -267,6 +289,15 @@ class UserManagementController extends Controller
             if ($user->qrCode) {
                 $this->qrCodeService->deactivateQrCode($user);
             }
+
+            // Log activity
+            ActivityService::log(
+                'delete',
+                "Deactivated user account: {$userName}",
+                $user,
+                ['employee_id' => $employeeId],
+                'users'
+            );
 
             return redirect()->route('users.index')
                 ->with('success', 'User deactivated successfully.');

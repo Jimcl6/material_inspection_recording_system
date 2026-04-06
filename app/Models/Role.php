@@ -14,6 +14,13 @@ class Role extends Model
         'name',
         'slug',
         'description',
+        'is_system',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_system' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     public function users(): BelongsToMany
@@ -59,5 +66,45 @@ class Role extends Model
     public function syncPermissions(array $permissionIds): void
     {
         $this->permissions()->sync($permissionIds);
+    }
+
+    /**
+     * Scope for non-system (custom) roles
+     */
+    public function scopeCustom($query)
+    {
+        return $query->where('is_system', false);
+    }
+
+    /**
+     * Scope for system roles
+     */
+    public function scopeSystem($query)
+    {
+        return $query->where('is_system', true);
+    }
+
+    /**
+     * Scope for active roles
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Check if role is a system role (protected from deletion)
+     */
+    public function isSystem(): bool
+    {
+        return $this->is_system ?? false;
+    }
+
+    /**
+     * Check if role is super admin
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->slug === 'super_admin';
     }
 }
