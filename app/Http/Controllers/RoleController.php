@@ -44,7 +44,10 @@ class RoleController extends Controller
             $query->where('is_active', $request->get('status') === 'active');
         }
 
-        $roles = $query->orderBy('is_system', 'desc')->orderBy('name')->paginate(10)->withQueryString();
+        $roles = $query->orderBy('is_system', 'desc')
+            ->orderBy('name')
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('Admin/Roles/Index', [
             'roles' => $roles,
