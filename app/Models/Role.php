@@ -23,14 +23,14 @@ class Role extends Model
         'is_active' => 'boolean',
     ];
 
-    public function users(): BelongsToMany
+    public function users()
     {
-        return $this->belongsToMany(User::class);
+        return $this->hasMany(User::class, 'role_id');
     }
 
     public function permissions(): BelongsToMany
     {
-        return $this->belongsToMany(UserPermission::class, 'role_permissions');
+        return $this->belongsToMany(UserPermission::class, 'role_permissions', 'role_id', 'permission_id');
     }
 
     /**

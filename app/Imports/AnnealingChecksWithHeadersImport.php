@@ -194,7 +194,7 @@ class AnnealingChecksWithHeadersImport
         return [
             'item_code' => $itemCode,
             'receiving_date' => $this->parseDate($get('receiving_date')) ?? now()->toDateString(),
-            'supplier_lot_number' => $supplierLot ? (string) $supplierLot : 'N/A',
+            'supplier_lot_number' => $supplierLot ? (string) $supplierLot : null,
             'quantity' => $this->parseInteger($quantity),
             'annealing_date' => $this->parseDate($get('annealing_date')) ?? now()->toDateString(),
             'machine_number' => $get('machine_number') ? (string) $get('machine_number') : null,
