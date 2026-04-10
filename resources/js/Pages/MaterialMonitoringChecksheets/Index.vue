@@ -4,6 +4,9 @@ import { ref, computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTableFilters from '@/Components/DataTableFilters.vue';
 import DeleteButton from '@/Components/DeleteButton.vue';
+import { usePermissions } from '@/Composables/usePermissions';
+
+const { canCreate, canUpdate, canDelete } = usePermissions();
 
 const props = defineProps({
     materialParts: {
@@ -87,6 +90,7 @@ const getSubLotCount = (materialPart) => {
                     Material Monitoring Checksheets
                 </h2>
                 <Link
+                    v-if="canCreate('material')"
                     :href="route('material-monitoring-checksheets.create')"
                     class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                 >
@@ -194,6 +198,7 @@ const getSubLotCount = (materialPart) => {
                                                     </svg>
                                                 </Link>
                                                 <Link
+                                                    v-if="canUpdate('material')"
                                                     :href="route('material-monitoring-checksheets.edit', materialPart.id)"
                                                     class="text-blue-600 hover:text-blue-900"
                                                     title="Edit"
@@ -202,7 +207,7 @@ const getSubLotCount = (materialPart) => {
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                                     </svg>
                                                 </Link>
-                                                <DeleteButton :material-part="materialPart" />
+                                                <DeleteButton v-if="canDelete('material')" :material-part="materialPart" />
                                             </div>
                                         </td>
                                     </tr>
