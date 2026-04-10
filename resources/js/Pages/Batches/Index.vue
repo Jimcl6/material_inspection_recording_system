@@ -9,6 +9,7 @@
                 </h2>
                 <div class="space-x-2">
                     <Link 
+                        v-if="canImport('magnetism')"
                         :href="route('magnetism-checksheet.import.form')" 
                         class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
@@ -18,6 +19,7 @@
                         Import
                     </Link>
                     <Link 
+                        v-if="canCreate('magnetism')"
                         :href="route('magnetism-checksheet.create')" 
                         class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
@@ -165,6 +167,7 @@
                                                     </svg>
                                                 </Link>
                                                 <Link
+                                                    v-if="canUpdate('magnetism')"
                                                     :href="route('magnetism-checksheet.edit', { magnetism_checksheet: batch.BatchID })"
                                                     class="p-1 text-blue-600 hover:text-blue-900 rounded hover:bg-gray-100"
                                                     title="Edit"
@@ -174,6 +177,7 @@
                                                     </svg>
                                                 </Link>
                                                 <Link
+                                                    v-if="canCreate('magnetism')"
                                                     :href="route('magnetism-checksheet.checkpoints.create', { magnetism_checksheet: batch.BatchID })"
                                                     class="p-1 text-green-600 hover:text-green-900 rounded hover:bg-gray-100"
                                                     title="Add Checkpoint"
@@ -183,6 +187,7 @@
                                                     </svg>
                                                 </Link>
                                                 <button
+                                                    v-if="canDelete('magnetism')"
                                                     @click="confirmDelete(batch)"
                                                     class="p-1 text-red-600 hover:text-red-900 rounded hover:bg-gray-100"
                                                     title="Delete"
@@ -289,9 +294,12 @@
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive } from 'vue';
+import { usePermissions } from '@/Composables/usePermissions';
 
 // Import route helper
 declare function route(name: string, params?: any): string;
+
+const { canCreate, canUpdate, canDelete, canImport } = usePermissions();
 
 type Filters = {
     q?: string;

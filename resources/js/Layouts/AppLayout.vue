@@ -6,19 +6,14 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+import { usePermissions } from '@/Composables/usePermissions';
 
 const showingNavigationDropdown = ref(false);
 const showAnnealingDropdown = ref(false);
+const showDiaphragmWeldingDropdown = ref(false);
 const showAdminDropdown = ref(false);
 
-const isSuperAdmin = () => {
-    return window.$page?.props?.auth?.user?.role?.slug === 'super_admin';
-};
-
-const isAdmin = () => {
-    const role = window.$page?.props?.auth?.user?.role?.slug;
-    return role === 'admin' || role === 'super_admin';
-};
+const { canView, canCreate, canImport, canApprove, isAdmin, isSuperAdmin } = usePermissions();
 </script>
 
 <template>
@@ -43,7 +38,7 @@ const isAdmin = () => {
                                 </NavLink>
                                 
                                 <!-- Annealing Checks Dropdown -->
-                                <div class="relative" @mouseenter="showAnnealingDropdown = true" @mouseleave="showAnnealingDropdown = false">
+                                <div v-if="canView('annealing')" class="relative" @mouseenter="showAnnealingDropdown = true" @mouseleave="showAnnealingDropdown = false">
                                     <button class="flex items-center text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                                             :class="{ 'bg-gray-100': route().current('annealing-checks.*') }">
                                         Annealing Checks
@@ -56,13 +51,13 @@ const isAdmin = () => {
                                             <NavLink :href="route('annealing-checks.index')" :active="route().current('annealing-checks.index')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                                 All Checks
                                             </NavLink>
-                                            <NavLink :href="route('annealing-checks.create')" :active="route().current('annealing-checks.create')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <NavLink v-if="canCreate('annealing')" :href="route('annealing-checks.create')" :active="route().current('annealing-checks.create')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                                 Add New
                                             </NavLink>
-                                            <NavLink :href="route('annealing-checks.import.form')" :active="route().current('annealing-checks.import.form')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <NavLink v-if="canImport('annealing')" :href="route('annealing-checks.import.form')" :active="route().current('annealing-checks.import.form')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                                 Import
                                             </NavLink>
-                                            <NavLink v-if="$page.props.auth.user.role?.slug === 'admin' || $page.props.auth.user.role?.slug === 'inspector'" 
+                                            <NavLink v-if="canApprove('annealing')" 
                                                     :href="route('annealing-checks.approval')" 
                                                     :active="route().current('annealing-checks.approval')" 
                                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100">
@@ -72,27 +67,58 @@ const isAdmin = () => {
                                     </div>
                                 </div>
                                 
-                                <NavLink :href="route('temp-records.index')" :active="route().current('temp-records.*')">
+                                <NavLink v-if="canView('temperature')" :href="route('temp-records.index')" :active="route().current('temp-records.*')">
                                     Temperature Records
                                 </NavLink>
-                                <NavLink :href="route('torque-records.index')" :active="route().current('torque-records.*')">
+                                <NavLink v-if="canView('torque')" :href="route('torque-records.index')" :active="route().current('torque-records.*')">
                                     Torque Records
                                 </NavLink>
-                                <NavLink :href="route('magnetism-checksheet.index')" :active="route().current('magnetism-checksheet.*')">
+                                <NavLink v-if="canView('magnetism')" :href="route('magnetism-checksheet.index')" :active="route().current('magnetism-checksheet.*')">
                                     Magnetism Checksheet
                                 </NavLink>
-                                <NavLink :href="route('modification-logs.index')" :active="route().current('modification-logs.*')">
+                                
+                                <!-- Diaphragm Welding Dropdown -->
+                                <div v-if="canView('diaphragm')" class="relative" @mouseenter="showDiaphragmWeldingDropdown = true" @mouseleave="showDiaphragmWeldingDropdown = false">
+                                    <button class="flex items-center text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                                            :class="{ 'bg-gray-100': route().current('diaphragm-welding.*') }">
+                                        Diaphragm Welding
+                                        <svg class="ml-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                    <div v-show="showDiaphragmWeldingDropdown" class="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                                        <div class="py-1">
+                                            <NavLink :href="route('diaphragm-welding.index')" :active="route().current('diaphragm-welding.index')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                All Checksheets
+                                            </NavLink>
+                                            <NavLink v-if="canCreate('diaphragm')" :href="route('diaphragm-welding.create')" :active="route().current('diaphragm-welding.create')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                Add New
+                                            </NavLink>
+                                            <NavLink v-if="canImport('diaphragm')" :href="route('diaphragm-welding.import.form')" :active="route().current('diaphragm-welding.import.form')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                Import
+                                            </NavLink>
+                                            <NavLink v-if="canApprove('diaphragm')" 
+                                                    :href="route('diaphragm-welding.approval')" 
+                                                    :active="route().current('diaphragm-welding.approval')" 
+                                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100">
+                                                Pending Approvals
+                                            </NavLink>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <NavLink v-if="canView('modification')" :href="route('modification-logs.index')" :active="route().current('modification-logs.*')">
                                     Modification Logs
                                 </NavLink>
-                                <NavLink :href="route('material-monitoring-checksheets.index')" :active="route().current('material-monitoring-checksheets.*')">
+                                <NavLink v-if="canView('material')" :href="route('material-monitoring-checksheets.index')" :active="route().current('material-monitoring-checksheets.*')">
                                     Mtrl Monitoring Checksheet
                                 </NavLink>
-                                <NavLink v-if="$page.props.auth.user.role?.slug === 'admin' || $page.props.auth.user.role?.slug === 'super_admin'" :href="route('users.index')" :active="route().current('users.*')">
+                                <NavLink v-if="isAdmin" :href="route('users.index')" :active="route().current('users.*')">
                                     User Management
                                 </NavLink>
                                 
                                 <!-- Admin Dropdown (for admin and super_admin) -->
-                                <div v-if="$page.props.auth.user.role?.slug === 'admin' || $page.props.auth.user.role?.slug === 'super_admin'" 
+                                <div v-if="isAdmin" 
                                      class="relative" @mouseenter="showAdminDropdown = true" @mouseleave="showAdminDropdown = false">
                                     <button class="flex items-center text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                                             :class="{ 'bg-gray-100': route().current('admin.*') || route().current('activity-logs.*') }">
@@ -103,19 +129,19 @@ const isAdmin = () => {
                                     </button>
                                     <div v-show="showAdminDropdown" class="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                                         <div class="py-1">
-                                            <NavLink v-if="$page.props.auth.user.role?.slug === 'super_admin'"
+                                            <NavLink v-if="isSuperAdmin"
                                                     :href="route('admin.departments.index')" 
                                                     :active="route().current('admin.departments.*')" 
                                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                                 Departments
                                             </NavLink>
-                                            <NavLink v-if="$page.props.auth.user.role?.slug === 'super_admin'"
+                                            <NavLink v-if="isSuperAdmin"
                                                     :href="route('admin.positions.index')" 
                                                     :active="route().current('admin.positions.*')" 
                                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                                 Positions
                                             </NavLink>
-                                            <NavLink v-if="$page.props.auth.user.role?.slug === 'super_admin'"
+                                            <NavLink v-if="isSuperAdmin"
                                                     :href="route('admin.roles.index')" 
                                                     :active="route().current('admin.roles.*')" 
                                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
@@ -215,63 +241,111 @@ const isAdmin = () => {
                         >
                             Dashboard
                         </ResponsiveNavLink>
+                        
+                        <!-- Annealing Section (Mobile) -->
+                        <template v-if="canView('annealing')">
+                            <ResponsiveNavLink
+                                :href="route('annealing-checks.index')"
+                                :active="route().current('annealing-checks.index')"
+                            >
+                                Annealing Checks
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="canCreate('annealing')"
+                                :href="route('annealing-checks.create')"
+                                :active="route().current('annealing-checks.create')"
+                                class="pl-8"
+                            >
+                                Add New
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="canImport('annealing')"
+                                :href="route('annealing-checks.import.form')"
+                                :active="route().current('annealing-checks.import.form')"
+                                class="pl-8"
+                            >
+                                Import
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="canApprove('annealing')"
+                                :href="route('annealing-checks.approval')"
+                                :active="route().current('annealing-checks.approval')"
+                                class="pl-8"
+                            >
+                                Pending Approvals
+                            </ResponsiveNavLink>
+                        </template>
+                        
                         <ResponsiveNavLink
-                            :href="route('annealing-checks.index')"
-                            :active="route().current('annealing-checks.index')"
-                        >
-                            All Checks
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            :href="route('annealing-checks.create')"
-                            :active="route().current('annealing-checks.create')"
-                        >
-                            Add New
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            :href="route('annealing-checks.import.form')"
-                            :active="route().current('annealing-checks.import.form')"
-                        >
-                            Import
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            v-if="$page.props.auth.user.role?.slug === 'admin' || $page.props.auth.user.role?.slug === 'inspector'"
-                            :href="route('annealing-checks.approval')"
-                            :active="route().current('annealing-checks.approval')"
-                        >
-                            Pending Approvals
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
+                            v-if="canView('temperature')"
                             :href="route('temp-records.index')"
                             :active="route().current('temp-records.*')"
                         >
                             Temperature Records
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
+                            v-if="canView('torque')"
                             :href="route('torque-records.index')"
                             :active="route().current('torque-records.*')"
                         >
                             Torque Records
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
+                            v-if="canView('magnetism')"
                             :href="route('magnetism-checksheet.index')"
                             :active="route().current('magnetism-checksheet.*')"
                         >
                             Magnetism Checksheet
                         </ResponsiveNavLink>
+                        
+                        <!-- Diaphragm Welding Section (Mobile) -->
+                        <div v-if="canView('diaphragm')" class="border-t border-gray-200 pt-2 mt-2">
+                            <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">Diaphragm Welding</div>
+                            <ResponsiveNavLink
+                                :href="route('diaphragm-welding.index')"
+                                :active="route().current('diaphragm-welding.index')"
+                            >
+                                All Checksheets
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="canCreate('diaphragm')"
+                                :href="route('diaphragm-welding.create')"
+                                :active="route().current('diaphragm-welding.create')"
+                            >
+                                Add New
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="canImport('diaphragm')"
+                                :href="route('diaphragm-welding.import.form')"
+                                :active="route().current('diaphragm-welding.import.form')"
+                            >
+                                Import
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="canApprove('diaphragm')"
+                                :href="route('diaphragm-welding.approval')"
+                                :active="route().current('diaphragm-welding.approval')"
+                            >
+                                Pending Approvals
+                            </ResponsiveNavLink>
+                        </div>
+                        
                         <ResponsiveNavLink
+                            v-if="canView('modification')"
                             :href="route('modification-logs.index')"
                             :active="route().current('modification-logs.*')"
                         >
                             Modification Logs
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
+                            v-if="canView('material')"
                             :href="route('material-monitoring-checksheets.index')"
                             :active="route().current('material-monitoring-checksheets.*')"
                         >
                             Material Parts
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            v-if="$page.props.auth.user.role?.slug === 'admin' || $page.props.auth.user.role?.slug === 'super_admin'"
+                            v-if="isAdmin"
                             :href="route('users.index')"
                             :active="route().current('users.*')"
                         >
@@ -279,24 +353,24 @@ const isAdmin = () => {
                         </ResponsiveNavLink>
                         
                         <!-- Admin Section (Mobile) -->
-                        <div v-if="$page.props.auth.user.role?.slug === 'admin' || $page.props.auth.user.role?.slug === 'super_admin'" class="border-t border-gray-200 pt-2 mt-2">
+                        <div v-if="isAdmin" class="border-t border-gray-200 pt-2 mt-2">
                             <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase">Admin</div>
                             <ResponsiveNavLink
-                                v-if="$page.props.auth.user.role?.slug === 'super_admin'"
+                                v-if="isSuperAdmin"
                                 :href="route('admin.departments.index')"
                                 :active="route().current('admin.departments.*')"
                             >
                                 Departments
                             </ResponsiveNavLink>
                             <ResponsiveNavLink
-                                v-if="$page.props.auth.user.role?.slug === 'super_admin'"
+                                v-if="isSuperAdmin"
                                 :href="route('admin.positions.index')"
                                 :active="route().current('admin.positions.*')"
                             >
                                 Positions
                             </ResponsiveNavLink>
                             <ResponsiveNavLink
-                                v-if="$page.props.auth.user.role?.slug === 'super_admin'"
+                                v-if="isSuperAdmin"
                                 :href="route('admin.roles.index')"
                                 :active="route().current('admin.roles.*')"
                             >

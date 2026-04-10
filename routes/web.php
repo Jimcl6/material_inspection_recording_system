@@ -14,7 +14,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ActivityLogController;
-use App\Models\AnnealingCheck;
+use App\Http\Controllers\DiaphragmWeldingController;
 
 // Public routes
 Route::get('/', function () {
@@ -47,24 +47,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Magnetism Checksheet
     Route::get('magnetism-checksheet', [ProductionBatchController::class, 'index'])
+        ->middleware('module.permission:magnetism,view')
         ->name('magnetism-checksheet.index');
     Route::get('magnetism-checksheet/create', [ProductionBatchController::class, 'create'])
+        ->middleware('module.permission:magnetism,create')
         ->name('magnetism-checksheet.create');
     Route::post('magnetism-checksheet', [ProductionBatchController::class, 'store'])
+        ->middleware('module.permission:magnetism,create')
         ->name('magnetism-checksheet.store');
     Route::get('magnetism-checksheet/{magnetism_checksheet}', [ProductionBatchController::class, 'show'])
+        ->middleware('module.permission:magnetism,view')
         ->name('magnetism-checksheet.show');
     Route::get('magnetism-checksheet/{magnetism_checksheet}/edit', [ProductionBatchController::class, 'edit'])
+        ->middleware('module.permission:magnetism,update')
         ->name('magnetism-checksheet.edit');
     Route::put('magnetism-checksheet/{magnetism_checksheet}', [ProductionBatchController::class, 'update'])
+        ->middleware('module.permission:magnetism,update')
         ->name('magnetism-checksheet.update');
     Route::delete('magnetism-checksheet/{magnetism_checksheet}', [ProductionBatchController::class, 'destroy'])
+        ->middleware('module.permission:magnetism,delete')
         ->name('magnetism-checksheet.destroy');
     Route::get('magnetism-checksheet/{magnetism_checksheet}/export', [ProductionBatchController::class, 'export'])
+        ->middleware('module.permission:magnetism,export')
         ->name('magnetism-checksheet.export');
     Route::get('magnetism-checksheet/import', [ProductionBatchController::class, 'importForm'])
+        ->middleware('module.permission:magnetism,import')
         ->name('magnetism-checksheet.import.form');
     Route::post('magnetism-checksheet/import', [ProductionBatchController::class, 'import'])
+        ->middleware('module.permission:magnetism,import')
         ->name('magnetism-checksheet.import');
     Route::get('magnetism-checksheet/next-letter', [ProductionBatchController::class, 'nextLetter'])
         ->name('magnetism-checksheet.next-letter');
@@ -83,32 +93,42 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Modification Logs
     Route::get('modification-logs', [ModificationLogController::class, 'index'])
+        ->middleware('module.permission:modification,view')
         ->name('modification-logs.index');
     Route::get('modification-logs/create', [ModificationLogController::class, 'create'])
+        ->middleware('module.permission:modification,create')
         ->name('modification-logs.create');
     Route::post('modification-logs', [ModificationLogController::class, 'store'])
+        ->middleware('module.permission:modification,create')
         ->name('modification-logs.store');
     Route::get('modification-logs/{modification_log}', [ModificationLogController::class, 'show'])
+        ->middleware('module.permission:modification,view')
         ->name('modification-logs.show');
     Route::get('modification-logs/{modification_log}/edit', [ModificationLogController::class, 'edit'])
+        ->middleware('module.permission:modification,update')
         ->name('modification-logs.edit');
     Route::put('modification-logs/{modification_log}', [ModificationLogController::class, 'update'])
+        ->middleware('module.permission:modification,update')
         ->name('modification-logs.update');
     Route::delete('modification-logs/{modification_log}', [ModificationLogController::class, 'destroy'])
+        ->middleware('module.permission:modification,delete')
         ->name('modification-logs.destroy');
 
     // Annealing Checks
     // Import/Export routes must come BEFORE the resource route
     Route::get('annealing-checks/import', [AnnealingCheckController::class, 'importForm'])
+        ->middleware('module.permission:annealing,import')
         ->name('annealing-checks.import.form');
     Route::post('annealing-checks/import', [AnnealingCheckController::class, 'import'])
+        ->middleware('module.permission:annealing,import')
         ->name('annealing-checks.import');
     Route::get('annealing-checks/export', [AnnealingCheckController::class, 'export'])
+        ->middleware('module.permission:annealing,export')
         ->name('annealing-checks.export');
     Route::get('annealing-checks/debug', [AnnealingCheckController::class, 'debug']);
     
     // Approval routes (admin/inspector only)
-    Route::middleware(['auth', 'role:admin,inspector'])->group(function () {
+    Route::middleware(['auth', 'module.permission:annealing,approve'])->group(function () {
         Route::get('annealing-checks/approval', [AnnealingCheckController::class, 'approval'])
             ->name('annealing-checks.approval');
         Route::post('annealing-checks/bulk-approve', [AnnealingCheckController::class, 'bulkApprove'])
@@ -117,28 +137,171 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('annealing-checks.bulk-reject');
     });
     
-    Route::resource('annealing-checks', AnnealingCheckController::class);
+    // Annealing Checks Resource Routes with permission middleware
+    Route::get('annealing-checks', [AnnealingCheckController::class, 'index'])
+        ->middleware('module.permission:annealing,view')
+        ->name('annealing-checks.index');
+    Route::get('annealing-checks/create', [AnnealingCheckController::class, 'create'])
+        ->middleware('module.permission:annealing,create')
+        ->name('annealing-checks.create');
+    Route::post('annealing-checks', [AnnealingCheckController::class, 'store'])
+        ->middleware('module.permission:annealing,create')
+        ->name('annealing-checks.store');
+    Route::get('annealing-checks/{annealing_check}', [AnnealingCheckController::class, 'show'])
+        ->middleware('module.permission:annealing,view')
+        ->name('annealing-checks.show');
+    Route::get('annealing-checks/{annealing_check}/edit', [AnnealingCheckController::class, 'edit'])
+        ->middleware('module.permission:annealing,update')
+        ->name('annealing-checks.edit');
+    Route::put('annealing-checks/{annealing_check}', [AnnealingCheckController::class, 'update'])
+        ->middleware('module.permission:annealing,update')
+        ->name('annealing-checks.update');
+    Route::patch('annealing-checks/{annealing_check}', [AnnealingCheckController::class, 'update'])
+        ->middleware('module.permission:annealing,update');
+    Route::delete('annealing-checks/{annealing_check}', [AnnealingCheckController::class, 'destroy'])
+        ->middleware('module.permission:annealing,delete')
+        ->name('annealing-checks.destroy');
     
-    // Temperature Records
-    Route::resource('temp-records', TempRecordController::class);
-    Route::get('temp-records/import', [TempRecordController::class, 'importForm'])
+    // Temperature Records with permission middleware
+    Route::get('temp-records', [TempRecordController::class, 'index'])
+        ->middleware('module.permission:temperature,view')
+        ->name('temp-records.index');
+    Route::get('temp-records/create', [TempRecordController::class, 'create'])
+        ->middleware('module.permission:temperature,create')
+        ->name('temp-records.create');
+    Route::post('temp-records', [TempRecordController::class, 'store'])
+        ->middleware('module.permission:temperature,create')
+        ->name('temp-records.store');
+    Route::get('temp-records/{temp_record}', [TempRecordController::class, 'show'])
+        ->middleware('module.permission:temperature,view')
+        ->name('temp-records.show');
+    Route::get('temp-records/{temp_record}/edit', [TempRecordController::class, 'edit'])
+        ->middleware('module.permission:temperature,update')
+        ->name('temp-records.edit');
+    Route::put('temp-records/{temp_record}', [TempRecordController::class, 'update'])
+        ->middleware('module.permission:temperature,update')
+        ->name('temp-records.update');
+    Route::patch('temp-records/{temp_record}', [TempRecordController::class, 'update'])
+        ->middleware('module.permission:temperature,update');
+    Route::delete('temp-records/{temp_record}', [TempRecordController::class, 'destroy'])
+        ->middleware('module.permission:temperature,delete')
+        ->name('temp-records.destroy');
+    Route::get('temp-records-import', [TempRecordController::class, 'importForm'])
+        ->middleware('module.permission:temperature,import')
         ->name('temp-records.import.form');
-    Route::post('temp-records/import', [TempRecordController::class, 'import'])
+    Route::post('temp-records-import', [TempRecordController::class, 'import'])
+        ->middleware('module.permission:temperature,import')
         ->name('temp-records.import');
 
-    // Torque Records
-    Route::resource('torque-records', TorqueRecordController::class);
+    // Torque Records with permission middleware
+    Route::get('torque-records', [TorqueRecordController::class, 'index'])
+        ->middleware('module.permission:torque,view')
+        ->name('torque-records.index');
+    Route::get('torque-records/create', [TorqueRecordController::class, 'create'])
+        ->middleware('module.permission:torque,create')
+        ->name('torque-records.create');
+    Route::post('torque-records', [TorqueRecordController::class, 'store'])
+        ->middleware('module.permission:torque,create')
+        ->name('torque-records.store');
+    Route::get('torque-records/{torque_record}', [TorqueRecordController::class, 'show'])
+        ->middleware('module.permission:torque,view')
+        ->name('torque-records.show');
+    Route::get('torque-records/{torque_record}/edit', [TorqueRecordController::class, 'edit'])
+        ->middleware('module.permission:torque,update')
+        ->name('torque-records.edit');
+    Route::put('torque-records/{torque_record}', [TorqueRecordController::class, 'update'])
+        ->middleware('module.permission:torque,update')
+        ->name('torque-records.update');
+    Route::patch('torque-records/{torque_record}', [TorqueRecordController::class, 'update'])
+        ->middleware('module.permission:torque,update');
+    Route::delete('torque-records/{torque_record}', [TorqueRecordController::class, 'destroy'])
+        ->middleware('module.permission:torque,delete')
+        ->name('torque-records.destroy');
     Route::get('torque-records/{torque_record}/export', [TorqueRecordController::class, 'export'])
+        ->middleware('module.permission:torque,export')
         ->name('torque-records.export');
-    Route::get('torque-records/import', [TorqueRecordController::class, 'importForm'])
+    Route::get('torque-records-import', [TorqueRecordController::class, 'importForm'])
+        ->middleware('module.permission:torque,import')
         ->name('torque-records.import.form');
-    Route::post('torque-records/import', [TorqueRecordController::class, 'import'])
+    Route::post('torque-records-import', [TorqueRecordController::class, 'import'])
+        ->middleware('module.permission:torque,import')
         ->name('torque-records.import');
 
-    // Material Parts
-    Route::resource('material-monitoring-checksheets', MaterialPartController::class);
+    // Material Parts with permission middleware
+    Route::get('material-monitoring-checksheets', [MaterialPartController::class, 'index'])
+        ->middleware('module.permission:material,view')
+        ->name('material-monitoring-checksheets.index');
+    Route::get('material-monitoring-checksheets/create', [MaterialPartController::class, 'create'])
+        ->middleware('module.permission:material,create')
+        ->name('material-monitoring-checksheets.create');
     Route::get('material-monitoring-checksheets/for-ai', [MaterialPartController::class, 'getForAI'])
         ->name('material-monitoring-checksheets.for-ai');
+    Route::post('material-monitoring-checksheets', [MaterialPartController::class, 'store'])
+        ->middleware('module.permission:material,create')
+        ->name('material-monitoring-checksheets.store');
+    Route::get('material-monitoring-checksheets/{material_monitoring_checksheet}', [MaterialPartController::class, 'show'])
+        ->middleware('module.permission:material,view')
+        ->name('material-monitoring-checksheets.show');
+    Route::get('material-monitoring-checksheets/{material_monitoring_checksheet}/edit', [MaterialPartController::class, 'edit'])
+        ->middleware('module.permission:material,update')
+        ->name('material-monitoring-checksheets.edit');
+    Route::put('material-monitoring-checksheets/{material_monitoring_checksheet}', [MaterialPartController::class, 'update'])
+        ->middleware('module.permission:material,update')
+        ->name('material-monitoring-checksheets.update');
+    Route::patch('material-monitoring-checksheets/{material_monitoring_checksheet}', [MaterialPartController::class, 'update'])
+        ->middleware('module.permission:material,update');
+    Route::delete('material-monitoring-checksheets/{material_monitoring_checksheet}', [MaterialPartController::class, 'destroy'])
+        ->middleware('module.permission:material,delete')
+        ->name('material-monitoring-checksheets.destroy');
+
+    // Diaphragm Welding Checksheet
+    // Import/Export routes must come BEFORE the resource route
+    Route::get('diaphragm-welding/import', [DiaphragmWeldingController::class, 'importForm'])
+        ->middleware('module.permission:diaphragm,import')
+        ->name('diaphragm-welding.import.form');
+    Route::post('diaphragm-welding/import', [DiaphragmWeldingController::class, 'import'])
+        ->middleware('module.permission:diaphragm,import')
+        ->name('diaphragm-welding.import');
+    Route::get('diaphragm-welding/export', [DiaphragmWeldingController::class, 'export'])
+        ->middleware('module.permission:diaphragm,export')
+        ->name('diaphragm-welding.export');
+    Route::get('diaphragm-welding/item-code-rules', [DiaphragmWeldingController::class, 'getItemCodeRules'])
+        ->name('diaphragm-welding.item-code-rules');
+    
+    // Approval routes (admin/inspector only)
+    Route::middleware(['auth', 'module.permission:diaphragm,approve'])->group(function () {
+        Route::get('diaphragm-welding/approval', [DiaphragmWeldingController::class, 'approval'])
+            ->name('diaphragm-welding.approval');
+        Route::post('diaphragm-welding/bulk-approve', [DiaphragmWeldingController::class, 'bulkApprove'])
+            ->name('diaphragm-welding.bulk-approve');
+        Route::post('diaphragm-welding/bulk-reject', [DiaphragmWeldingController::class, 'bulkReject'])
+            ->name('diaphragm-welding.bulk-reject');
+    });
+    
+    // Diaphragm Welding Resource Routes with permission middleware
+    Route::get('diaphragm-welding', [DiaphragmWeldingController::class, 'index'])
+        ->middleware('module.permission:diaphragm,view')
+        ->name('diaphragm-welding.index');
+    Route::get('diaphragm-welding/create', [DiaphragmWeldingController::class, 'create'])
+        ->middleware('module.permission:diaphragm,create')
+        ->name('diaphragm-welding.create');
+    Route::post('diaphragm-welding', [DiaphragmWeldingController::class, 'store'])
+        ->middleware('module.permission:diaphragm,create')
+        ->name('diaphragm-welding.store');
+    Route::get('diaphragm-welding/{diaphragm_welding}', [DiaphragmWeldingController::class, 'show'])
+        ->middleware('module.permission:diaphragm,view')
+        ->name('diaphragm-welding.show');
+    Route::get('diaphragm-welding/{diaphragm_welding}/edit', [DiaphragmWeldingController::class, 'edit'])
+        ->middleware('module.permission:diaphragm,update')
+        ->name('diaphragm-welding.edit');
+    Route::put('diaphragm-welding/{diaphragm_welding}', [DiaphragmWeldingController::class, 'update'])
+        ->middleware('module.permission:diaphragm,update')
+        ->name('diaphragm-welding.update');
+    Route::patch('diaphragm-welding/{diaphragm_welding}', [DiaphragmWeldingController::class, 'update'])
+        ->middleware('module.permission:diaphragm,update');
+    Route::delete('diaphragm-welding/{diaphragm_welding}', [DiaphragmWeldingController::class, 'destroy'])
+        ->middleware('module.permission:diaphragm,delete')
+        ->name('diaphragm-welding.destroy');
 
     // User Management (Admin only)
     Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {

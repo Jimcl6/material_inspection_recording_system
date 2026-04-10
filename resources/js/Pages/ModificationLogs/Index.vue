@@ -3,9 +3,12 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTableFilters from '@/Components/DataTableFilters.vue';
+import { usePermissions } from '@/Composables/usePermissions';
 
 // Import route helper
 declare function route(name: string, params?: any): string;
+
+const { canCreate, canUpdate, canDelete } = usePermissions();
 
 interface ModificationLog {
     id: number;
@@ -143,6 +146,7 @@ const confirmDelete = (log: ModificationLog) => {
                     Modification Logs
                 </h2>
                 <Link
+                    v-if="canCreate('modification')"
                     :href="route('modification-logs.create')"
                     class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
                 >
@@ -229,6 +233,7 @@ const confirmDelete = (log: ModificationLog) => {
                                                     </svg>
                                                 </Link>
                                                 <Link
+                                                    v-if="canUpdate('modification')"
                                                     :href="route('modification-logs.edit', log.id)"
                                                     class="p-1 text-blue-600 hover:text-blue-900 rounded hover:bg-gray-100"
                                                     title="Edit"
@@ -238,6 +243,7 @@ const confirmDelete = (log: ModificationLog) => {
                                                     </svg>
                                                 </Link>
                                                 <button
+                                                    v-if="canDelete('modification')"
                                                     @click="confirmDelete(log)"
                                                     class="p-1 text-red-600 hover:text-red-900 rounded hover:bg-gray-100"
                                                     title="Delete"
