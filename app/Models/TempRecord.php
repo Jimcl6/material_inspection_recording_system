@@ -17,6 +17,7 @@ class TempRecord extends Model
         'line_assigned',
         'control_no',
         'equipment_type',
+        'machine_setting_standard',
         'process_assigned',
         'person_in_charge',
         'time_am',
