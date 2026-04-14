@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\TorqueRecord;
+use App\Imports\TorqueChecksheetImport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class TorqueRecordController extends Controller
@@ -151,5 +153,159 @@ class TorqueRecordController extends Controller
     {
         $torque_record->delete();
         return redirect()->route('torque-records.index')->with('success', 'Record deleted.');
+    }
+
+    /**
+     * Show the import form
+     */
+    public function importForm()
+    {
+        return Inertia::render('TorqueRecords/Import');
+    }
+
+    /**
+     * Preview import - Phase 1: Parse file and detect duplicates
+     */
+    public function importPreview(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
+        ]);
+
+        $file = $request->file('file');
+
+        try {
+            $tempPath = $file->store('temp');
+            $fullPath = storage_path('app/' . $tempPath);
+
+            $import = new TorqueChecksheetImport();
+            $results = $import->preview($fullPath);
+
+            // Store the temp file path in session for execute phase
+            session(['torque_import_file' => $tempPath]);
+
+            return response()->json([
+                'success' => true,
+                'preview' => $results,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Torque Import Preview failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to preview file: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Execute import - Phase 2: Create/update records based on user choice
+     */
+    public function importExecute(Request $request)
+    {
+        $request->validate([
+            'update_duplicates' => ['nullable', 'boolean'],
+        ]);
+
+        $tempPath = session('torque_import_file');
+
+        if (!$tempPath) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No file to import. Please upload a file first.',
+            ], 400);
+        }
+
+        $fullPath = storage_path('app/' . $tempPath);
+
+        if (!file_exists($fullPath)) {
+            session()->forget('torque_import_file');
+            return response()->json([
+                'success' => false,
+                'error' => 'Import file expired. Please upload again.',
+            ], 400);
+        }
+
+        try {
+            $updateDuplicates = $request->boolean('update_duplicates', false);
+
+            $import = new TorqueChecksheetImport();
+            $results = $import->execute($fullPath, $updateDuplicates);
+
+            // Clean up temp file
+            @unlink($fullPath);
+            session()->forget('torque_import_file');
+
+            $message = "Import completed: {$results['imported']} created";
+            if ($results['updated'] > 0) $message .= ", {$results['updated']} updated";
+            if ($results['skipped'] > 0) $message .= ", {$results['skipped']} skipped";
+            if (count($results['errors']) > 0) $message .= ", " . count($results['errors']) . " errors";
+
+            return response()->json([
+                'success' => true,
+                'results' => $results,
+                'message' => $message,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Torque Import Execute failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to import file: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Direct import (single step, for simple imports without preview)
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
+            'update_duplicates' => ['nullable', 'boolean'],
+        ]);
+
+        $file = $request->file('file');
+
+        try {
+            $tempPath = $file->store('temp');
+            $fullPath = storage_path('app/' . $tempPath);
+
+            $updateDuplicates = $request->boolean('update_duplicates', false);
+
+            $import = new TorqueChecksheetImport();
+            $results = $import->execute($fullPath, $updateDuplicates);
+
+            @unlink($fullPath);
+
+            $message = "Import completed: {$results['imported']} created";
+            if ($results['updated'] > 0) $message .= ", {$results['updated']} updated";
+            if ($results['skipped'] > 0) $message .= ", {$results['skipped']} skipped";
+            if (count($results['errors']) > 0) $message .= ", " . count($results['errors']) . " errors";
+
+            return Inertia::render('TorqueRecords/Import', [
+                'import_results' => $results,
+                'success' => $message,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Torque Import failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return Inertia::render('TorqueRecords/Import', [
+                'error' => 'Error importing file: ' . $e->getMessage(),
+            ]);
+        }
     }
 }

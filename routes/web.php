@@ -189,9 +189,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('temp-records-import', [TempRecordController::class, 'importForm'])
         ->middleware('module.permission:temperature,import')
         ->name('temp-records.import.form');
-    Route::post('temp-records-import', [TempRecordController::class, 'import'])
+    Route::post('temp-records-import/preview', [TempRecordController::class, 'importPreview'])
         ->middleware('module.permission:temperature,import')
-        ->name('temp-records.import');
+        ->name('temp-records.import.preview');
+    Route::post('temp-records-import/execute', [TempRecordController::class, 'importExecute'])
+        ->middleware('module.permission:temperature,import')
+        ->name('temp-records.import.execute');
 
     // Torque Records with permission middleware
     Route::get('torque-records', [TorqueRecordController::class, 'index'])
@@ -226,6 +229,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('torque-records-import', [TorqueRecordController::class, 'import'])
         ->middleware('module.permission:torque,import')
         ->name('torque-records.import');
+    Route::post('torque-records-import/preview', [TorqueRecordController::class, 'importPreview'])
+        ->middleware('module.permission:torque,import')
+        ->name('torque-records.import.preview');
+    Route::post('torque-records-import/execute', [TorqueRecordController::class, 'importExecute'])
+        ->middleware('module.permission:torque,import')
+        ->name('torque-records.import.execute');
 
     // Material Parts with permission middleware
     Route::get('material-monitoring-checksheets', [MaterialPartController::class, 'index'])

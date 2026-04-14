@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\TempRecord;
+use App\Imports\TempRecordImport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -173,5 +175,122 @@ class TempRecordController extends Controller
         }
         // Fallback: let validator handle invalid format
         return null;
+    }
+
+    /**
+     * Show the import form
+     */
+    public function importForm()
+    {
+        return Inertia::render('TempRecords/Import');
+    }
+
+    /**
+     * Preview import - Phase 1: Parse file and detect duplicates
+     */
+    public function importPreview(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
+            'equipment_type' => ['nullable', 'string'],
+        ]);
+
+        try {
+            $file = $request->file('file');
+            $tempPath = $file->store('temp');
+            $fullPath = storage_path('app/' . $tempPath);
+
+            $equipmentType = $request->input('equipment_type');
+
+            $import = new TempRecordImport();
+            $results = $import->preview($fullPath, $equipmentType);
+
+            // Store the temp file path in session for execute phase
+            session(['temp_record_import_file' => $tempPath]);
+
+            return response()->json([
+                'success' => true,
+                'preview' => $results,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Temp Record Import Preview failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to process file: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Execute import - Phase 2: Create/update records based on user choice
+     */
+    public function importExecute(Request $request)
+    {
+        $request->validate([
+            'equipment_type' => ['required', 'string'],
+            'line_assigned' => ['nullable', 'string', 'max:100'],
+            'process_assigned' => ['nullable', 'string', 'max:100'],
+            'update_duplicates' => ['nullable', 'boolean'],
+        ]);
+
+        $tempPath = session('temp_record_import_file');
+
+        if (!$tempPath) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No file to import. Please upload a file first.',
+            ], 400);
+        }
+
+        $fullPath = storage_path('app/' . $tempPath);
+
+        if (!file_exists($fullPath)) {
+            session()->forget('temp_record_import_file');
+            return response()->json([
+                'success' => false,
+                'error' => 'Import file expired. Please upload again.',
+            ], 400);
+        }
+
+        try {
+            $equipmentType = $request->input('equipment_type');
+            $lineAssigned = $request->input('line_assigned');
+            $processAssigned = $request->input('process_assigned');
+            $updateDuplicates = $request->boolean('update_duplicates', false);
+
+            $import = new TempRecordImport();
+            $results = $import->execute($fullPath, $equipmentType, $lineAssigned, $processAssigned, $updateDuplicates);
+
+            // Clean up temp file
+            @unlink($fullPath);
+            session()->forget('temp_record_import_file');
+
+            $message = "Import completed: {$results['imported']} created";
+            if ($results['updated'] > 0) $message .= ", {$results['updated']} updated";
+            if ($results['skipped'] > 0) $message .= ", {$results['skipped']} skipped";
+            if (count($results['errors']) > 0) $message .= ", " . count($results['errors']) . " errors";
+
+            return response()->json([
+                'success' => true,
+                'results' => $results,
+                'message' => $message,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Temp Record Import Execute failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to import file: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
