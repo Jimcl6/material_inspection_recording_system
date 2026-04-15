@@ -10,8 +10,8 @@ window._ = _;
 import axios from 'axios';
 window.axios = axios;
 
-// Set the base URL for axios
-window.axios.defaults.baseURL = '/api';
+// Enable credentials for session cookie support
+window.axios.defaults.withCredentials = true;
 
 // Set CSRF token as a common header
 let token = document.head.querySelector('meta[name="csrf-token"]');
@@ -23,6 +23,18 @@ if (token) {
 }
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
+// Handle 419 (CSRF token mismatch) errors by refreshing the page
+window.axios.interceptors.response.use(
+    response => response,
+    error => {
+        if (error.response?.status === 419) {
+            // Session expired or CSRF token mismatch - reload to get fresh token
+            window.location.reload();
+        }
+        return Promise.reject(error);
+    }
+);
 
 /**
  * Echo exposes an expressive API for subscribing to channels and listening

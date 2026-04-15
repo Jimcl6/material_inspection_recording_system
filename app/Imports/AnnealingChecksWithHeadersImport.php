@@ -14,6 +14,22 @@ class AnnealingChecksWithHeadersImport
     private $importResults = [];
     private $currentUser;
 
+    // Preview results
+    protected $previewResults = [
+        'new_records' => [],
+        'duplicate_records' => [],
+        'total_parsed' => 0,
+        'errors' => [],
+    ];
+
+    // Execute results
+    protected $executeResults = [
+        'imported' => 0,
+        'updated' => 0,
+        'skipped' => 0,
+        'errors' => [],
+    ];
+
     public function __construct()
     {
         $this->currentUser = auth()->user();
@@ -327,5 +343,265 @@ class AnnealingChecksWithHeadersImport
     public function getResults(): array
     {
         return $this->importResults;
+    }
+
+    /**
+     * Preview import - Phase 1: Parse file and detect duplicates
+     */
+    public function preview(string $filePath): array
+    {
+        try {
+            $reader = IOFactory::createReaderForFile($filePath);
+            $spreadsheet = $reader->load($filePath);
+
+            Log::info('Annealing Import Preview - Excel file loaded', [
+                'total_sheets' => $spreadsheet->getSheetCount(),
+                'sheet_names' => $spreadsheet->getSheetNames(),
+            ]);
+
+            foreach ($spreadsheet->getSheetNames() as $index => $sheetName) {
+                $sheet = $spreadsheet->getSheet($index);
+                $highestRow = $sheet->getHighestRow();
+
+                // Skip sheets with very few rows (no data)
+                if ($highestRow < 10) {
+                    Log::info("Preview: Skipping sheet '{$sheetName}': only {$highestRow} rows");
+                    continue;
+                }
+
+                // Detect column mapping from header rows 8 and 9
+                $columnMap = $this->detectColumnMapping($sheet);
+
+                if (empty($columnMap) || !isset($columnMap['item_code'])) {
+                    Log::info("Preview: Skipping sheet '{$sheetName}': could not detect column mapping");
+                    continue;
+                }
+
+                Log::info("Preview: Processing sheet '{$sheetName}'", [
+                    'highest_row' => $highestRow,
+                    'column_map' => $columnMap,
+                ]);
+
+                $this->processSheetPreview($sheet, $sheetName, $highestRow, $columnMap);
+            }
+
+            return $this->previewResults;
+
+        } catch (\Exception $e) {
+            Log::error('Annealing Import Preview failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            $this->previewResults['errors'][] = 'Failed to process file: ' . $e->getMessage();
+            return $this->previewResults;
+        }
+    }
+
+    /**
+     * Execute import - Phase 2: Create/update records based on user choice
+     */
+    public function execute(string $filePath, bool $updateDuplicates = false): array
+    {
+        try {
+            $reader = IOFactory::createReaderForFile($filePath);
+            $spreadsheet = $reader->load($filePath);
+
+            Log::info('Annealing Import Execute - Excel file loaded', [
+                'total_sheets' => $spreadsheet->getSheetCount(),
+                'update_duplicates' => $updateDuplicates,
+            ]);
+
+            foreach ($spreadsheet->getSheetNames() as $index => $sheetName) {
+                $sheet = $spreadsheet->getSheet($index);
+                $highestRow = $sheet->getHighestRow();
+
+                // Skip sheets with very few rows (no data)
+                if ($highestRow < 10) {
+                    continue;
+                }
+
+                // Detect column mapping from header rows 8 and 9
+                $columnMap = $this->detectColumnMapping($sheet);
+
+                if (empty($columnMap) || !isset($columnMap['item_code'])) {
+                    continue;
+                }
+
+                $this->processSheetExecute($sheet, $sheetName, $highestRow, $columnMap, $updateDuplicates);
+            }
+
+            return $this->executeResults;
+
+        } catch (\Exception $e) {
+            Log::error('Annealing Import Execute failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            $this->executeResults['errors'][] = 'Failed to process file: ' . $e->getMessage();
+            return $this->executeResults;
+        }
+    }
+
+    /**
+     * Process a sheet for preview (detect new/duplicate records)
+     */
+    private function processSheetPreview($sheet, string $sheetName, int $highestRow, array $columnMap): void
+    {
+        // Data starts at row 10
+        for ($rowNum = 10; $rowNum <= $highestRow; $rowNum++) {
+            // Read item code first to check if row has data
+            $itemCode = trim((string) $sheet->getCell($columnMap['item_code'] . $rowNum)->getValue());
+
+            // Skip empty rows or non-data rows
+            if (empty($itemCode) || preg_match('/^HPI-PR/i', $itemCode) || preg_match('/NOTE/i', $itemCode)) {
+                continue;
+            }
+
+            // Must look like a real item code (letters, numbers, hyphens)
+            if (!preg_match('/^[A-Z]{2}[\dA-Z]/', $itemCode)) {
+                continue;
+            }
+
+            try {
+                $data = $this->extractRowData($sheet, $rowNum, $columnMap, $sheetName);
+                $previewRecord = $this->buildPreviewRecord($data);
+
+                $this->previewResults['total_parsed']++;
+
+                // Check for duplicate (by item_code + annealing_date)
+                $existing = $this->findExistingRecord($data);
+
+                if ($existing) {
+                    $this->previewResults['duplicate_records'][] = [
+                        'existing_id' => $existing->id,
+                        'existing_data' => [
+                            'item_code' => $existing->item_code,
+                            'annealing_date' => $existing->annealing_date ? $existing->annealing_date->format('Y-m-d') : null,
+                            'receiving_date' => $existing->receiving_date ? $existing->receiving_date->format('Y-m-d') : null,
+                            'supplier_lot_number' => $existing->supplier_lot_number,
+                            'quantity' => $existing->quantity,
+                            'machine_number' => $existing->machine_number,
+                            'temperature_setting' => $existing->temperature_setting,
+                        ],
+                        'new_data' => $previewRecord,
+                    ];
+                } else {
+                    $this->previewResults['new_records'][] = $previewRecord;
+                }
+
+            } catch (\Exception $e) {
+                $this->previewResults['errors'][] = "Sheet '{$sheetName}' Row {$rowNum}: " . $e->getMessage();
+                Log::error("Preview error on '{$sheetName}' row {$rowNum}: " . $e->getMessage());
+            }
+        }
+
+        Log::info("Preview: Sheet '{$sheetName}' complete", [
+            'new_records' => count($this->previewResults['new_records']),
+            'duplicates' => count($this->previewResults['duplicate_records']),
+            'total_parsed' => $this->previewResults['total_parsed'],
+        ]);
+    }
+
+    /**
+     * Process a sheet for execute (create/update records)
+     */
+    private function processSheetExecute($sheet, string $sheetName, int $highestRow, array $columnMap, bool $updateDuplicates): void
+    {
+        // Data starts at row 10
+        for ($rowNum = 10; $rowNum <= $highestRow; $rowNum++) {
+            // Read item code first to check if row has data
+            $itemCode = trim((string) $sheet->getCell($columnMap['item_code'] . $rowNum)->getValue());
+
+            // Skip empty rows or non-data rows
+            if (empty($itemCode) || preg_match('/^HPI-PR/i', $itemCode) || preg_match('/NOTE/i', $itemCode)) {
+                continue;
+            }
+
+            // Must look like a real item code (letters, numbers, hyphens)
+            if (!preg_match('/^[A-Z]{2}[\dA-Z]/', $itemCode)) {
+                continue;
+            }
+
+            try {
+                $data = $this->extractRowData($sheet, $rowNum, $columnMap, $sheetName);
+
+                // Check for duplicate (by item_code + annealing_date)
+                $existing = $this->findExistingRecord($data);
+
+                if ($existing) {
+                    if ($updateDuplicates) {
+                        $existing->update($data);
+                        $this->executeResults['updated']++;
+                        Log::info("Updated: {$data['item_code']} from '{$sheetName}' row {$rowNum}");
+                    } else {
+                        $this->executeResults['skipped']++;
+                    }
+                } else {
+                    AnnealingCheck::create($data);
+                    $this->executeResults['imported']++;
+                    Log::info("Imported: {$data['item_code']} from '{$sheetName}' row {$rowNum}");
+                }
+
+            } catch (\Exception $e) {
+                $this->executeResults['errors'][] = "Sheet '{$sheetName}' Row {$rowNum}: " . $e->getMessage();
+                Log::error("Execute error on '{$sheetName}' row {$rowNum}: " . $e->getMessage());
+            }
+        }
+
+        Log::info("Execute: Sheet '{$sheetName}' complete", [
+            'imported' => $this->executeResults['imported'],
+            'updated' => $this->executeResults['updated'],
+            'skipped' => $this->executeResults['skipped'],
+            'errors' => count($this->executeResults['errors']),
+        ]);
+    }
+
+    /**
+     * Build a preview record from extracted data (for display in UI)
+     */
+    private function buildPreviewRecord(array $data): array
+    {
+        return [
+            'item_code' => $data['item_code'],
+            'annealing_date' => $data['annealing_date'],
+            'receiving_date' => $data['receiving_date'],
+            'supplier_lot_number' => $data['supplier_lot_number'],
+            'quantity' => $data['quantity'],
+            'machine_number' => $data['machine_number'],
+            'temperature_setting' => $data['temperature_setting'],
+            'annealing_time' => $data['annealing_time'],
+            'damper_setting' => $data['damper_setting'],
+            'time_in' => $data['time_in'],
+            'time_out' => $data['time_out'],
+            'remarks' => $data['remarks'],
+        ];
+    }
+
+    /**
+     * Find existing record by duplicate key (item_code + annealing_date)
+     */
+    private function findExistingRecord(array $data): ?AnnealingCheck
+    {
+        return AnnealingCheck::where('item_code', $data['item_code'])
+            ->whereDate('annealing_date', $data['annealing_date'])
+            ->first();
+    }
+
+    /**
+     * Get preview results
+     */
+    public function getPreviewResults(): array
+    {
+        return $this->previewResults;
+    }
+
+    /**
+     * Get execute results
+     */
+    public function getExecuteResults(): array
+    {
+        return $this->executeResults;
     }
 }
