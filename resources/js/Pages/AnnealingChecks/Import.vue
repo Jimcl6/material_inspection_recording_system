@@ -1,34 +1,148 @@
-<script setup>
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+<script setup lang="ts">
+import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { ref, computed } from 'vue';
+import { route } from 'ziggy-js';
+import axios from 'axios';
 
-const page = usePage();
-const importResults = computed(() => page.props.import_results || []);
+interface PreviewRecord {
+    item_code: string;
+    annealing_date: string;
+    receiving_date: string;
+    supplier_lot_number: string;
+    quantity: number;
+    machine_number: string;
+    temperature_setting: string;
+    annealing_time: string;
+    damper_setting: string;
+    time_in: string;
+    time_out: string;
+    remarks: string;
+}
 
-const form = useForm({
-    file: null,
-    overwrite: false,
-});
+interface DuplicateRecord {
+    existing_id: number;
+    existing_data: PreviewRecord;
+    new_data: PreviewRecord;
+}
 
-const fileInput = ref(null);
+interface PreviewResults {
+    new_records: PreviewRecord[];
+    duplicate_records: DuplicateRecord[];
+    total_parsed: number;
+    errors: string[];
+}
 
-const handleFileChange = (event) => {
-    form.file = event.target.files[0];
+interface ImportResults {
+    imported: number;
+    updated: number;
+    skipped: number;
+    errors: string[];
+}
+
+interface Props {
+    import_results?: ImportResults;
+    success?: string;
+    error?: string;
+}
+
+const props = defineProps<Props>();
+
+const fileInput = ref<HTMLInputElement | null>(null);
+const selectedFile = ref<File | null>(null);
+const selectedFileName = ref('');
+const isPreviewLoading = ref(false);
+const isImportLoading = ref(false);
+const previewResults = ref<PreviewResults | null>(null);
+const importResults = ref<ImportResults | null>(props.import_results || null);
+const updateDuplicates = ref(false);
+const errorMessage = ref(props.error || '');
+const successMessage = ref(props.success || '');
+
+const hasPreview = computed(() => previewResults.value !== null);
+const hasDuplicates = computed(() => (previewResults.value?.duplicate_records?.length || 0) > 0);
+const hasNewRecords = computed(() => (previewResults.value?.new_records?.length || 0) > 0);
+const hasErrors = computed(() => (previewResults.value?.errors?.length || 0) > 0);
+
+const handleFileChange = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    if (target.files && target.files.length > 0) {
+        selectedFile.value = target.files[0];
+        selectedFileName.value = target.files[0].name;
+        // Reset preview when new file selected
+        previewResults.value = null;
+        importResults.value = null;
+        errorMessage.value = '';
+        successMessage.value = '';
+    }
 };
 
-const submit = () => {
-    form.post(route('annealing-checks.import'), {
-        onSuccess: () => {
-            form.reset();
-            if (fileInput.value) {
-                fileInput.value.value = '';
-            }
-        },
-    });
+const previewImport = async () => {
+    if (!selectedFile.value) {
+        errorMessage.value = 'Please select a file to import.';
+        return;
+    }
+
+    isPreviewLoading.value = true;
+    errorMessage.value = '';
+    successMessage.value = '';
+
+    const formData = new FormData();
+    formData.append('file', selectedFile.value);
+
+    try {
+        const response = await axios.post(route('annealing-checks.import.preview'), formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+
+        if (response.data.success) {
+            previewResults.value = response.data.preview;
+        } else {
+            errorMessage.value = response.data.error || 'Failed to preview file.';
+        }
+    } catch (error: any) {
+        errorMessage.value = error.response?.data?.error || error.message || 'Failed to preview file.';
+    } finally {
+        isPreviewLoading.value = false;
+    }
+};
+
+const executeImport = async () => {
+    isImportLoading.value = true;
+    errorMessage.value = '';
+
+    try {
+        const response = await axios.post(route('annealing-checks.import.execute'), {
+            update_duplicates: updateDuplicates.value,
+        });
+
+        if (response.data.success) {
+            importResults.value = response.data.results;
+            successMessage.value = response.data.message;
+            previewResults.value = null;
+        } else {
+            errorMessage.value = response.data.error || 'Failed to import file.';
+        }
+    } catch (error: any) {
+        errorMessage.value = error.response?.data?.error || error.message || 'Failed to import file.';
+    } finally {
+        isImportLoading.value = false;
+    }
+};
+
+const resetForm = () => {
+    selectedFile.value = null;
+    selectedFileName.value = '';
+    previewResults.value = null;
+    importResults.value = null;
+    updateDuplicates.value = false;
+    errorMessage.value = '';
+    successMessage.value = '';
+    if (fileInput.value) {
+        fileInput.value.value = '';
+    }
 };
 </script>
 
@@ -43,160 +157,275 @@ const submit = () => {
                 </h2>
                 <Link 
                     :href="route('annealing-checks.index')" 
-                    class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150"
+                    class="text-gray-600 hover:text-gray-800"
                 >
-                    Back to List
+                    &larr; Back to List
                 </Link>
             </div>
         </template>
 
         <div class="py-6">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 bg-white border-b border-gray-200">
-                        <div class="max-w-3xl mx-auto">
-                            <!-- Instructions -->
-                            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
-                                <div class="flex">
-                                    <div class="flex-shrink-0">
-                                        <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                    <div class="ml-3">
-                                        <h3 class="text-sm font-medium text-blue-800">Import Instructions</h3>
-                                        <div class="mt-2 text-sm text-blue-700">
-                                            <p class="mb-2">
-                                                Upload an Excel file (.xlsx, .xls, .csv) containing annealing check data. The file should follow the standard format with these columns:
-                                            </p>
-                                            <ul class="list-disc pl-5 space-y-1">
-                                                <li>Item Code (required)</li>
-                                                <li>Receiving Date (YYYY-MM-DD, required)</li>
-                                                <li>Supplier Lot #</li>
-                                                <li>Quantity (required, minimum 1)</li>
-                                                <li>Annealing Date (YYYY-MM-DD, required)</li>
-                                                <li>Machine # (required)</li>
-                                                <li>Machine Setting</li>
-                                                <li>PIC (ID of the user)</li>
-                                                <li>Checked By (ID of the user)</li>
-                                                <li>Verified By (ID of the user)</li>
-                                                <li>Temperature Readings (format: "HH:MM: TT.TT°C | HH:MM: TT.TT°C")</li>
-                                                <li>Remarks</li>
-                                            </ul>
-                                            <p class="mt-2">
-                                                <a 
-                                                    :href="route('annealing-checks.export')" 
-                                                    class="font-medium text-blue-600 hover:text-blue-500"
-                                                    download
-                                                >
-                                                    Download Template
-                                                </a>
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+                <!-- Success Message -->
+                <div v-if="successMessage" class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-green-800">{{ successMessage }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                <div v-if="errorMessage" class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-red-800">{{ errorMessage }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Import Results -->
+                <div v-if="importResults" class="mb-6 bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Import Results</h3>
+                        
+                        <div class="grid grid-cols-4 gap-4 mb-4">
+                            <div class="bg-green-50 rounded-lg p-4 text-center">
+                                <p class="text-2xl font-bold text-green-600">{{ importResults.imported }}</p>
+                                <p class="text-sm text-green-800">Created</p>
                             </div>
+                            <div class="bg-blue-50 rounded-lg p-4 text-center">
+                                <p class="text-2xl font-bold text-blue-600">{{ importResults.updated }}</p>
+                                <p class="text-sm text-blue-800">Updated</p>
+                            </div>
+                            <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                                <p class="text-2xl font-bold text-yellow-600">{{ importResults.skipped }}</p>
+                                <p class="text-sm text-yellow-800">Skipped</p>
+                            </div>
+                            <div class="bg-red-50 rounded-lg p-4 text-center">
+                                <p class="text-2xl font-bold text-red-600">{{ importResults.errors?.length || 0 }}</p>
+                                <p class="text-sm text-red-800">Errors</p>
+                            </div>
+                        </div>
 
-                            <!-- Import Form -->
-                            <form @submit.prevent="submit">
-                                <!-- File Input -->
-                                <div class="mb-6">
-                                    <InputLabel for="file" value="Excel File *" />
-                                    <div class="mt-1 flex items-center">
-                                        <input
-                                            id="file"
-                                            ref="fileInput"
-                                            type="file"
-                                            class="hidden"
-                                            accept=".xlsx,.xls,.csv"
-                                            @change="handleFileChange"
-                                        />
-                                        <label 
-                                            for="file"
-                                            class="cursor-pointer inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150"
-                                        >
-                                            <svg class="w-5 h-5 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                            </svg>
-                                            {{ form.file ? form.file.name : 'Choose file...' }}
-                                        </label>
-                                        <span v-if="form.file" class="ml-3 text-sm text-gray-500">
-                                            {{ (form.file.size / 1024).toFixed(1) }} KB
-                                        </span>
-                                    </div>
-                                    <InputError :message="form.errors.file" class="mt-2" />
-                                </div>
+                        <div v-if="importResults.errors && importResults.errors.length > 0" class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <h4 class="font-medium text-red-800 mb-2">Error Details:</h4>
+                            <ul class="text-sm text-red-700 list-disc list-inside max-h-40 overflow-y-auto">
+                                <li v-for="(err, index) in importResults.errors" :key="index">{{ err }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
 
-                                <!-- Options -->
-                                <div class="mb-6">
-                                    <div class="flex items-start">
-                                        <div class="flex items-center h-5">
-                                            <input
-                                                id="overwrite"
-                                                v-model="form.overwrite"
-                                                type="checkbox"
-                                                class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                                            />
-                                        </div>
-                                        <div class="ml-3 text-sm">
-                                            <label for="overwrite" class="font-medium text-gray-700">
-                                                Overwrite existing records
-                                            </label>
-                                            <p class="text-gray-500">
-                                                Check this to delete all existing records before importing.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                <!-- Preview Results -->
+                <div v-if="hasPreview" class="mb-6 bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Preview Results</h3>
+                        
+                        <div class="grid grid-cols-3 gap-4 mb-4">
+                            <div class="bg-green-50 rounded-lg p-4 text-center">
+                                <p class="text-2xl font-bold text-green-600">{{ previewResults?.new_records?.length || 0 }}</p>
+                                <p class="text-sm text-green-800">New Records</p>
+                            </div>
+                            <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                                <p class="text-2xl font-bold text-yellow-600">{{ previewResults?.duplicate_records?.length || 0 }}</p>
+                                <p class="text-sm text-yellow-800">Duplicates Found</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-4 text-center">
+                                <p class="text-2xl font-bold text-gray-600">{{ previewResults?.total_parsed || 0 }}</p>
+                                <p class="text-sm text-gray-800">Total Parsed</p>
+                            </div>
+                        </div>
 
-                                <!-- Submit Button -->
-                                <div class="flex items-center justify-end">
-                                    <Link
-                                        :href="route('annealing-checks.index')"
-                                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-4"
-                                    >
-                                        Cancel
-                                    </Link>
-                                    <PrimaryButton
-                                        :class="{ 'opacity-25': form.processing }"
-                                        :disabled="!form.file || form.processing"
-                                    >
-                                        <span v-if="form.processing">
-                                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            Importing...
-                                        </span>
-                                        <span v-else>Import Data</span>
-                                    </PrimaryButton>
-                                </div>
-                            </form>
+                        <!-- Preview Errors -->
+                        <div v-if="hasErrors" class="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
+                            <h4 class="font-medium text-red-800 mb-2">Parsing Errors:</h4>
+                            <ul class="text-sm text-red-700 list-disc list-inside">
+                                <li v-for="(err, index) in previewResults?.errors" :key="index">{{ err }}</li>
+                            </ul>
+                        </div>
+
+                        <!-- Duplicate Handling -->
+                        <div v-if="hasDuplicates" class="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <h4 class="font-medium text-yellow-800 mb-2">Duplicate Records Detected</h4>
+                            <p class="text-sm text-yellow-700 mb-3">
+                                {{ previewResults?.duplicate_records?.length }} record(s) already exist in the database with matching item code and annealing date.
+                            </p>
                             
-                            <!-- Import Results -->
-                            <div v-if="importResults.length > 0" class="mt-8">
-                                <h3 class="text-lg font-medium text-gray-900 mb-4">Import Results</h3>
-                                <div class="space-y-4">
-                                    <div v-for="result in importResults" :key="result.sheet_name" class="bg-gray-50 rounded-lg p-4">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <h4 class="font-medium text-gray-900">{{ result.sheet_name }}</h4>
-                                            <div class="flex space-x-4 text-sm">
-                                                <span class="text-green-600">{{ result.imported }} imported</span>
-                                                <span class="text-yellow-600">{{ result.skipped }} skipped</span>
-                                                <span class="text-red-600">{{ result.errors.length }} errors</span>
-                                            </div>
-                                        </div>
-                                        <div v-if="result.errors.length > 0" class="mt-2">
-                                            <details class="text-sm">
-                                                <summary class="cursor-pointer text-red-600 hover:text-red-800">View errors</summary>
-                                                <ul class="mt-2 space-y-1 text-red-600">
-                                                    <li v-for="error in result.errors" :key="error">{{ error }}</li>
-                                                </ul>
-                                            </details>
-                                        </div>
-                                    </div>
+                            <label class="flex items-center">
+                                <input 
+                                    type="checkbox" 
+                                    v-model="updateDuplicates"
+                                    class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                />
+                                <span class="ml-2 text-sm text-yellow-800 font-medium">
+                                    Update existing records with new data
+                                </span>
+                            </label>
+                            <p class="mt-1 ml-6 text-xs text-yellow-600">
+                                If unchecked, duplicates will be skipped.
+                            </p>
+
+                            <!-- Duplicate Details (collapsible) -->
+                            <details class="mt-3">
+                                <summary class="cursor-pointer text-sm font-medium text-yellow-800 hover:text-yellow-900">
+                                    View duplicate details
+                                </summary>
+                                <div class="mt-2 max-h-60 overflow-y-auto">
+                                    <table class="min-w-full text-xs">
+                                        <thead class="bg-yellow-100">
+                                            <tr>
+                                                <th class="px-2 py-1 text-left">Item Code</th>
+                                                <th class="px-2 py-1 text-left">Annealing Date</th>
+                                                <th class="px-2 py-1 text-left">Machine #</th>
+                                                <th class="px-2 py-1 text-left">Quantity</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(dup, index) in previewResults?.duplicate_records" :key="index" class="border-b border-yellow-100">
+                                                <td class="px-2 py-1">{{ dup.new_data.item_code }}</td>
+                                                <td class="px-2 py-1">{{ dup.new_data.annealing_date }}</td>
+                                                <td class="px-2 py-1">{{ dup.new_data.machine_number }}</td>
+                                                <td class="px-2 py-1">{{ dup.new_data.quantity }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
+                            </details>
+                        </div>
+
+                        <!-- New Records Preview -->
+                        <div v-if="hasNewRecords" class="mb-4">
+                            <details>
+                                <summary class="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
+                                    View new records ({{ previewResults?.new_records?.length }})
+                                </summary>
+                                <div class="mt-2 max-h-60 overflow-y-auto">
+                                    <table class="min-w-full text-xs">
+                                        <thead class="bg-gray-100">
+                                            <tr>
+                                                <th class="px-2 py-1 text-left">Item Code</th>
+                                                <th class="px-2 py-1 text-left">Annealing Date</th>
+                                                <th class="px-2 py-1 text-left">Machine #</th>
+                                                <th class="px-2 py-1 text-left">Temp</th>
+                                                <th class="px-2 py-1 text-left">Quantity</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(rec, index) in previewResults?.new_records" :key="index" class="border-b border-gray-100">
+                                                <td class="px-2 py-1">{{ rec.item_code }}</td>
+                                                <td class="px-2 py-1">{{ rec.annealing_date }}</td>
+                                                <td class="px-2 py-1">{{ rec.machine_number }}</td>
+                                                <td class="px-2 py-1">{{ rec.temperature_setting }}</td>
+                                                <td class="px-2 py-1">{{ rec.quantity }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </details>
+                        </div>
+
+                        <!-- Confirm Import Button -->
+                        <div class="flex justify-end space-x-4 pt-4 border-t">
+                            <button 
+                                type="button"
+                                @click="resetForm"
+                                class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="button"
+                                @click="executeImport"
+                                :disabled="isImportLoading || (!hasNewRecords && !hasDuplicates)"
+                                class="px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 disabled:opacity-50"
+                            >
+                                {{ isImportLoading ? 'Importing...' : 'Confirm Import' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Form -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Upload Excel File</h3>
+                        
+                        <!-- File Input -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Select Excel File (.xlsx, .xls)
+                            </label>
+                            <div class="flex items-center justify-center w-full">
+                                <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <svg class="w-8 h-8 mb-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                        </svg>
+                                        <p class="mb-2 text-sm text-gray-500">
+                                            <span class="font-semibold">Click to upload</span> or drag and drop
+                                        </p>
+                                        <p class="text-xs text-gray-500">Excel files only (max 10MB)</p>
+                                    </div>
+                                    <input 
+                                        ref="fileInput"
+                                        type="file" 
+                                        class="hidden" 
+                                        accept=".xlsx,.xls"
+                                        @change="handleFileChange"
+                                    />
+                                </label>
                             </div>
+                            <p v-if="selectedFileName" class="mt-2 text-sm text-gray-600">
+                                Selected: <span class="font-medium">{{ selectedFileName }}</span>
+                            </p>
+                        </div>
+
+                        <!-- Instructions -->
+                        <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="font-medium text-blue-800 mb-2">Import Instructions</h4>
+                            <ul class="text-sm text-blue-700 list-disc list-inside space-y-1">
+                                <li>Use the standard Annealing Checksheet Excel format</li>
+                                <li>Column headers are detected from rows 8-9</li>
+                                <li>Data rows start from row 10</li>
+                                <li>Item Code is required and must match pattern (e.g., "AA123...")</li>
+                                <li>Duplicates are detected by Item Code + Annealing Date</li>
+                                <li>Sheets with less than 10 rows will be skipped</li>
+                            </ul>
+                            <p class="mt-2">
+                                <a 
+                                    :href="route('annealing-checks.export')" 
+                                    class="font-medium text-blue-600 hover:text-blue-500"
+                                    download
+                                >
+                                    Download Template
+                                </a>
+                            </p>
+                        </div>
+
+                        <!-- Preview Button -->
+                        <div class="flex justify-end space-x-4">
+                            <button 
+                                type="button"
+                                @click="resetForm"
+                                class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            >
+                                Reset
+                            </button>
+                            <button 
+                                type="button"
+                                @click="previewImport"
+                                :disabled="isPreviewLoading || !selectedFile"
+                                class="px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 disabled:opacity-50"
+                            >
+                                {{ isPreviewLoading ? 'Analyzing...' : 'Preview Import' }}
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -122,6 +122,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('annealing-checks/import', [AnnealingCheckController::class, 'import'])
         ->middleware('module.permission:annealing,import')
         ->name('annealing-checks.import');
+    Route::post('annealing-checks/import/preview', [AnnealingCheckController::class, 'importPreview'])
+        ->middleware('module.permission:annealing,import')
+        ->name('annealing-checks.import.preview');
+    Route::post('annealing-checks/import/execute', [AnnealingCheckController::class, 'importExecute'])
+        ->middleware('module.permission:annealing,import')
+        ->name('annealing-checks.import.execute');
     Route::get('annealing-checks/export', [AnnealingCheckController::class, 'export'])
         ->middleware('module.permission:annealing,export')
         ->name('annealing-checks.export');
