@@ -58,13 +58,33 @@ class ProductionBatchController extends Controller
         $batch = ProductionBatch::findOrFail($magnetism_checksheet);
         
         try {
-            $batch->load(['checkpoints' => function ($q) {
-                $q->withCount('samples');
-            }]);
+            $batch->load(['checkpoints.samples']);
         } catch (\Exception $e) {
             // If checkpoints relationship fails, continue without checkpoints
             $batch->checkpoints = collect();
         }
+
+        // Build checkpoints with samples organized by phase
+        $checkpointsData = $batch->checkpoints->map(function ($cp) {
+            $samplesFirst = $cp->samples->where('Phase', 'FIRST')->sortBy('SampleOrder')->pluck('Value')->values()->toArray();
+            $samplesLast = $cp->samples->where('Phase', 'LAST')->sortBy('SampleOrder')->pluck('Value')->values()->toArray();
+            
+            // Pad arrays to always have 5 elements
+            while (count($samplesFirst) < 5) $samplesFirst[] = '';
+            while (count($samplesLast) < 5) $samplesLast[] = '';
+            
+            return [
+                'CheckpointID' => $cp->CheckpointID,
+                'CheckpointNumber' => $cp->CheckpointNumber,
+                'PositionLabel' => InspectionCheckpoint::POSITION_LABELS[$cp->CheckpointNumber] ?? "Checkpoint {$cp->CheckpointNumber}",
+                'InspectorName_First' => $cp->InspectorName_First,
+                'Judgement_First' => $cp->Judgement_First,
+                'InspectorName_Last' => $cp->InspectorName_Last,
+                'Judgement_Last' => $cp->Judgement_Last,
+                'samples_first' => $samplesFirst,
+                'samples_last' => $samplesLast,
+            ];
+        })->sortBy('CheckpointNumber')->values();
 
         return Inertia::render('Batches/Show', [
             'batch' => [
@@ -80,17 +100,7 @@ class ProductionBatchController extends Controller
                 'ItemName' => $batch->ItemName,
                 'ItemCode' => $batch->ItemCode,
             ],
-            'checkpoints' => $batch->checkpoints->map(function ($cp) {
-                return [
-                    'CheckpointID' => $cp->CheckpointID,
-                    'CheckpointNumber' => $cp->CheckpointNumber,
-                    'InspectorName_First' => $cp->InspectorName_First,
-                    'Judgement_First' => $cp->Judgement_First,
-                    'InspectorName_Last' => $cp->InspectorName_Last,
-                    'Judgement_Last' => $cp->Judgement_Last,
-                    'samples_count' => $cp->samples_count ?? 0,
-                ];
-            })->values(),
+            'checkpoints' => $checkpointsData,
         ]);
     }
 
@@ -151,82 +161,143 @@ class ProductionBatchController extends Controller
             ->with('success', 'Checkpoint created successfully!');
     }
 
-    public function editCheckpoint($magnetism_checksheet, $checkpoint)
+    public function editCheckpoint($magnetism_checksheet, $checkpoint = null)
     {
         $productionBatch = ProductionBatch::findOrFail($magnetism_checksheet);
-        $checkpoint = InspectionCheckpoint::with('samples')
-            ->where('BatchID', $productionBatch->BatchID)
-            ->findOrFail($checkpoint);
+        
+        // Load all checkpoints with samples for grid editing
+        $productionBatch->load(['checkpoints.samples']);
+        
+        // Build checkpoints data organized by checkpoint number (1-4)
+        $checkpointsData = [];
+        $inspectorFirst = '';
+        $inspectorLast = '';
+        
+        for ($i = 1; $i <= 4; $i++) {
+            $cp = $productionBatch->checkpoints->firstWhere('CheckpointNumber', $i);
+            
+            if ($cp) {
+                $samplesFirst = $cp->samples->where('Phase', 'FIRST')->sortBy('SampleOrder')->pluck('Value')->values()->toArray();
+                $samplesLast = $cp->samples->where('Phase', 'LAST')->sortBy('SampleOrder')->pluck('Value')->values()->toArray();
+                
+                // Get inspector names from first checkpoint found
+                if (!$inspectorFirst && $cp->InspectorName_First) $inspectorFirst = $cp->InspectorName_First;
+                if (!$inspectorLast && $cp->InspectorName_Last) $inspectorLast = $cp->InspectorName_Last;
+                
+                $checkpointsData[] = [
+                    'CheckpointID' => $cp->CheckpointID,
+                    'CheckpointNumber' => $i,
+                    'label' => InspectionCheckpoint::POSITION_LABELS[$i] ?? "Checkpoint {$i}",
+                    'Judgement_First' => $cp->Judgement_First ?? '',
+                    'Judgement_Last' => $cp->Judgement_Last ?? '',
+                    'samples_first' => array_pad($samplesFirst, 5, ''),
+                    'samples_last' => array_pad($samplesLast, 5, ''),
+                ];
+            } else {
+                // Checkpoint doesn't exist yet, create empty placeholder
+                $checkpointsData[] = [
+                    'CheckpointID' => null,
+                    'CheckpointNumber' => $i,
+                    'label' => InspectionCheckpoint::POSITION_LABELS[$i] ?? "Checkpoint {$i}",
+                    'Judgement_First' => '',
+                    'Judgement_Last' => '',
+                    'samples_first' => ['', '', '', '', ''],
+                    'samples_last' => ['', '', '', '', ''],
+                ];
+            }
+        }
         
         return Inertia::render('Batches/EditCheckpoint', [
-            'batch' => $productionBatch,
-            'checkpoint' => [
-                'CheckpointID' => $checkpoint->CheckpointID,
-                'CheckpointNumber' => $checkpoint->CheckpointNumber,
-                'InspectorName_First' => $checkpoint->InspectorName_First,
-                'Judgement_First' => $checkpoint->Judgement_First,
-                'InspectorName_Last' => $checkpoint->InspectorName_Last,
-                'Judgement_Last' => $checkpoint->Judgement_Last,
-                'samples' => $checkpoint->samples->map(function ($sample) {
-                    return [
-                        'SampleID' => $sample->SampleID,
-                        'SampleOrder' => $sample->SampleOrder,
-                        'Phase' => $sample->Phase,
-                        'Value' => $sample->Value,
-                    ];
-                }),
+            'batch' => [
+                'BatchID' => $productionBatch->BatchID,
+                'ProductionDate' => $productionBatch->ProductionDate,
+                'LetterCode' => $productionBatch->LetterCode,
+                'QRCode' => $productionBatch->QRCode,
+                'MaterialLotNumber' => $productionBatch->MaterialLotNumber,
             ],
+            'checkpoints' => $checkpointsData,
+            'inspectorFirst' => $inspectorFirst,
+            'inspectorLast' => $inspectorLast,
         ]);
     }
 
-    public function updateCheckpoint(Request $request, $magnetism_checksheet, $checkpoint)
+    public function updateCheckpoint(Request $request, $magnetism_checksheet, $checkpoint = null)
     {
         $productionBatch = ProductionBatch::findOrFail($magnetism_checksheet);
-        $checkpoint = InspectionCheckpoint::where('BatchID', $productionBatch->BatchID)
-            ->findOrFail($checkpoint);
         
         $data = $request->validate([
-            'CheckpointNumber' => ['required', 'integer', 'min:1'],
-            'InspectorName_First' => ['nullable', 'string', 'max:255'],
-            'Judgement_First' => ['nullable', 'string', 'max:255'],
-            'InspectorName_Last' => ['nullable', 'string', 'max:255'],
-            'Judgement_Last' => ['nullable', 'string', 'max:255'],
-            'samples' => ['nullable', 'array'],
-            'samples.*.SampleID' => ['nullable', 'integer'],
-            'samples.*.SampleOrder' => ['nullable', 'integer', 'min:1'],
-            'samples.*.Phase' => ['nullable', 'string', 'in:FIRST,LAST'],
-            'samples.*.Value' => ['nullable', 'string', 'max:255'],
+            'inspectorFirst' => ['nullable', 'string', 'max:255'],
+            'inspectorLast' => ['nullable', 'string', 'max:255'],
+            'checkpoints' => ['required', 'array'],
+            'checkpoints.*.CheckpointNumber' => ['required', 'integer', 'min:1', 'max:4'],
+            'checkpoints.*.Judgement_First' => ['nullable', 'string', 'max:255'],
+            'checkpoints.*.Judgement_Last' => ['nullable', 'string', 'max:255'],
+            'checkpoints.*.samples_first' => ['nullable', 'array'],
+            'checkpoints.*.samples_last' => ['nullable', 'array'],
         ]);
 
-        // Update the checkpoint
-        $checkpoint->update([
-            'CheckpointNumber' => $data['CheckpointNumber'],
-            'InspectorName_First' => $data['InspectorName_First'] ?? null,
-            'Judgement_First' => $data['Judgement_First'] ?? null,
-            'InspectorName_Last' => $data['InspectorName_Last'] ?? null,
-            'Judgement_Last' => $data['Judgement_Last'] ?? null,
-        ]);
+        $inspectorFirst = $data['inspectorFirst'] ?? null;
+        $inspectorLast = $data['inspectorLast'] ?? null;
 
-        // Update samples
-        if (isset($data['samples'])) {
-            // Delete existing samples for this checkpoint
-            InspectionSample::where('CheckpointID', $checkpoint->CheckpointID)->delete();
+        // Process each checkpoint
+        foreach ($data['checkpoints'] as $cpData) {
+            $checkpointNumber = (int)$cpData['CheckpointNumber'];
             
-            // Create new samples
-            foreach ($data['samples'] as $sample) {
-                if (!empty($sample['Value'])) {
+            // Find or create checkpoint
+            $cp = InspectionCheckpoint::where('BatchID', $productionBatch->BatchID)
+                ->where('CheckpointNumber', $checkpointNumber)
+                ->first();
+            
+            if (!$cp) {
+                $cp = InspectionCheckpoint::create([
+                    'BatchID' => $productionBatch->BatchID,
+                    'CheckpointNumber' => $checkpointNumber,
+                    'InspectorName_First' => $inspectorFirst,
+                    'Judgement_First' => $cpData['Judgement_First'] ?? null,
+                    'InspectorName_Last' => $inspectorLast,
+                    'Judgement_Last' => $cpData['Judgement_Last'] ?? null,
+                ]);
+            } else {
+                $cp->update([
+                    'InspectorName_First' => $inspectorFirst,
+                    'Judgement_First' => $cpData['Judgement_First'] ?? null,
+                    'InspectorName_Last' => $inspectorLast,
+                    'Judgement_Last' => $cpData['Judgement_Last'] ?? null,
+                ]);
+            }
+
+            // Delete existing samples for this checkpoint
+            InspectionSample::where('CheckpointID', $cp->CheckpointID)->delete();
+
+            // Store First Inspection samples
+            $samplesFirst = $cpData['samples_first'] ?? [];
+            foreach ($samplesFirst as $i => $val) {
+                if ($val !== null && $val !== '') {
                     InspectionSample::create([
-                        'CheckpointID' => $checkpoint->CheckpointID,
-                        'SampleOrder' => $sample['SampleOrder'] ?? 1,
-                        'Phase' => $sample['Phase'] ?? 'FIRST',
-                        'Value' => $sample['Value'],
+                        'CheckpointID' => $cp->CheckpointID,
+                        'SampleOrder' => $i + 1,
+                        'Phase' => 'FIRST',
+                        'Value' => (string)$val,
+                    ]);
+                }
+            }
+
+            // Store Last Inspection samples
+            $samplesLast = $cpData['samples_last'] ?? [];
+            foreach ($samplesLast as $i => $val) {
+                if ($val !== null && $val !== '') {
+                    InspectionSample::create([
+                        'CheckpointID' => $cp->CheckpointID,
+                        'SampleOrder' => $i + 1,
+                        'Phase' => 'LAST',
+                        'Value' => (string)$val,
                     ]);
                 }
             }
         }
 
         return redirect()->route('magnetism-checksheet.show', $productionBatch->BatchID)
-            ->with('success', 'Checkpoint updated successfully!');
+            ->with('success', 'Inspection samples updated successfully!');
     }
 
     public function destroyCheckpoint($magnetism_checksheet, $checkpoint)
@@ -269,44 +340,55 @@ class ProductionBatchController extends Controller
 
         $batch = ProductionBatch::create($data);
 
-        // Optional nested checkpoint + samples (for modal flow)
-        $checkpoint = $request->input('checkpoint');
-        if (is_array($checkpoint)) {
-            $cp = new InspectionCheckpoint([
-                'BatchID' => $batch->BatchID,
-                'CheckpointNumber' => (int)($checkpoint['CheckpointNumber'] ?? 1),
-                'InspectorName_First' => $checkpoint['InspectorName_First'] ?? null,
-                'Judgement_First' => $checkpoint['Judgement_First'] ?? null,
-                'InspectorName_Last' => $checkpoint['InspectorName_Last'] ?? null,
-                'Judgement_Last' => $checkpoint['Judgement_Last'] ?? null,
-            ]);
-            $cp->save();
+        // Handle checkpoints grid (4 checkpoints × 5 samples × 2 phases)
+        $checkpoints = $request->input('checkpoints');
+        if (is_array($checkpoints)) {
+            foreach ($checkpoints as $cpData) {
+                $checkpointNumber = (int)($cpData['CheckpointNumber'] ?? 0);
+                if ($checkpointNumber < 1 || $checkpointNumber > 4) continue;
 
-            $first = $checkpoint['samples_first'] ?? [];
-            $last = $checkpoint['samples_last'] ?? [];
+                $cp = InspectionCheckpoint::create([
+                    'BatchID' => $batch->BatchID,
+                    'CheckpointNumber' => $checkpointNumber,
+                    'InspectorName_First' => $cpData['InspectorName_First'] ?? null,
+                    'Judgement_First' => $cpData['Judgement_First'] ?? null,
+                    'InspectorName_Last' => $cpData['InspectorName_Last'] ?? null,
+                    'Judgement_Last' => $cpData['Judgement_Last'] ?? null,
+                ]);
 
-            // Accept arrays of strings or array of objects
-            foreach ($first as $i => $val) {
-                $order = $i + 1;
-                if (is_array($val)) { $order = (int)($val['SampleOrder'] ?? $order); $val = $val['Value'] ?? null; }
-                if ($val === null || $val === '') continue;
-                InspectionSample::create([
-                    'CheckpointID' => $cp->CheckpointID,
-                    'SampleOrder' => $order,
-                    'Phase' => 'FIRST',
-                    'Value' => (string)$val,
-                ]);
-            }
-            foreach ($last as $i => $val) {
-                $order = $i + 1;
-                if (is_array($val)) { $order = (int)($val['SampleOrder'] ?? $order); $val = $val['Value'] ?? null; }
-                if ($val === null || $val === '') continue;
-                InspectionSample::create([
-                    'CheckpointID' => $cp->CheckpointID,
-                    'SampleOrder' => $order,
-                    'Phase' => 'LAST',
-                    'Value' => (string)$val,
-                ]);
+                // Store First Inspection samples (fixed 5)
+                $samplesFirst = $cpData['samples_first'] ?? [];
+                foreach ($samplesFirst as $i => $val) {
+                    $order = $i + 1;
+                    if (is_array($val)) {
+                        $order = (int)($val['SampleOrder'] ?? $order);
+                        $val = $val['Value'] ?? null;
+                    }
+                    if ($val === null || $val === '') continue;
+                    InspectionSample::create([
+                        'CheckpointID' => $cp->CheckpointID,
+                        'SampleOrder' => $order,
+                        'Phase' => 'FIRST',
+                        'Value' => (string)$val,
+                    ]);
+                }
+
+                // Store Last Inspection samples (fixed 5)
+                $samplesLast = $cpData['samples_last'] ?? [];
+                foreach ($samplesLast as $i => $val) {
+                    $order = $i + 1;
+                    if (is_array($val)) {
+                        $order = (int)($val['SampleOrder'] ?? $order);
+                        $val = $val['Value'] ?? null;
+                    }
+                    if ($val === null || $val === '') continue;
+                    InspectionSample::create([
+                        'CheckpointID' => $cp->CheckpointID,
+                        'SampleOrder' => $order,
+                        'Phase' => 'LAST',
+                        'Value' => (string)$val,
+                    ]);
+                }
             }
         }
 

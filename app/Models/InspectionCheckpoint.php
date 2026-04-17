@@ -21,6 +21,19 @@ class InspectionCheckpoint extends Model
         'Judgement_Last',
     ];
 
+    // Checkpoint position labels (1-4 mapping)
+    public const POSITION_LABELS = [
+        1 => 'Front 1',
+        2 => 'Front 2',
+        3 => 'Back 1',
+        4 => 'Back 2',
+    ];
+
+    public function getPositionLabelAttribute(): string
+    {
+        return self::POSITION_LABELS[$this->CheckpointNumber] ?? "Checkpoint {$this->CheckpointNumber}";
+    }
+
     public function batch(): BelongsTo
     {
         return $this->belongsTo(ProductionBatch::class, 'BatchID', 'BatchID');

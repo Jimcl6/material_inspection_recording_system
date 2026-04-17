@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 // Import route helper
@@ -22,39 +22,17 @@ interface Props {
     checkpoints: Array<{
         CheckpointID: number;
         CheckpointNumber: number;
+        PositionLabel: string;
         InspectorName_First: string;
         Judgement_First: string;
         InspectorName_Last: string;
         Judgement_Last: string;
-        samples_count: number;
+        samples_first: string[];
+        samples_last: string[];
     }>;
 }
 
 const props = defineProps<Props>();
-
-const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-
-const form = useForm({
-    CheckpointNumber: '',
-    InspectorName_First: '',
-    Judgement_First: '',
-    InspectorName_Last: '',
-    Judgement_Last: '',
-});
-
-const submitAdd = () => {
-    form.transform((data) => ({ ...data, _token: csrf }))
-        .post(route('magnetism-checksheet.checkpoints.store', { magnetism_checksheet: props.batch.BatchID }), {
-            preserveScroll: true,
-            onSuccess: () => form.reset(),
-        });
-};
-
-const destroyCheckpoint = (id: number) => {
-    if (confirm('Delete this checkpoint?')) {
-        router.post(`/magnetism-checksheet/${props.batch.BatchID}/checkpoints/${id}`, { _method: 'delete', _token: csrf }, { preserveScroll: true });
-    }
-};
 
 const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
@@ -149,178 +127,122 @@ const formatDate = (dateString: string) => {
                     </div>
                 </div>
 
-                <!-- Checkpoints Card -->
+                <!-- Inspection Samples Grid -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 bg-white border-b border-gray-200">
                         <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-lg font-medium text-gray-900">Checkpoints</h3>
+                            <h3 class="text-lg font-medium text-gray-900">Inspection Samples</h3>
                             <Link
                                 :href="route('magnetism-checksheet.checkpoints.create', { magnetism_checksheet: batch.BatchID })"
                                 class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
                             >
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                 </svg>
-                                Add Checkpoint
+                                Edit Samples
                             </Link>
                         </div>
 
-                        <!-- Quick Add Form -->
-                        <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                            <h4 class="text-sm font-medium text-gray-900 mb-3">Quick Add Checkpoint</h4>
-                            <form @submit.prevent="submitAdd" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Checkpoint #</label>
-                                    <input
-                                        v-model="form.CheckpointNumber"
-                                        type="number"
-                                        min="1"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Inspector (First)</label>
-                                    <input
-                                        v-model="form.InspectorName_First"
-                                        type="text"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                    />
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Judgement (First)</label>
-                                    <input
-                                        v-model="form.Judgement_First"
-                                        type="text"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                    />
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Inspector (Last)</label>
-                                    <input
-                                        v-model="form.InspectorName_Last"
-                                        type="text"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                    />
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Judgement (Last)</label>
-                                    <input
-                                        v-model="form.Judgement_Last"
-                                        type="text"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                    />
-                                </div>
-                                <div class="flex items-end">
-                                    <button
-                                        type="submit"
-                                        class="w-full inline-flex items-center justify-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                                        :disabled="form.processing"
-                                    >
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                        </svg>
-                                        Add
-                                    </button>
-                                </div>
-                            </form>
-                            <div class="mt-3 text-sm text-red-600" v-if="form.errors && Object.keys(form.errors).length">
-                                <div v-for="(msg, key) in form.errors" :key="key" class="mb-1">
-                                    {{ msg }}
-                                </div>
+                        <!-- Inspector Names Display -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" v-if="checkpoints.length">
+                            <div class="bg-blue-50 rounded-lg p-3">
+                                <span class="text-sm font-medium text-blue-700">Inspector (First):</span>
+                                <span class="ml-2 text-sm text-blue-900">{{ checkpoints[0]?.InspectorName_First || 'N/A' }}</span>
+                            </div>
+                            <div class="bg-green-50 rounded-lg p-3">
+                                <span class="text-sm font-medium text-green-700">Inspector (Last):</span>
+                                <span class="ml-2 text-sm text-green-900">{{ checkpoints[0]?.InspectorName_Last || 'N/A' }}</span>
                             </div>
                         </div>
 
-                        <!-- Checkpoints Table -->
-                        <div class="overflow-x-auto lg:overflow-visible">
-                            <table class="min-w-full divide-y divide-gray-200">
+                        <!-- Samples Grid Display -->
+                        <div class="overflow-x-auto" v-if="checkpoints.length">
+                            <table class="min-w-full border border-gray-200 rounded-lg">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            #
+                                        <th rowspan="2" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r border-gray-200 align-middle">
+                                            Checkpoint
                                         </th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Samples
+                                        <th colspan="6" class="px-3 py-2 text-center text-xs font-medium text-blue-600 uppercase tracking-wider border-b border-r border-gray-200 bg-blue-50">
+                                            First Inspection (N=5)
                                         </th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                            Inspector (First)
+                                        <th colspan="6" class="px-3 py-2 text-center text-xs font-medium text-green-600 uppercase tracking-wider border-b border-gray-200 bg-green-50">
+                                            Last Inspection (N=5)
                                         </th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                            Judgement (First)
+                                    </tr>
+                                    <tr>
+                                        <th v-for="n in 5" :key="'fh'+n" class="px-2 py-1 text-center text-xs font-medium text-gray-500 border-b border-r border-gray-200 bg-blue-50 w-14">
+                                            {{ n }}
                                         </th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                            Inspector (Last)
+                                        <th class="px-2 py-1 text-center text-xs font-medium text-gray-500 border-b border-r border-gray-200 bg-blue-50 w-16">
+                                            Judge
                                         </th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                                            Judgement (Last)
+                                        <th v-for="n in 5" :key="'lh'+n" class="px-2 py-1 text-center text-xs font-medium text-gray-500 border-b border-r border-gray-200 bg-green-50 w-14">
+                                            {{ n }}
                                         </th>
-                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Actions
+                                        <th class="px-2 py-1 text-center text-xs font-medium text-gray-500 border-b border-gray-200 bg-green-50 w-16">
+                                            Judge
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="checkpoint in checkpoints" :key="checkpoint.CheckpointID" class="hover:bg-gray-50">
-                                        <td class="px-4 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">
-                                                {{ checkpoint.CheckpointNumber }}
-                                            </div>
+                                    <tr v-for="cp in checkpoints" :key="cp.CheckpointID" class="hover:bg-gray-50">
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">
+                                            {{ cp.CheckpointNumber }} - {{ cp.PositionLabel }}
                                         </td>
-                                        <td class="px-4 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">
-                                                {{ checkpoint.samples_count || 0 }}
-                                            </div>
+                                        <!-- First Inspection Samples -->
+                                        <td v-for="(val, i) in cp.samples_first" :key="'f'+cp.CheckpointNumber+'-'+i" class="px-2 py-2 text-center text-sm text-gray-700 border-r border-gray-200">
+                                            {{ val || '-' }}
                                         </td>
-                                        <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
-                                            <div class="text-sm text-gray-900">
-                                                {{ checkpoint.InspectorName_First || 'N/A' }}
-                                            </div>
+                                        <!-- First Inspection Judgement -->
+                                        <td class="px-2 py-2 text-center text-sm border-r border-gray-200">
+                                            <span :class="[
+                                                'px-2 py-1 rounded text-xs font-medium',
+                                                cp.Judgement_First?.toUpperCase() === 'OK' ? 'bg-green-100 text-green-800' :
+                                                cp.Judgement_First?.toUpperCase() === 'NG' ? 'bg-red-100 text-red-800' :
+                                                'text-gray-700'
+                                            ]">
+                                                {{ cp.Judgement_First || '-' }}
+                                            </span>
                                         </td>
-                                        <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
-                                            <div class="text-sm text-gray-900">
-                                                {{ checkpoint.Judgement_First || 'N/A' }}
-                                            </div>
+                                        <!-- Last Inspection Samples -->
+                                        <td v-for="(val, i) in cp.samples_last" :key="'l'+cp.CheckpointNumber+'-'+i" class="px-2 py-2 text-center text-sm text-gray-700 border-r border-gray-200">
+                                            {{ val || '-' }}
                                         </td>
-                                        <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
-                                            <div class="text-sm text-gray-900">
-                                                {{ checkpoint.InspectorName_Last || 'N/A' }}
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
-                                            <div class="text-sm text-gray-900">
-                                                {{ checkpoint.Judgement_Last || 'N/A' }}
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div class="flex items-center justify-end space-x-2">
-                                                <Link
-                                                    :href="route('magnetism-checksheet.checkpoints.edit', { magnetism_checksheet: batch.BatchID, checkpoint: checkpoint.CheckpointID })"
-                                                    class="p-1 text-blue-600 hover:text-blue-900 rounded hover:bg-gray-100"
-                                                    title="Manage"
-                                                >
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                                    </svg>
-                                                </Link>
-                                                <button
-                                                    @click="destroyCheckpoint(checkpoint.CheckpointID)"
-                                                    class="p-1 text-red-600 hover:text-red-900 rounded hover:bg-gray-100"
-                                                    title="Delete"
-                                                >
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="!checkpoints.length">
-                                        <td colspan="7" class="px-4 py-4 text-center text-sm text-gray-500">
-                                            No checkpoints found for this batch.
+                                        <!-- Last Inspection Judgement -->
+                                        <td class="px-2 py-2 text-center text-sm">
+                                            <span :class="[
+                                                'px-2 py-1 rounded text-xs font-medium',
+                                                cp.Judgement_Last?.toUpperCase() === 'OK' ? 'bg-green-100 text-green-800' :
+                                                cp.Judgement_Last?.toUpperCase() === 'NG' ? 'bg-red-100 text-red-800' :
+                                                'text-gray-700'
+                                            ]">
+                                                {{ cp.Judgement_Last || '-' }}
+                                            </span>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div v-else class="text-center py-8">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No inspection data</h3>
+                            <p class="mt-1 text-sm text-gray-500">Get started by adding inspection samples.</p>
+                            <div class="mt-6">
+                                <Link
+                                    :href="route('magnetism-checksheet.checkpoints.create', { magnetism_checksheet: batch.BatchID })"
+                                    class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700"
+                                >
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Add Inspection Data
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 </div>
