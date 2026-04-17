@@ -79,15 +79,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('magnetism-checksheet/next-letter', [ProductionBatchController::class, 'nextLetter'])
         ->name('magnetism-checksheet.next-letter');
     
-    // Magnetism Checksheet Checkpoints
-    Route::get('magnetism-checksheet/{magnetism_checksheet}/checkpoints/create', [ProductionBatchController::class, 'createCheckpoint'])
+    // Magnetism Checksheet Checkpoints (Grid-based editing)
+    Route::get('magnetism-checksheet/{magnetism_checksheet}/checkpoints/create', [ProductionBatchController::class, 'editCheckpoint'])
         ->name('magnetism-checksheet.checkpoints.create');
-    Route::post('magnetism-checksheet/{magnetism_checksheet}/checkpoints', [ProductionBatchController::class, 'storeCheckpoint'])
-        ->name('magnetism-checksheet.checkpoints.store');
+    Route::put('magnetism-checksheet/{magnetism_checksheet}/checkpoints/update', [ProductionBatchController::class, 'updateCheckpoint'])
+        ->name('magnetism-checksheet.checkpoints.update');
     Route::get('magnetism-checksheet/{magnetism_checksheet}/checkpoints/{checkpoint}/edit', [ProductionBatchController::class, 'editCheckpoint'])
         ->name('magnetism-checksheet.checkpoints.edit');
-    Route::put('magnetism-checksheet/{magnetism_checksheet}/checkpoints/{checkpoint}', [ProductionBatchController::class, 'updateCheckpoint'])
-        ->name('magnetism-checksheet.checkpoints.update');
+    Route::post('magnetism-checksheet/{magnetism_checksheet}/checkpoints', [ProductionBatchController::class, 'storeCheckpoint'])
+        ->name('magnetism-checksheet.checkpoints.store');
     Route::delete('magnetism-checksheet/{magnetism_checksheet}/checkpoints/{checkpoint}', [ProductionBatchController::class, 'destroyCheckpoint'])
         ->name('magnetism-checksheet.checkpoints.destroy');
 

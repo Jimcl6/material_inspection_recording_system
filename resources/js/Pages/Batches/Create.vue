@@ -6,6 +6,9 @@ import { watch, ref, reactive } from 'vue';
 // Import route helper
 declare function route(name: string, params?: any): string;
 
+// Checkpoint position labels
+const CHECKPOINT_LABELS = ['Front 1', 'Front 2', 'Back 1', 'Back 2'];
+
 const form = useForm({
   ProductionDate: '',
   LetterCode: '',
@@ -41,33 +44,46 @@ watch(() => form.ProductionDate, () => {
 // Also try once on initial render
 fetchNextLetter();
 
-// Local state for checkpoint and samples within the same setup scope
-const cp = reactive({
-  CheckpointNumber: 1,
-  InspectorName_First: '',
-  Judgement_First: '',
-  InspectorName_Last: '',
-  Judgement_Last: '',
-});
+// Inspector names (shared across all checkpoints per phase)
+const inspectorFirst = ref('');
+const inspectorLast = ref('');
 
-const samplesFirst = ref<string[]>([]);
-const samplesLast = ref<string[]>([]);
+// Fixed 4 checkpoints with 5 samples each for First and Last inspection
+interface CheckpointData {
+  CheckpointNumber: number;
+  label: string;
+  Judgement_First: string;
+  Judgement_Last: string;
+  samples_first: string[];
+  samples_last: string[];
+}
 
-const addFirst = () => { samplesFirst.value.push(''); };
-const removeFirst = (i: number) => { samplesFirst.value.splice(i, 1); };
-const addLast = () => { samplesLast.value.push(''); };
-const removeLast = (i: number) => { samplesLast.value.splice(i, 1); };
+const checkpoints = reactive<CheckpointData[]>([
+  { CheckpointNumber: 1, label: 'Front 1', Judgement_First: '', Judgement_Last: '', samples_first: ['', '', '', '', ''], samples_last: ['', '', '', '', ''] },
+  { CheckpointNumber: 2, label: 'Front 2', Judgement_First: '', Judgement_Last: '', samples_first: ['', '', '', '', ''], samples_last: ['', '', '', '', ''] },
+  { CheckpointNumber: 3, label: 'Back 1', Judgement_First: '', Judgement_Last: '', samples_first: ['', '', '', '', ''], samples_last: ['', '', '', '', ''] },
+  { CheckpointNumber: 4, label: 'Back 2', Judgement_First: '', Judgement_Last: '', samples_first: ['', '', '', '', ''], samples_last: ['', '', '', '', ''] },
+]);
 
 const submit = () => {
   const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+  
+  // Build checkpoints array with inspector names
+  const checkpointsPayload = checkpoints.map(cp => ({
+    CheckpointNumber: cp.CheckpointNumber,
+    InspectorName_First: inspectorFirst.value,
+    Judgement_First: cp.Judgement_First,
+    InspectorName_Last: inspectorLast.value,
+    Judgement_Last: cp.Judgement_Last,
+    samples_first: cp.samples_first,
+    samples_last: cp.samples_last,
+  }));
+
   const payload = {
-    ...form,
-    checkpoint: {
-      ...cp,
-      samples_first: samplesFirst.value,
-      samples_last: samplesLast.value,
-    },
+    ...form.data(),
+    checkpoints: checkpointsPayload,
   };
+  
   form.transform(() => ({ ...payload, _token: csrf }))
       .post('/magnetism-checksheet');
 };
@@ -212,129 +228,108 @@ const submit = () => {
                                 ></textarea>
                             </div>
 
-                            <!-- Optional Checkpoint Section -->
+                            <!-- Inspection Samples Grid Section -->
                             <div class="border-t pt-6">
-                                <h3 class="text-lg font-medium text-gray-900 mb-4">Optional: First Checkpoint and Samples</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Inspection Samples</h3>
+                                
+                                <!-- Inspector Names -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Checkpoint #</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Inspector (First Inspection)</label>
                                         <input
-                                            v-model.number="cp.CheckpointNumber"
-                                            type="number"
-                                            min="1"
+                                            v-model="inspectorFirst"
+                                            type="text"
+                                            placeholder="Enter inspector name"
                                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                         />
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Inspector (First)</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Inspector (Last Inspection)</label>
                                         <input
-                                            v-model="cp.InspectorName_First"
+                                            v-model="inspectorLast"
                                             type="text"
-                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Judgement (First)</label>
-                                        <input
-                                            v-model="cp.Judgement_First"
-                                            type="text"
-                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Inspector (Last)</label>
-                                        <input
-                                            v-model="cp.InspectorName_Last"
-                                            type="text"
-                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Judgement (Last)</label>
-                                        <input
-                                            v-model="cp.Judgement_Last"
-                                            type="text"
+                                            placeholder="Enter inspector name"
                                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                         />
                                     </div>
                                 </div>
 
-                                <!-- Samples Section -->
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <div>
-                                        <div class="flex justify-between items-center mb-2">
-                                            <label class="block text-sm font-medium text-gray-700">Samples (FIRST)</label>
-                                            <button
-                                                type="button"
-                                                @click="addFirst"
-                                                class="inline-flex items-center px-3 py-1 bg-indigo-600 border border-transparent rounded-md text-xs font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                            >
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                                </svg>
-                                                Add
-                                            </button>
-                                        </div>
-                                        <div class="space-y-2">
-                                            <div v-for="(sample, i) in samplesFirst" :key="'f' + i" class="flex items-center space-x-2">
-                                                <span class="inline-flex items-center justify-center w-12 h-10 rounded-md border border-gray-300 bg-gray-50 text-sm font-medium text-gray-700">
-                                                    #{{ i + 1 }}
-                                                </span>
-                                                <input
-                                                    v-model="samplesFirst[i]"
-                                                    type="text"
-                                                    class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    @click="removeFirst(i)"
-                                                    class="inline-flex items-center p-2 border border-transparent rounded-md text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                                >
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div class="flex justify-between items-center mb-2">
-                                            <label class="block text-sm font-medium text-gray-700">Samples (LAST)</label>
-                                            <button
-                                                type="button"
-                                                @click="addLast"
-                                                class="inline-flex items-center px-3 py-1 bg-indigo-600 border border-transparent rounded-md text-xs font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                            >
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                                </svg>
-                                                Add
-                                            </button>
-                                        </div>
-                                        <div class="space-y-2">
-                                            <div v-for="(sample, i) in samplesLast" :key="'l' + i" class="flex items-center space-x-2">
-                                                <span class="inline-flex items-center justify-center w-12 h-10 rounded-md border border-gray-300 bg-gray-50 text-sm font-medium text-gray-700">
-                                                    #{{ i + 1 }}
-                                                </span>
-                                                <input
-                                                    v-model="samplesLast[i]"
-                                                    type="text"
-                                                    class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    @click="removeLast(i)"
-                                                    class="inline-flex items-center p-2 border border-transparent rounded-md text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                                >
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <!-- Samples Grid -->
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full border border-gray-200 rounded-lg">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th rowspan="2" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r border-gray-200 align-middle">
+                                                    Checkpoint
+                                                </th>
+                                                <th colspan="6" class="px-3 py-2 text-center text-xs font-medium text-blue-600 uppercase tracking-wider border-b border-r border-gray-200 bg-blue-50">
+                                                    First Inspection (N=5)
+                                                </th>
+                                                <th colspan="6" class="px-3 py-2 text-center text-xs font-medium text-green-600 uppercase tracking-wider border-b border-gray-200 bg-green-50">
+                                                    Last Inspection (N=5)
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <th v-for="n in 5" :key="'fh'+n" class="px-2 py-1 text-center text-xs font-medium text-gray-500 border-b border-r border-gray-200 bg-blue-50 w-16">
+                                                    {{ n }}
+                                                </th>
+                                                <th class="px-2 py-1 text-center text-xs font-medium text-gray-500 border-b border-r border-gray-200 bg-blue-50 w-20">
+                                                    Judge
+                                                </th>
+                                                <th v-for="n in 5" :key="'lh'+n" class="px-2 py-1 text-center text-xs font-medium text-gray-500 border-b border-r border-gray-200 bg-green-50 w-16">
+                                                    {{ n }}
+                                                </th>
+                                                <th class="px-2 py-1 text-center text-xs font-medium text-gray-500 border-b border-gray-200 bg-green-50 w-20">
+                                                    Judge
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            <tr v-for="cp in checkpoints" :key="cp.CheckpointNumber" class="hover:bg-gray-50">
+                                                <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">
+                                                    {{ cp.CheckpointNumber }} - {{ cp.label }}
+                                                </td>
+                                                <!-- First Inspection Samples -->
+                                                <td v-for="(_, i) in cp.samples_first" :key="'f'+cp.CheckpointNumber+'-'+i" class="px-1 py-1 border-r border-gray-200">
+                                                    <input
+                                                        v-model="cp.samples_first[i]"
+                                                        type="text"
+                                                        class="w-14 text-center text-sm rounded border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                                        placeholder="-"
+                                                    />
+                                                </td>
+                                                <!-- First Inspection Judgement -->
+                                                <td class="px-1 py-1 border-r border-gray-200">
+                                                    <input
+                                                        v-model="cp.Judgement_First"
+                                                        type="text"
+                                                        class="w-16 text-center text-sm rounded border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                                        placeholder="OK"
+                                                    />
+                                                </td>
+                                                <!-- Last Inspection Samples -->
+                                                <td v-for="(_, i) in cp.samples_last" :key="'l'+cp.CheckpointNumber+'-'+i" class="px-1 py-1 border-r border-gray-200">
+                                                    <input
+                                                        v-model="cp.samples_last[i]"
+                                                        type="text"
+                                                        class="w-14 text-center text-sm rounded border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                                        placeholder="-"
+                                                    />
+                                                </td>
+                                                <!-- Last Inspection Judgement -->
+                                                <td class="px-1 py-1">
+                                                    <input
+                                                        v-model="cp.Judgement_Last"
+                                                        type="text"
+                                                        class="w-16 text-center text-sm rounded border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                                        placeholder="OK"
+                                                    />
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
+                                <p class="mt-2 text-sm text-gray-500">Enter measurement values for each sample position. Leave empty if not applicable.</p>
                             </div>
 
                             <!-- Form Actions -->
