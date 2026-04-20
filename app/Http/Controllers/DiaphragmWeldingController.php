@@ -287,6 +287,107 @@ class DiaphragmWeldingController extends Controller
     }
 
     /**
+     * Preview import - Phase 1: Parse file and detect duplicates
+     */
+    public function importPreview(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
+        ]);
+
+        $file = $request->file('file');
+
+        try {
+            $tempPath = $file->store('temp');
+            $fullPath = storage_path('app/' . $tempPath);
+
+            $import = new \App\Imports\DiaphragmWeldingImport();
+            $results = $import->preview($fullPath);
+
+            // Store the temp file path in session for execute phase
+            session(['diaphragm_welding_import_file' => $tempPath]);
+
+            return response()->json([
+                'success' => true,
+                'preview' => $results,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Diaphragm Welding Import Preview failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to preview file: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Execute import - Phase 2: Create/update records based on user choice
+     */
+    public function importExecute(Request $request)
+    {
+        $request->validate([
+            'update_duplicates' => ['nullable', 'boolean'],
+        ]);
+
+        $tempPath = session('diaphragm_welding_import_file');
+
+        if (!$tempPath) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No file to import. Please upload a file first.',
+            ], 400);
+        }
+
+        $fullPath = storage_path('app/' . $tempPath);
+
+        if (!file_exists($fullPath)) {
+            session()->forget('diaphragm_welding_import_file');
+            return response()->json([
+                'success' => false,
+                'error' => 'Import file expired. Please upload again.',
+            ], 400);
+        }
+
+        try {
+            $updateDuplicates = $request->boolean('update_duplicates', false);
+
+            $import = new \App\Imports\DiaphragmWeldingImport();
+            $results = $import->execute($fullPath, $updateDuplicates);
+
+            // Clean up temp file
+            @unlink($fullPath);
+            session()->forget('diaphragm_welding_import_file');
+
+            $message = "Import completed: {$results['imported']} created";
+            if ($results['updated'] > 0) $message .= ", {$results['updated']} updated";
+            if ($results['skipped'] > 0) $message .= ", {$results['skipped']} skipped";
+            if (count($results['errors']) > 0) $message .= ", " . count($results['errors']) . " errors";
+
+            return response()->json([
+                'success' => true,
+                'results' => $results,
+                'message' => $message,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Diaphragm Welding Import Execute failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to import file: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Show the approval page for administrators and inspectors
      */
     public function approval()
