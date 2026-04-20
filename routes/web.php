@@ -277,12 +277,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('diaphragm-welding/import', [DiaphragmWeldingController::class, 'import'])
         ->middleware('module.permission:diaphragm,import')
         ->name('diaphragm-welding.import');
+    Route::post('diaphragm-welding/import/preview', [DiaphragmWeldingController::class, 'importPreview'])
+        ->middleware('module.permission:diaphragm,import')
+        ->name('diaphragm-welding.import.preview');
+    Route::post('diaphragm-welding/import/execute', [DiaphragmWeldingController::class, 'importExecute'])
+        ->middleware('module.permission:diaphragm,import')
+        ->name('diaphragm-welding.import.execute');
     Route::get('diaphragm-welding/export', [DiaphragmWeldingController::class, 'export'])
         ->middleware('module.permission:diaphragm,export')
         ->name('diaphragm-welding.export');
     Route::get('diaphragm-welding/item-code-rules', [DiaphragmWeldingController::class, 'getItemCodeRules'])
         ->name('diaphragm-welding.item-code-rules');
-    
+
     // Approval routes (admin/inspector only)
     Route::middleware(['auth', 'module.permission:diaphragm,approve'])->group(function () {
         Route::get('diaphragm-welding/approval', [DiaphragmWeldingController::class, 'approval'])
@@ -292,7 +298,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('diaphragm-welding/bulk-reject', [DiaphragmWeldingController::class, 'bulkReject'])
             ->name('diaphragm-welding.bulk-reject');
     });
-    
+
     // Diaphragm Welding Resource Routes with permission middleware
     Route::get('diaphragm-welding', [DiaphragmWeldingController::class, 'index'])
         ->middleware('module.permission:diaphragm,view')
