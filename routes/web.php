@@ -7,6 +7,7 @@ use App\Http\Controllers\AnnealingCheckController;
 use App\Http\Controllers\TempRecordController;
 use App\Http\Controllers\TorqueRecordController;
 use App\Http\Controllers\ProductionBatchController;
+use App\Http\Controllers\MagnetismController;
 use App\Http\Controllers\ModificationLogController;
 use App\Http\Controllers\MaterialPartController;
 use App\Http\Controllers\UserManagementController;
@@ -45,51 +46,66 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Add more admin routes here
     });
 
-    // Magnetism Checksheet
-    Route::get('magnetism-checksheet', [ProductionBatchController::class, 'index'])
-        ->middleware('module.permission:magnetism,view')
-        ->name('magnetism-checksheet.index');
-    Route::get('magnetism-checksheet/create', [ProductionBatchController::class, 'create'])
-        ->middleware('module.permission:magnetism,create')
-        ->name('magnetism-checksheet.create');
-    Route::post('magnetism-checksheet', [ProductionBatchController::class, 'store'])
-        ->middleware('module.permission:magnetism,create')
-        ->name('magnetism-checksheet.store');
-    Route::get('magnetism-checksheet/{magnetism_checksheet}', [ProductionBatchController::class, 'show'])
-        ->middleware('module.permission:magnetism,view')
-        ->name('magnetism-checksheet.show');
-    Route::get('magnetism-checksheet/{magnetism_checksheet}/edit', [ProductionBatchController::class, 'edit'])
-        ->middleware('module.permission:magnetism,update')
-        ->name('magnetism-checksheet.edit');
-    Route::put('magnetism-checksheet/{magnetism_checksheet}', [ProductionBatchController::class, 'update'])
-        ->middleware('module.permission:magnetism,update')
-        ->name('magnetism-checksheet.update');
-    Route::delete('magnetism-checksheet/{magnetism_checksheet}', [ProductionBatchController::class, 'destroy'])
-        ->middleware('module.permission:magnetism,delete')
-        ->name('magnetism-checksheet.destroy');
-    Route::get('magnetism-checksheet/{magnetism_checksheet}/export', [ProductionBatchController::class, 'export'])
-        ->middleware('module.permission:magnetism,export')
-        ->name('magnetism-checksheet.export');
-    Route::get('magnetism-checksheet/import', [ProductionBatchController::class, 'importForm'])
+    // Magnetism Checksheet (New structure with checksheets, batches, and checkpoints)
+    // Import must come before resource routes
+    Route::get('magnetism-checksheet/import', [MagnetismController::class, 'importForm'])
         ->middleware('module.permission:magnetism,import')
         ->name('magnetism-checksheet.import.form');
-    Route::post('magnetism-checksheet/import', [ProductionBatchController::class, 'import'])
+    Route::post('magnetism-checksheet/import', [MagnetismController::class, 'import'])
         ->middleware('module.permission:magnetism,import')
         ->name('magnetism-checksheet.import');
-    Route::get('magnetism-checksheet/next-letter', [ProductionBatchController::class, 'nextLetter'])
-        ->name('magnetism-checksheet.next-letter');
+    Route::post('magnetism-checksheet/import/preview', [MagnetismController::class, 'importPreview'])
+        ->middleware('module.permission:magnetism,import')
+        ->name('magnetism-checksheet.import.preview');
+    Route::post('magnetism-checksheet/import/execute', [MagnetismController::class, 'importExecute'])
+        ->middleware('module.permission:magnetism,import')
+        ->name('magnetism-checksheet.import.execute');
     
-    // Magnetism Checksheet Checkpoints (Grid-based editing)
-    Route::get('magnetism-checksheet/{magnetism_checksheet}/checkpoints/create', [ProductionBatchController::class, 'editCheckpoint'])
-        ->name('magnetism-checksheet.checkpoints.create');
-    Route::put('magnetism-checksheet/{magnetism_checksheet}/checkpoints/update', [ProductionBatchController::class, 'updateCheckpoint'])
+    // Main CRUD routes
+    Route::get('magnetism-checksheet', [MagnetismController::class, 'index'])
+        ->middleware('module.permission:magnetism,view')
+        ->name('magnetism-checksheet.index');
+    Route::get('magnetism-checksheet/create', [MagnetismController::class, 'create'])
+        ->middleware('module.permission:magnetism,create')
+        ->name('magnetism-checksheet.create');
+    Route::post('magnetism-checksheet', [MagnetismController::class, 'store'])
+        ->middleware('module.permission:magnetism,create')
+        ->name('magnetism-checksheet.store');
+    Route::get('magnetism-checksheet/{magnetism_checksheet}', [MagnetismController::class, 'show'])
+        ->middleware('module.permission:magnetism,view')
+        ->name('magnetism-checksheet.show');
+    Route::get('magnetism-checksheet/{magnetism_checksheet}/edit', [MagnetismController::class, 'edit'])
+        ->middleware('module.permission:magnetism,update')
+        ->name('magnetism-checksheet.edit');
+    Route::put('magnetism-checksheet/{magnetism_checksheet}', [MagnetismController::class, 'update'])
+        ->middleware('module.permission:magnetism,update')
+        ->name('magnetism-checksheet.update');
+    Route::delete('magnetism-checksheet/{magnetism_checksheet}', [MagnetismController::class, 'destroy'])
+        ->middleware('module.permission:magnetism,delete')
+        ->name('magnetism-checksheet.destroy');
+    Route::get('magnetism-checksheet/{magnetism_checksheet}/export', [MagnetismController::class, 'export'])
+        ->middleware('module.permission:magnetism,export')
+        ->name('magnetism-checksheet.export');
+    
+    // Batch routes (nested under checksheet)
+    Route::post('magnetism-checksheet/{magnetism_checksheet}/batches', [MagnetismController::class, 'storeBatch'])
+        ->middleware('module.permission:magnetism,create')
+        ->name('magnetism-checksheet.batches.store');
+    Route::put('magnetism-checksheet/{magnetism_checksheet}/batches/{batch}', [MagnetismController::class, 'updateBatch'])
+        ->middleware('module.permission:magnetism,update')
+        ->name('magnetism-checksheet.batches.update');
+    Route::delete('magnetism-checksheet/{magnetism_checksheet}/batches/{batch}', [MagnetismController::class, 'destroyBatch'])
+        ->middleware('module.permission:magnetism,delete')
+        ->name('magnetism-checksheet.batches.destroy');
+    Route::get('magnetism-checksheet/{magnetism_checksheet}/next-letter', [MagnetismController::class, 'nextLetter'])
+        ->name('magnetism-checksheet.next-letter');
+    Route::get('magnetism-checksheet/{magnetism_checksheet}/letter-for-lot', [MagnetismController::class, 'getLetterForLot'])
+        ->name('magnetism-checksheet.letter-for-lot');
+    
+    // Checkpoint routes (bulk save for a production date)
+    Route::put('magnetism-checksheet/{magnetism_checksheet}/checkpoints', [MagnetismController::class, 'updateCheckpoints'])
+        ->middleware('module.permission:magnetism,update')
         ->name('magnetism-checksheet.checkpoints.update');
-    Route::get('magnetism-checksheet/{magnetism_checksheet}/checkpoints/{checkpoint}/edit', [ProductionBatchController::class, 'editCheckpoint'])
-        ->name('magnetism-checksheet.checkpoints.edit');
-    Route::post('magnetism-checksheet/{magnetism_checksheet}/checkpoints', [ProductionBatchController::class, 'storeCheckpoint'])
-        ->name('magnetism-checksheet.checkpoints.store');
-    Route::delete('magnetism-checksheet/{magnetism_checksheet}/checkpoints/{checkpoint}', [ProductionBatchController::class, 'destroyCheckpoint'])
-        ->name('magnetism-checksheet.checkpoints.destroy');
 
     // Modification Logs
     Route::get('modification-logs', [ModificationLogController::class, 'index'])
