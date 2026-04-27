@@ -356,6 +356,7 @@ class MagnetismController extends Controller
             'item_code' => ['required', 'string', 'max:50'],
             'item_name' => ['required', 'string', 'max:100'],
             'machine_no' => ['required', 'string', 'max:50'],
+            'format' => ['nullable', 'string', 'in:HPI-PR03-01,HPI-PR05-03'],
         ]);
 
         try {
@@ -364,24 +365,33 @@ class MagnetismController extends Controller
             $tempPath = $file->store('temp/magnetism-imports');
             $fullPath = Storage::path($tempPath);
 
-            // Store file path in session for execute phase
+            // Get format (null = auto-detect)
+            $format = $request->input('format');
+
+            // Store file path and params in session for execute phase
             session(['magnetism_import_file' => $tempPath]);
             session(['magnetism_import_item_code' => $request->input('item_code')]);
             session(['magnetism_import_item_name' => $request->input('item_name')]);
             session(['magnetism_import_machine_no' => $request->input('machine_no')]);
 
-            // Run preview
+            // Run preview with format (auto-detect if null)
             $importer = new MagnetismChecksheetImport();
             $preview = $importer->preview(
                 $fullPath,
                 $request->input('item_code'),
                 $request->input('item_name'),
-                $request->input('machine_no')
+                $request->input('machine_no'),
+                $format
             );
+
+            // Store detected format in session for execute phase
+            session(['magnetism_import_format' => $preview['detected_format']]);
 
             return response()->json([
                 'success' => true,
                 'preview' => $preview,
+                'detected_format' => $preview['detected_format'],
+                'available_formats' => MagnetismChecksheetImport::getAvailableFormats(),
             ]);
 
         } catch (\Exception $e) {
@@ -399,6 +409,7 @@ class MagnetismController extends Controller
     {
         $request->validate([
             'update_duplicates' => ['nullable', 'boolean'],
+            'format' => ['nullable', 'string', 'in:HPI-PR03-01,HPI-PR05-03'],
         ]);
 
         // Get stored file path from session
@@ -406,6 +417,7 @@ class MagnetismController extends Controller
         $itemCode = session('magnetism_import_item_code');
         $itemName = session('magnetism_import_item_name');
         $machineNo = session('magnetism_import_machine_no');
+        $detectedFormat = session('magnetism_import_format');
 
         if (!$tempPath || !Storage::exists($tempPath)) {
             return response()->json([
@@ -417,6 +429,8 @@ class MagnetismController extends Controller
         try {
             $fullPath = Storage::path($tempPath);
             $updateDuplicates = $request->boolean('update_duplicates', false);
+            // Use format from request, or fall back to detected format from preview
+            $format = $request->input('format') ?? $detectedFormat;
 
             // Run execute
             $importer = new MagnetismChecksheetImport();
@@ -425,7 +439,8 @@ class MagnetismController extends Controller
                 $itemCode,
                 $itemName,
                 $machineNo,
-                $updateDuplicates
+                $updateDuplicates,
+                $format
             );
 
             // Clean up temp file
@@ -435,6 +450,7 @@ class MagnetismController extends Controller
                 'magnetism_import_item_code',
                 'magnetism_import_item_name',
                 'magnetism_import_machine_no',
+                'magnetism_import_format',
             ]);
 
             // Calculate totals for message

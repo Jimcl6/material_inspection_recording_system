@@ -47,6 +47,7 @@ interface PreviewResults {
     total_checkpoints_parsed: number;
     errors: string[];
     sheets_processed: { name: string; month: number; year: number }[];
+    detected_format: string | null;
 }
 
 interface ImportResults {
@@ -74,6 +75,9 @@ const successMessage = ref('');
 const itemCode = ref('');
 const itemName = ref('');
 const machineNo = ref('');
+const selectedFormat = ref<string | null>(null); // null = auto-detect
+const detectedFormat = ref<string | null>(null);
+const availableFormats = ref<Record<string, string>>({});
 
 const hasPreview = computed(() => previewResults.value !== null);
 const hasDuplicateBatches = computed(() => (previewResults.value?.duplicate_batches?.length || 0) > 0);
@@ -91,6 +95,7 @@ const handleFileChange = (event: Event) => {
         selectedFileName.value = target.files[0].name;
         previewResults.value = null;
         importResults.value = null;
+        detectedFormat.value = null;
         errorMessage.value = '';
         successMessage.value = '';
     }
@@ -115,6 +120,9 @@ const previewImport = async () => {
     formData.append('item_code', itemCode.value);
     formData.append('item_name', itemName.value);
     formData.append('machine_no', machineNo.value);
+    if (selectedFormat.value) {
+        formData.append('format', selectedFormat.value);
+    }
 
     try {
         const response = await axios.post(route('magnetism-checksheet.import.preview'), formData, {
@@ -123,6 +131,8 @@ const previewImport = async () => {
 
         if (response.data.success) {
             previewResults.value = response.data.preview;
+            detectedFormat.value = response.data.detected_format;
+            availableFormats.value = response.data.available_formats || {};
         } else {
             errorMessage.value = response.data.error || 'Failed to preview file.';
         }
@@ -140,6 +150,7 @@ const executeImport = async () => {
     try {
         const response = await axios.post(route('magnetism-checksheet.import.execute'), {
             update_duplicates: updateDuplicates.value,
+            format: detectedFormat.value,
         });
 
         if (response.data.success) {
@@ -174,6 +185,8 @@ const resetForm = () => {
     itemCode.value = '';
     itemName.value = '';
     machineNo.value = '';
+    selectedFormat.value = null;
+    detectedFormat.value = null;
     if (fileInput.value) {
         fileInput.value.value = '';
     }
@@ -271,6 +284,32 @@ const getMonthName = (month: number): string => {
                     <div class="p-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Preview Results</h3>
                         
+                        <!-- Format Detection -->
+                        <div v-if="detectedFormat" class="mb-4 bg-purple-50 border border-purple-200 rounded-lg p-3">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-medium text-purple-800">Format Detected:</h4>
+                                    <p class="text-sm text-purple-700">
+                                        <span class="font-semibold">{{ detectedFormat }}</span>
+                                        <span v-if="availableFormats[detectedFormat]" class="text-purple-600 ml-1">
+                                            ({{ availableFormats[detectedFormat].replace(detectedFormat + ' ', '') }})
+                                        </span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-purple-700 mb-1">Change format:</label>
+                                    <select 
+                                        v-model="detectedFormat"
+                                        class="text-sm rounded-md border-purple-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                                    >
+                                        <option v-for="(label, key) in availableFormats" :key="key" :value="key">
+                                            {{ key }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Sheets Processed -->
                         <div v-if="previewResults?.sheets_processed?.length" class="mb-4 bg-indigo-50 border border-indigo-200 rounded-lg p-3">
                             <h4 class="font-medium text-indigo-800 mb-2">Sheets Detected:</h4>
@@ -421,7 +460,7 @@ const getMonthName = (month: number): string => {
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Upload Excel File</h3>
                         
                         <!-- Header Fields -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                             <div>
                                 <label for="item_code" class="block text-sm font-medium text-gray-700">Item Code <span class="text-red-500">*</span></label>
                                 <input
@@ -449,6 +488,19 @@ const getMonthName = (month: number): string => {
                                     type="text"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                 />
+                            </div>
+                            <div>
+                                <label for="format" class="block text-sm font-medium text-gray-700">Document Format</label>
+                                <select
+                                    id="format"
+                                    v-model="selectedFormat"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                >
+                                    <option :value="null">Auto-detect</option>
+                                    <option value="HPI-PR05-03">HPI-PR05-03 (Tesla 160~210mT)</option>
+                                    <option value="HPI-PR03-01">HPI-PR03-01 (Tesla 120~150mT)</option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">Leave as auto-detect to identify format from file structure</p>
                             </div>
                         </div>
 
@@ -486,6 +538,7 @@ const getMonthName = (month: number): string => {
                         <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
                             <h4 class="font-medium text-blue-800 mb-2">Import Instructions</h4>
                             <ul class="text-sm text-blue-700 list-disc list-inside space-y-1">
+                                <li><strong>Document Format:</strong> Auto-detect identifies the format from file structure, or manually select HPI-PR03-01 or HPI-PR05-03</li>
                                 <li>Month/year is auto-detected from sheet names (e.g., "December 2025")</li>
                                 <li>Batches: date, letter code, material lot, QR code, produce qty, job number</li>
                                 <li>Checkpoints: 4 rows per date with Tesla samples (first/last inspection)</li>

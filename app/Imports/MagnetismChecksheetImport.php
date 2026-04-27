@@ -13,6 +13,59 @@ use Carbon\Carbon;
 
 class MagnetismChecksheetImport
 {
+    // Supported format types
+    public const FORMAT_HPI_PR03_01 = 'HPI-PR03-01';
+    public const FORMAT_HPI_PR05_03 = 'HPI-PR05-03';
+    public const DEFAULT_FORMAT = self::FORMAT_HPI_PR05_03;
+
+    // Format-specific column mappings
+    protected const FORMAT_MAPPINGS = [
+        self::FORMAT_HPI_PR03_01 => [
+            'header_row' => 6,
+            'data_start_row' => 9,
+            'date_col' => 'A',
+            'letter_col' => 'I',
+            'material_lot_col' => 'J',
+            'qr_code_col' => 'K',
+            'produce_qty_col' => 'L',
+            'job_number_col' => 'M',
+            'total_qty_col' => 'N',
+            'checkpoint_col' => 'O',
+            'first_samples_start_col' => 'P',
+            'operator_first_col' => 'U',
+            'judgment_first_col' => 'V',
+            'last_samples_start_col' => 'W',
+            'operator_last_col' => 'AB',
+            'judgment_last_col' => 'AC',
+            'checked_by_col' => 'AD',
+            'remarks_col' => 'AE',
+            'has_total_qty' => true,
+            'has_operator_cols' => true,
+        ],
+        self::FORMAT_HPI_PR05_03 => [
+            'header_row' => 8,
+            'data_start_row' => 11,
+            'date_col' => 'A',
+            'letter_col' => 'I',
+            'material_lot_col' => 'J',
+            'qr_code_col' => 'K',
+            'produce_qty_col' => 'L',
+            'job_number_col' => 'M',
+            'total_qty_col' => null,
+            'checkpoint_col' => 'U',
+            'first_samples_start_col' => 'V',
+            'operator_first_col' => null,
+            'judgment_first_col' => 'AA',
+            'last_samples_start_col' => 'AB',
+            'operator_last_col' => null,
+            'judgment_last_col' => 'AG',
+            'checked_by_col' => 'AH',
+            'remarks_col' => 'AI',
+            'has_total_qty' => false,
+            'has_operator_cols' => false,
+        ],
+    ];
+
     protected $results = [
         'new_batches' => [],
         'new_checkpoints' => [],
@@ -22,6 +75,7 @@ class MagnetismChecksheetImport
         'total_checkpoints_parsed' => 0,
         'errors' => [],
         'sheets_processed' => [],
+        'detected_format' => null,
     ];
 
     protected $executeResults = [
@@ -38,6 +92,8 @@ class MagnetismChecksheetImport
     protected $itemCode;
     protected $itemName;
     protected $machineNo;
+    protected $format;
+    protected $formatMapping;
 
     // Month name to number mapping
     protected const MONTH_MAP = [
@@ -51,8 +107,14 @@ class MagnetismChecksheetImport
 
     /**
      * Preview import - Phase 1: Parse file and detect duplicates
+     *
+     * @param string $filePath Path to Excel file
+     * @param string $itemCode Item code
+     * @param string $itemName Item name
+     * @param string $machineNo Machine number
+     * @param string|null $format Format type (HPI-PR03-01 or HPI-PR05-03), null for auto-detect
      */
-    public function preview(string $filePath, string $itemCode, string $itemName, string $machineNo): array
+    public function preview(string $filePath, string $itemCode, string $itemName, string $machineNo, ?string $format = null): array
     {
         $this->itemCode = $itemCode;
         $this->itemName = $itemName;
@@ -61,9 +123,15 @@ class MagnetismChecksheetImport
         try {
             $spreadsheet = IOFactory::load($filePath);
 
+            // Auto-detect or validate format
+            $this->format = $this->resolveFormat($spreadsheet, $format);
+            $this->formatMapping = self::FORMAT_MAPPINGS[$this->format];
+            $this->results['detected_format'] = $this->format;
+
             Log::info('Magnetism Import Preview - Excel file loaded', [
                 'total_sheets' => $spreadsheet->getSheetCount(),
                 'sheet_names' => $spreadsheet->getSheetNames(),
+                'format' => $this->format,
             ]);
 
             foreach ($spreadsheet->getSheetNames() as $sheetName) {
@@ -99,8 +167,15 @@ class MagnetismChecksheetImport
 
     /**
      * Execute import - Phase 2: Create/update records based on user choice
+     *
+     * @param string $filePath Path to Excel file
+     * @param string $itemCode Item code
+     * @param string $itemName Item name
+     * @param string $machineNo Machine number
+     * @param bool $updateDuplicates Whether to update duplicate records
+     * @param string|null $format Format type (HPI-PR03-01 or HPI-PR05-03)
      */
-    public function execute(string $filePath, string $itemCode, string $itemName, string $machineNo, bool $updateDuplicates = false): array
+    public function execute(string $filePath, string $itemCode, string $itemName, string $machineNo, bool $updateDuplicates = false, ?string $format = null): array
     {
         $this->itemCode = $itemCode;
         $this->itemName = $itemName;
@@ -109,9 +184,14 @@ class MagnetismChecksheetImport
         try {
             $spreadsheet = IOFactory::load($filePath);
 
+            // Use provided format or auto-detect
+            $this->format = $this->resolveFormat($spreadsheet, $format);
+            $this->formatMapping = self::FORMAT_MAPPINGS[$this->format];
+
             Log::info('Magnetism Import Execute - Excel file loaded', [
                 'total_sheets' => $spreadsheet->getSheetCount(),
                 'update_duplicates' => $updateDuplicates,
+                'format' => $this->format,
             ]);
 
             foreach ($spreadsheet->getSheetNames() as $sheetName) {
@@ -173,6 +253,101 @@ class MagnetismChecksheetImport
     }
 
     /**
+     * Resolve format - use provided format or auto-detect
+     */
+    protected function resolveFormat($spreadsheet, ?string $format): string
+    {
+        // If format is provided and valid, use it
+        if ($format && isset(self::FORMAT_MAPPINGS[$format])) {
+            return $format;
+        }
+
+        // Auto-detect format from spreadsheet structure
+        $detectedFormat = $this->detectFormat($spreadsheet);
+
+        Log::info('Magnetism Import - Format resolved', [
+            'provided' => $format,
+            'detected' => $detectedFormat,
+        ]);
+
+        return $detectedFormat;
+    }
+
+    /**
+     * Auto-detect format from spreadsheet structure
+     * Checks the position of "Checkpoint" header to determine format
+     */
+    protected function detectFormat($spreadsheet): string
+    {
+        // Get the first data sheet (skip master/template)
+        foreach ($spreadsheet->getSheetNames() as $sheetName) {
+            $lowerName = strtolower($sheetName);
+            if (str_contains($lowerName, 'master') || str_contains($lowerName, 'template')) {
+                continue;
+            }
+
+            // Check if this sheet has month/year data
+            if (!$this->parseMonthYearFromSheetName($sheetName)) {
+                continue;
+            }
+
+            $sheet = $spreadsheet->getSheetByName($sheetName);
+
+            // Check for HPI-PR03-01 format: Checkpoint in column O, header row 6
+            $checkpointO = $this->getCellValue($sheet, 'O6');
+            if ($checkpointO && stripos($checkpointO, 'checkpoint') !== false) {
+                return self::FORMAT_HPI_PR03_01;
+            }
+
+            // Check for HPI-PR05-03 format: Checkpoint in column U, header row 8
+            $checkpointU = $this->getCellValue($sheet, 'U8');
+            if ($checkpointU && stripos($checkpointU, 'checkpoint') !== false) {
+                return self::FORMAT_HPI_PR05_03;
+            }
+
+            // Alternative detection: Check for "N=5 (First Inspection)" position
+            // HPI-PR03-01: Column P, row 6
+            // HPI-PR05-03: Column V, row 8
+            $firstInspP = $this->getCellValue($sheet, 'P6');
+            if ($firstInspP && stripos($firstInspP, 'first') !== false && stripos($firstInspP, 'inspection') !== false) {
+                return self::FORMAT_HPI_PR03_01;
+            }
+
+            $firstInspV = $this->getCellValue($sheet, 'V8');
+            if ($firstInspV && stripos($firstInspV, 'first') !== false && stripos($firstInspV, 'inspection') !== false) {
+                return self::FORMAT_HPI_PR05_03;
+            }
+
+            // Check header row position - HPI-PR03-01 has headers at row 6, HPI-PR05-03 at row 8
+            $lotNumberRow6 = $this->getCellValue($sheet, 'A6');
+            if ($lotNumberRow6 && stripos($lotNumberRow6, 'lot') !== false) {
+                return self::FORMAT_HPI_PR03_01;
+            }
+
+            $lotNumberRow8 = $this->getCellValue($sheet, 'A8');
+            if ($lotNumberRow8 && stripos($lotNumberRow8, 'lot') !== false) {
+                return self::FORMAT_HPI_PR05_03;
+            }
+
+            break; // Only check first valid sheet
+        }
+
+        // Default to HPI-PR05-03 if detection fails
+        return self::DEFAULT_FORMAT;
+    }
+
+    /**
+     * Get available formats for UI
+     */
+    public static function getAvailableFormats(): array
+    {
+        return [
+            self::FORMAT_HPI_PR03_01 => 'HPI-PR03-01 (Tesla 120~150mT)',
+            self::FORMAT_HPI_PR05_03 => 'HPI-PR05-03 (Tesla 160~210mT)',
+        ];
+    }
+
+    /**
      * Process sheet for preview
      */
     protected function processSheetPreview($sheet, string $sheetName, int $month, int $year): void
@@ -226,25 +401,41 @@ class MagnetismChecksheetImport
      */
     protected function processSheetExecute($sheet, string $sheetName, int $month, int $year, bool $updateDuplicates): void
     {
-        // Find or create checksheet
-        $checksheet = MagnetismChecksheet::firstOrCreate(
-            [
-                'item_code' => $this->itemCode,
-                'machine_no' => $this->machineNo,
-                'month' => $month,
-                'year' => $year,
-            ],
-            [
-                'item_name' => $this->itemName,
-            ]
-        );
+        // Find or create checksheet - include soft-deleted records to handle unique constraint
+        $checksheet = MagnetismChecksheet::withTrashed()
+            ->where('item_code', $this->itemCode)
+            ->where('machine_no', $this->machineNo)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->first();
 
-        if ($checksheet->wasRecentlyCreated) {
-            $this->executeResults['checksheets_created'][] = [
-                'id' => $checksheet->id,
-                'month' => $month,
-                'year' => $year,
-            ];
+        if ($checksheet) {
+            // Restore if soft-deleted
+            if ($checksheet->trashed()) {
+                $checksheet->restore();
+            }
+            // Update item_name
+            $checksheet->update(['item_name' => $this->itemName]);
+        } else {
+            // Create new checksheet
+            try {
+                $checksheet = MagnetismChecksheet::create([
+                    'item_code' => $this->itemCode,
+                    'machine_no' => $this->machineNo,
+                    'month' => $month,
+                    'year' => $year,
+                    'item_name' => $this->itemName,
+                ]);
+
+                $this->executeResults['checksheets_created'][] = [
+                    'id' => $checksheet->id,
+                    'month' => $month,
+                    'year' => $year,
+                ];
+            } catch (\Exception $e) {
+                $this->executeResults['errors'][] = "Sheet '{$sheetName}': Failed to create checksheet - " . $e->getMessage();
+                return;
+            }
         }
 
         // Detect column mapping
@@ -274,85 +465,13 @@ class MagnetismChecksheetImport
     }
 
     /**
-     * Detect column mapping from header rows
+     * Get column mapping from format configuration
+     * Uses the pre-defined format mappings based on detected/selected format
      */
     protected function detectColumnMapping($sheet): array
     {
-        $map = [];
-        $highestCol = $sheet->getHighestColumn();
-        $highestColIndex = Coordinate::columnIndexFromString($highestCol);
-
-        // Scan rows 8-9 for headers
-        for ($rowNum = 7; $rowNum <= 10; $rowNum++) {
-            for ($colIndex = 1; $colIndex <= $highestColIndex; $colIndex++) {
-                $col = Coordinate::stringFromColumnIndex($colIndex);
-                $value = $this->getCellValue($sheet, $col . $rowNum);
-
-                if (empty($value)) continue;
-
-                $upperVal = strtoupper(trim($value));
-
-                // Batch columns
-                if (str_contains($upperVal, 'DATE') && !isset($map['date_col'])) {
-                    $map['date_col'] = $col;
-                    $map['date_row'] = $rowNum;
-                }
-                if (str_contains($upperVal, 'LETTER') || $upperVal === 'L') {
-                    $map['letter_col'] = $col;
-                }
-                if (str_contains($upperVal, 'MATERIAL') || str_contains($upperVal, 'LOT')) {
-                    $map['material_lot_col'] = $col;
-                }
-                if (str_contains($upperVal, 'QR')) {
-                    $map['qr_code_col'] = $col;
-                }
-                if (str_contains($upperVal, 'PRODUCE') || str_contains($upperVal, 'QTY')) {
-                    $map['produce_qty_col'] = $col;
-                }
-                if (str_contains($upperVal, 'JOB') || str_contains($upperVal, 'ORDER')) {
-                    $map['job_number_col'] = $col;
-                }
-
-                // Checkpoint headers (typically numbered 1st, 2nd, 3rd, Last or Front/Back)
-                if (preg_match('/^1ST|FRONT\s*1|CHECKPOINT\s*1/i', $upperVal)) {
-                    $map['checkpoint1_col'] = $col;
-                    $map['checkpoint1_row'] = $rowNum;
-                }
-                if (preg_match('/^2ND|FRONT\s*2|CHECKPOINT\s*2/i', $upperVal)) {
-                    $map['checkpoint2_col'] = $col;
-                }
-                if (preg_match('/^3RD|BACK\s*1|CHECKPOINT\s*3/i', $upperVal)) {
-                    $map['checkpoint3_col'] = $col;
-                }
-                if (preg_match('/^LAST|4TH|BACK\s*2|CHECKPOINT\s*4/i', $upperVal)) {
-                    $map['checkpoint4_col'] = $col;
-                }
-
-                // Sample and operator columns
-                if (str_contains($upperVal, 'FIRST') && str_contains($upperVal, 'INSPECTION')) {
-                    $map['first_inspection_start_col'] = $col;
-                }
-                if (str_contains($upperVal, 'LAST') && str_contains($upperVal, 'INSPECTION')) {
-                    $map['last_inspection_start_col'] = $col;
-                }
-                if (str_contains($upperVal, 'OPERATOR')) {
-                    if (!isset($map['operator_first_col'])) {
-                        $map['operator_first_col'] = $col;
-                    } else {
-                        $map['operator_last_col'] = $col;
-                    }
-                }
-                if (str_contains($upperVal, 'JUDGMENT') || str_contains($upperVal, 'JUDGE')) {
-                    if (!isset($map['judgment_first_col'])) {
-                        $map['judgment_first_col'] = $col;
-                    } else {
-                        $map['judgment_last_col'] = $col;
-                    }
-                }
-            }
-        }
-
-        return $map;
+        // Use the format mapping directly
+        return $this->formatMapping;
     }
 
     /**
@@ -363,24 +482,20 @@ class MagnetismChecksheetImport
         $dateColumns = [];
         $highestRow = $sheet->getHighestRow();
 
-        // Find the data start row (typically row 10 or after headers)
-        $dataStartRow = 10;
+        // Use format-specific data start row
+        $dataStartRow = $columnMap['data_start_row'] ?? 10;
+        $dateCol = $columnMap['date_col'] ?? 'A';
 
-        // Scan for dates in the date column
-        if (isset($columnMap['date_col'])) {
-            $dateCol = $columnMap['date_col'];
+        for ($row = $dataStartRow; $row <= $highestRow; $row++) {
+            $dateValue = $this->getCellValue($sheet, $dateCol . $row);
+            $parsedDate = $this->parseDate($dateValue);
 
-            for ($row = $dataStartRow; $row <= $highestRow; $row++) {
-                $dateValue = $this->getCellValue($sheet, $dateCol . $row);
-                $parsedDate = $this->parseDate($dateValue);
-
-                if ($parsedDate && !in_array($parsedDate, array_column($dateColumns, 'date'))) {
-                    $dateColumns[] = [
-                        'date' => $parsedDate,
-                        'start_row' => $row,
-                        'col' => $dateCol,
-                    ];
-                }
+            if ($parsedDate && !in_array($parsedDate, array_column($dateColumns, 'date'))) {
+                $dateColumns[] = [
+                    'date' => $parsedDate,
+                    'start_row' => $row,
+                    'col' => $dateCol,
+                ];
             }
         }
 
@@ -398,11 +513,12 @@ class MagnetismChecksheetImport
     protected function parseBatchesPreview($sheet, array $dateInfo, array $columnMap, ?int $checksheetId, int $month, int $year): void
     {
         $highestRow = $sheet->getHighestRow();
-        $dateCol = $columnMap['date_col'] ?? 'C';
+        $dateCol = $columnMap['date_col'] ?? 'A';
+        $dataStartRow = $columnMap['data_start_row'] ?? 10;
         $productionDate = $dateInfo['date'];
 
         // Find all rows with this date
-        for ($row = 10; $row <= $highestRow; $row++) {
+        for ($row = $dataStartRow; $row <= $highestRow; $row++) {
             $cellDate = $this->parseDate($this->getCellValue($sheet, $dateCol . $row));
             if ($cellDate !== $productionDate) continue;
 
@@ -479,13 +595,14 @@ class MagnetismChecksheetImport
     protected function importBatches($sheet, array $dateInfo, array $columnMap, MagnetismChecksheet $checksheet, bool $updateDuplicates): void
     {
         $highestRow = $sheet->getHighestRow();
-        $dateCol = $columnMap['date_col'] ?? 'C';
+        $dateCol = $columnMap['date_col'] ?? 'A';
+        $dataStartRow = $columnMap['data_start_row'] ?? 10;
         $productionDate = $dateInfo['date'];
 
         // Track letter codes for this import
         $letterCodeTracker = [];
 
-        for ($row = 10; $row <= $highestRow; $row++) {
+        for ($row = $dataStartRow; $row <= $highestRow; $row++) {
             $cellDate = $this->parseDate($this->getCellValue($sheet, $dateCol . $row));
             if ($cellDate !== $productionDate) continue;
 
@@ -574,12 +691,12 @@ class MagnetismChecksheetImport
     {
         return [
             'production_date' => $productionDate,
-            'letter_code' => $this->getCellValue($sheet, ($columnMap['letter_col'] ?? 'D') . $row),
-            'material_lot_number' => $this->getCellValue($sheet, ($columnMap['material_lot_col'] ?? 'E') . $row),
-            'qr_code' => $this->getCellValue($sheet, ($columnMap['qr_code_col'] ?? 'F') . $row),
-            'produce_qty' => $this->parseInteger($this->getCellValue($sheet, ($columnMap['produce_qty_col'] ?? 'G') . $row)),
-            'job_number' => $this->getCellValue($sheet, ($columnMap['job_number_col'] ?? 'H') . $row),
-            'remarks' => null,
+            'letter_code' => $this->getCellValue($sheet, ($columnMap['letter_col'] ?? 'I') . $row),
+            'material_lot_number' => $this->getCellValue($sheet, ($columnMap['material_lot_col'] ?? 'J') . $row),
+            'qr_code' => $this->getCellValue($sheet, ($columnMap['qr_code_col'] ?? 'K') . $row),
+            'produce_qty' => $this->parseInteger($this->getCellValue($sheet, ($columnMap['produce_qty_col'] ?? 'L') . $row)),
+            'job_number' => $this->getCellValue($sheet, ($columnMap['job_number_col'] ?? 'M') . $row),
+            'remarks' => $this->getCellValue($sheet, ($columnMap['remarks_col'] ?? null) ? $columnMap['remarks_col'] . $row : null),
         ];
     }
 
@@ -591,14 +708,21 @@ class MagnetismChecksheetImport
         // The checkpoint rows are typically offset from the date row
         // Checkpoint 1 (1st/Front 1), Checkpoint 2 (2nd/Front 2), Checkpoint 3 (3rd/Back 1), Checkpoint 4 (Last/Back 2)
         $baseRow = $dateInfo['start_row'];
-        $checkpointRow = $baseRow + ($checkpointNum - 1);
+        $checkpointRow = $baseRow + (($checkpointNum - 1) * 2); // Each checkpoint has 2 rows (data + empty)
 
-        // Get sample columns - typically 5 samples for first inspection, 5 for last
-        $firstInspectionStartCol = $columnMap['first_inspection_start_col'] ?? 'I';
-        $lastInspectionStartCol = $columnMap['last_inspection_start_col'] ?? 'N';
+        // Get sample columns from format mapping
+        $firstSamplesStartCol = $columnMap['first_samples_start_col'] ?? 'P';
+        $lastSamplesStartCol = $columnMap['last_samples_start_col'] ?? 'W';
 
-        $firstStartIndex = Coordinate::columnIndexFromString($firstInspectionStartCol);
-        $lastStartIndex = Coordinate::columnIndexFromString($lastInspectionStartCol);
+        $firstStartIndex = Coordinate::columnIndexFromString($firstSamplesStartCol);
+        $lastStartIndex = Coordinate::columnIndexFromString($lastSamplesStartCol);
+
+        // Get operator columns (may be null for some formats)
+        $operatorFirstCol = $columnMap['operator_first_col'] ?? null;
+        $operatorLastCol = $columnMap['operator_last_col'] ?? null;
+        $judgmentFirstCol = $columnMap['judgment_first_col'] ?? 'V';
+        $judgmentLastCol = $columnMap['judgment_last_col'] ?? 'AC';
+        $checkedByCol = $columnMap['checked_by_col'] ?? null;
 
         return [
             'sample1_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex) . $checkpointRow)),
@@ -606,16 +730,16 @@ class MagnetismChecksheetImport
             'sample3_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 2) . $checkpointRow)),
             'sample4_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 3) . $checkpointRow)),
             'sample5_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 4) . $checkpointRow)),
-            'operator_first' => $this->getCellValue($sheet, ($columnMap['operator_first_col'] ?? Coordinate::stringFromColumnIndex($firstStartIndex + 5)) . $checkpointRow),
-            'judgment_first' => $this->getCellValue($sheet, ($columnMap['judgment_first_col'] ?? Coordinate::stringFromColumnIndex($firstStartIndex + 6)) . $checkpointRow),
+            'operator_first' => $operatorFirstCol ? $this->getCellValue($sheet, $operatorFirstCol . $checkpointRow) : null,
+            'judgment_first' => $this->getCellValue($sheet, $judgmentFirstCol . $checkpointRow),
             'sample1_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex) . $checkpointRow)),
             'sample2_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 1) . $checkpointRow)),
             'sample3_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 2) . $checkpointRow)),
             'sample4_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 3) . $checkpointRow)),
             'sample5_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 4) . $checkpointRow)),
-            'operator_last' => $this->getCellValue($sheet, ($columnMap['operator_last_col'] ?? Coordinate::stringFromColumnIndex($lastStartIndex + 5)) . $checkpointRow),
-            'judgment_last' => $this->getCellValue($sheet, ($columnMap['judgment_last_col'] ?? Coordinate::stringFromColumnIndex($lastStartIndex + 6)) . $checkpointRow),
-            'checked_by' => null,
+            'operator_last' => $operatorLastCol ? $this->getCellValue($sheet, $operatorLastCol . $checkpointRow) : null,
+            'judgment_last' => $this->getCellValue($sheet, $judgmentLastCol . $checkpointRow),
+            'checked_by' => $checkedByCol ? $this->getCellValue($sheet, $checkedByCol . $checkpointRow) : null,
         ];
     }
 
