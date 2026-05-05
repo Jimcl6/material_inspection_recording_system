@@ -374,18 +374,26 @@ class MagnetismChecksheetImport
             return;
         }
 
-        // Parse date columns (production dates are in specific columns)
-        $dateColumns = $this->parseDateColumns($sheet, $columnMap);
+        // Parse all rows with date inheritance
+        $parsedRows = $this->parseRowsWithDateInheritance($sheet, $columnMap);
 
-        // Process each date column
-        foreach ($dateColumns as $dateInfo) {
-            $productionDate = $dateInfo['date'];
+        // Group rows by date for processing
+        $rowsByDate = [];
+        foreach ($parsedRows as $rowData) {
+            $date = $rowData['date'];
+            if (!isset($rowsByDate[$date])) {
+                $rowsByDate[$date] = [];
+            }
+            $rowsByDate[$date][] = $rowData;
+        }
 
-            // Parse batches for this date
-            $this->parseBatchesPreview($sheet, $dateInfo, $columnMap, $checksheetId, $month, $year);
+        // Process each date group
+        foreach ($rowsByDate as $productionDate => $rows) {
+            // Parse batches for this date (all rows)
+            $this->parseBatchesPreviewFromRows($sheet, $rows, $columnMap, $checksheetId, $month, $year, $productionDate);
 
-            // Parse checkpoints for this date
-            $this->parseCheckpointsPreview($sheet, $dateInfo, $columnMap, $checksheetId, $month, $year);
+            // Parse checkpoints for this date (only rows with checkpoint numbers)
+            $this->parseCheckpointsPreviewFromRows($sheet, $rows, $columnMap, $checksheetId, $month, $year, $productionDate);
         }
 
         Log::info("Preview: Sheet '{$sheetName}' complete", [
@@ -445,16 +453,26 @@ class MagnetismChecksheetImport
             return;
         }
 
-        // Parse date columns
-        $dateColumns = $this->parseDateColumns($sheet, $columnMap);
+        // Parse all rows with date inheritance
+        $parsedRows = $this->parseRowsWithDateInheritance($sheet, $columnMap);
 
-        // Process each date column
-        foreach ($dateColumns as $dateInfo) {
-            // Import batches for this date
-            $this->importBatches($sheet, $dateInfo, $columnMap, $checksheet, $updateDuplicates);
+        // Group rows by date for processing
+        $rowsByDate = [];
+        foreach ($parsedRows as $rowData) {
+            $date = $rowData['date'];
+            if (!isset($rowsByDate[$date])) {
+                $rowsByDate[$date] = [];
+            }
+            $rowsByDate[$date][] = $rowData;
+        }
 
-            // Import checkpoints for this date
-            $this->importCheckpoints($sheet, $dateInfo, $columnMap, $checksheet, $updateDuplicates);
+        // Process each date group
+        foreach ($rowsByDate as $productionDate => $rows) {
+            // Import batches for this date (all rows)
+            $this->importBatchesFromRows($sheet, $rows, $columnMap, $checksheet, $updateDuplicates, $productionDate);
+
+            // Import checkpoints for this date (only rows with checkpoint numbers)
+            $this->importCheckpointsFromRows($sheet, $rows, $columnMap, $checksheet, $updateDuplicates, $productionDate);
         }
 
         Log::info("Execute: Sheet '{$sheetName}' complete", [
@@ -475,59 +493,129 @@ class MagnetismChecksheetImport
     }
 
     /**
-     * Parse date columns from the sheet
+     * Parse all rows with date inheritance
+     * Rows without explicit dates inherit from the previous row's date
      */
-    protected function parseDateColumns($sheet, array $columnMap): array
+    protected function parseRowsWithDateInheritance($sheet, array $columnMap): array
     {
-        $dateColumns = [];
+        $rows = [];
+        $currentDate = null;
         $highestRow = $sheet->getHighestRow();
-
-        // Use format-specific data start row
         $dataStartRow = $columnMap['data_start_row'] ?? 10;
         $dateCol = $columnMap['date_col'] ?? 'A';
+        $checkpointCol = $columnMap['checkpoint_col'] ?? 'O';
 
         for ($row = $dataStartRow; $row <= $highestRow; $row++) {
-            $dateValue = $this->getCellValue($sheet, $dateCol . $row);
-            $parsedDate = $this->parseDate($dateValue);
-
-            if ($parsedDate && !in_array($parsedDate, array_column($dateColumns, 'date'))) {
-                $dateColumns[] = [
-                    'date' => $parsedDate,
-                    'start_row' => $row,
-                    'col' => $dateCol,
-                ];
+            // Check for date in this row
+            $cellDate = $this->parseDate($this->getCellValue($sheet, $dateCol . $row));
+            
+            // If this row has a date, update current date
+            if ($cellDate) {
+                $currentDate = $cellDate;
             }
+
+            // Skip rows without any date context
+            if (!$currentDate) {
+                continue;
+            }
+
+            // Check if row has any meaningful data (batch or checkpoint)
+            if (!$this->rowHasData($sheet, $row, $columnMap)) {
+                continue;
+            }
+
+            // Get checkpoint number from the checkpoint column (if present)
+            $checkpointValue = $this->getCellValue($sheet, $checkpointCol . $row);
+            $checkpointNum = $this->parseCheckpointNumber($checkpointValue);
+
+            $rows[] = [
+                'row' => $row,
+                'date' => $currentDate,
+                'has_explicit_date' => ($cellDate !== null),
+                'checkpoint_number' => $checkpointNum,
+            ];
         }
 
-        // Sort by date
-        usort($dateColumns, function ($a, $b) {
-            return strcmp($a['date'], $b['date']);
-        });
-
-        return $dateColumns;
+        return $rows;
     }
 
     /**
-     * Parse batches for preview
+     * Check if a row has any meaningful data (batch or checkpoint)
      */
-    protected function parseBatchesPreview($sheet, array $dateInfo, array $columnMap, ?int $checksheetId, int $month, int $year): void
+    protected function rowHasData($sheet, int $row, array $columnMap): bool
     {
-        $highestRow = $sheet->getHighestRow();
-        $dateCol = $columnMap['date_col'] ?? 'A';
-        $dataStartRow = $columnMap['data_start_row'] ?? 10;
-        $productionDate = $dateInfo['date'];
+        // Check for batch data
+        $materialLot = $this->getCellValue($sheet, ($columnMap['material_lot_col'] ?? 'J') . $row);
+        $qrCode = $this->getCellValue($sheet, ($columnMap['qr_code_col'] ?? 'K') . $row);
+        $letterCode = $this->getCellValue($sheet, ($columnMap['letter_col'] ?? 'I') . $row);
+        
+        // Check for checkpoint data
+        $checkpointCol = $columnMap['checkpoint_col'] ?? 'O';
+        $checkpointValue = $this->getCellValue($sheet, $checkpointCol . $row);
+        
+        // Check for sample data
+        $firstSamplesStartCol = $columnMap['first_samples_start_col'] ?? 'P';
+        $firstStartIndex = Coordinate::columnIndexFromString($firstSamplesStartCol);
+        $sample1First = $this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex) . $row);
 
-        // Find all rows with this date
-        for ($row = $dataStartRow; $row <= $highestRow; $row++) {
-            $cellDate = $this->parseDate($this->getCellValue($sheet, $dateCol . $row));
-            if ($cellDate !== $productionDate) continue;
+        return !empty($materialLot) || !empty($qrCode) || !empty($letterCode) || 
+               !empty($checkpointValue) || !empty($sample1First);
+    }
 
+    /**
+     * Parse checkpoint number from cell value
+     * Handles formats like "1", "CP1", "1st", "Front 1", etc.
+     */
+    protected function parseCheckpointNumber($value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        // Direct numeric
+        if (is_numeric($value) && $value >= 1 && $value <= 4) {
+            return (int) $value;
+        }
+
+        // Extract number from string
+        if (preg_match('/(\d+)/', $value, $matches)) {
+            $num = (int) $matches[1];
+            if ($num >= 1 && $num <= 4) {
+                return $num;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Parse batches for preview using pre-parsed rows with date inheritance
+     */
+    protected function parseBatchesPreviewFromRows($sheet, array $rows, array $columnMap, ?int $checksheetId, int $month, int $year, string $productionDate): void
+    {
+        // Track unique batches to avoid duplicates within the same import
+        $seenBatches = [];
+
+        foreach ($rows as $rowData) {
+            $row = $rowData['row'];
+            
             $batchData = $this->extractBatchData($sheet, $row, $columnMap, $productionDate);
-            if (!$this->isValidBatch($batchData)) continue;
+            if (!$this->isValidBatch($batchData)) {
+                continue;
+            }
+
+            // Create unique key for this batch
+            $batchKey = $productionDate . '|' . $batchData['material_lot_number'] . '|' . $batchData['qr_code'];
+            if (isset($seenBatches[$batchKey])) {
+                continue;
+            }
+            $seenBatches[$batchKey] = true;
 
             $this->results['total_batches_parsed']++;
 
-            // Check for duplicate
+            // Check for duplicate in database
             $existing = $checksheetId ? $this->findExistingBatch($checksheetId, $batchData) : null;
 
             $previewRecord = [
@@ -554,20 +642,36 @@ class MagnetismChecksheetImport
     }
 
     /**
-     * Parse checkpoints for preview
+     * Parse checkpoints for preview using pre-parsed rows with date inheritance
      */
-    protected function parseCheckpointsPreview($sheet, array $dateInfo, array $columnMap, ?int $checksheetId, int $month, int $year): void
+    protected function parseCheckpointsPreviewFromRows($sheet, array $rows, array $columnMap, ?int $checksheetId, int $month, int $year, string $productionDate): void
     {
-        $productionDate = $dateInfo['date'];
+        // Track seen checkpoint numbers to avoid duplicates
+        $seenCheckpoints = [];
 
-        // Parse 4 checkpoints for this date
-        for ($checkpointNum = 1; $checkpointNum <= 4; $checkpointNum++) {
-            $checkpointData = $this->extractCheckpointData($sheet, $dateInfo, $columnMap, $checkpointNum);
-            if (!$this->hasCheckpointData($checkpointData)) continue;
+        foreach ($rows as $rowData) {
+            $row = $rowData['row'];
+            $checkpointNum = $rowData['checkpoint_number'];
+
+            // Skip rows without checkpoint numbers
+            if ($checkpointNum === null) {
+                continue;
+            }
+
+            // Skip if we've already processed this checkpoint for this date
+            if (isset($seenCheckpoints[$checkpointNum])) {
+                continue;
+            }
+            $seenCheckpoints[$checkpointNum] = true;
+
+            $checkpointData = $this->extractCheckpointDataFromRow($sheet, $row, $columnMap);
+            if (!$this->hasCheckpointData($checkpointData)) {
+                continue;
+            }
 
             $this->results['total_checkpoints_parsed']++;
 
-            // Check for duplicate
+            // Check for duplicate in database
             $existing = $checksheetId ? $this->findExistingCheckpoint($checksheetId, $productionDate, $checkpointNum) : null;
 
             $previewRecord = array_merge($checkpointData, [
@@ -590,24 +694,27 @@ class MagnetismChecksheetImport
     }
 
     /**
-     * Import batches
+     * Import batches using pre-parsed rows with date inheritance
      */
-    protected function importBatches($sheet, array $dateInfo, array $columnMap, MagnetismChecksheet $checksheet, bool $updateDuplicates): void
+    protected function importBatchesFromRows($sheet, array $rows, array $columnMap, MagnetismChecksheet $checksheet, bool $updateDuplicates, string $productionDate): void
     {
-        $highestRow = $sheet->getHighestRow();
-        $dateCol = $columnMap['date_col'] ?? 'A';
-        $dataStartRow = $columnMap['data_start_row'] ?? 10;
-        $productionDate = $dateInfo['date'];
+        // Track unique batches to avoid duplicates within the same import
+        $seenBatches = [];
 
-        // Track letter codes for this import
-        $letterCodeTracker = [];
-
-        for ($row = $dataStartRow; $row <= $highestRow; $row++) {
-            $cellDate = $this->parseDate($this->getCellValue($sheet, $dateCol . $row));
-            if ($cellDate !== $productionDate) continue;
-
+        foreach ($rows as $rowData) {
+            $row = $rowData['row'];
+            
             $batchData = $this->extractBatchData($sheet, $row, $columnMap, $productionDate);
-            if (!$this->isValidBatch($batchData)) continue;
+            if (!$this->isValidBatch($batchData)) {
+                continue;
+            }
+
+            // Create unique key for this batch
+            $batchKey = $productionDate . '|' . $batchData['material_lot_number'] . '|' . $batchData['qr_code'];
+            if (isset($seenBatches[$batchKey])) {
+                continue;
+            }
+            $seenBatches[$batchKey] = true;
 
             try {
                 // Get letter code for this material lot
@@ -650,15 +757,32 @@ class MagnetismChecksheetImport
     }
 
     /**
-     * Import checkpoints
+     * Import checkpoints using pre-parsed rows with date inheritance
      */
-    protected function importCheckpoints($sheet, array $dateInfo, array $columnMap, MagnetismChecksheet $checksheet, bool $updateDuplicates): void
+    protected function importCheckpointsFromRows($sheet, array $rows, array $columnMap, MagnetismChecksheet $checksheet, bool $updateDuplicates, string $productionDate): void
     {
-        $productionDate = $dateInfo['date'];
+        // Track seen checkpoint numbers to avoid duplicates
+        $seenCheckpoints = [];
 
-        for ($checkpointNum = 1; $checkpointNum <= 4; $checkpointNum++) {
-            $checkpointData = $this->extractCheckpointData($sheet, $dateInfo, $columnMap, $checkpointNum);
-            if (!$this->hasCheckpointData($checkpointData)) continue;
+        foreach ($rows as $rowData) {
+            $row = $rowData['row'];
+            $checkpointNum = $rowData['checkpoint_number'];
+
+            // Skip rows without checkpoint numbers
+            if ($checkpointNum === null) {
+                continue;
+            }
+
+            // Skip if we've already processed this checkpoint for this date
+            if (isset($seenCheckpoints[$checkpointNum])) {
+                continue;
+            }
+            $seenCheckpoints[$checkpointNum] = true;
+
+            $checkpointData = $this->extractCheckpointDataFromRow($sheet, $row, $columnMap);
+            if (!$this->hasCheckpointData($checkpointData)) {
+                continue;
+            }
 
             try {
                 $existing = $this->findExistingCheckpoint($checksheet->id, $productionDate, $checkpointNum);
@@ -685,31 +809,10 @@ class MagnetismChecksheetImport
     }
 
     /**
-     * Extract batch data from a row
+     * Extract checkpoint data from a specific row (not calculated offset)
      */
-    protected function extractBatchData($sheet, int $row, array $columnMap, string $productionDate): array
+    protected function extractCheckpointDataFromRow($sheet, int $row, array $columnMap): array
     {
-        return [
-            'production_date' => $productionDate,
-            'letter_code' => $this->getCellValue($sheet, ($columnMap['letter_col'] ?? 'I') . $row),
-            'material_lot_number' => $this->getCellValue($sheet, ($columnMap['material_lot_col'] ?? 'J') . $row),
-            'qr_code' => $this->getCellValue($sheet, ($columnMap['qr_code_col'] ?? 'K') . $row),
-            'produce_qty' => $this->parseInteger($this->getCellValue($sheet, ($columnMap['produce_qty_col'] ?? 'L') . $row)),
-            'job_number' => $this->getCellValue($sheet, ($columnMap['job_number_col'] ?? 'M') . $row),
-            'remarks' => $this->getCellValue($sheet, ($columnMap['remarks_col'] ?? null) ? $columnMap['remarks_col'] . $row : null),
-        ];
-    }
-
-    /**
-     * Extract checkpoint data
-     */
-    protected function extractCheckpointData($sheet, array $dateInfo, array $columnMap, int $checkpointNum): array
-    {
-        // The checkpoint rows are typically offset from the date row
-        // Checkpoint 1 (1st/Front 1), Checkpoint 2 (2nd/Front 2), Checkpoint 3 (3rd/Back 1), Checkpoint 4 (Last/Back 2)
-        $baseRow = $dateInfo['start_row'];
-        $checkpointRow = $baseRow + (($checkpointNum - 1) * 2); // Each checkpoint has 2 rows (data + empty)
-
         // Get sample columns from format mapping
         $firstSamplesStartCol = $columnMap['first_samples_start_col'] ?? 'P';
         $lastSamplesStartCol = $columnMap['last_samples_start_col'] ?? 'W';
@@ -725,21 +828,37 @@ class MagnetismChecksheetImport
         $checkedByCol = $columnMap['checked_by_col'] ?? null;
 
         return [
-            'sample1_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex) . $checkpointRow)),
-            'sample2_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 1) . $checkpointRow)),
-            'sample3_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 2) . $checkpointRow)),
-            'sample4_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 3) . $checkpointRow)),
-            'sample5_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 4) . $checkpointRow)),
-            'operator_first' => $operatorFirstCol ? $this->getCellValue($sheet, $operatorFirstCol . $checkpointRow) : null,
-            'judgment_first' => $this->getCellValue($sheet, $judgmentFirstCol . $checkpointRow),
-            'sample1_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex) . $checkpointRow)),
-            'sample2_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 1) . $checkpointRow)),
-            'sample3_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 2) . $checkpointRow)),
-            'sample4_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 3) . $checkpointRow)),
-            'sample5_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 4) . $checkpointRow)),
-            'operator_last' => $operatorLastCol ? $this->getCellValue($sheet, $operatorLastCol . $checkpointRow) : null,
-            'judgment_last' => $this->getCellValue($sheet, $judgmentLastCol . $checkpointRow),
-            'checked_by' => $checkedByCol ? $this->getCellValue($sheet, $checkedByCol . $checkpointRow) : null,
+            'sample1_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex) . $row)),
+            'sample2_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 1) . $row)),
+            'sample3_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 2) . $row)),
+            'sample4_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 3) . $row)),
+            'sample5_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 4) . $row)),
+            'operator_first' => $operatorFirstCol ? $this->getCellValue($sheet, $operatorFirstCol . $row) : null,
+            'judgment_first' => $this->getCellValue($sheet, $judgmentFirstCol . $row),
+            'sample1_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex) . $row)),
+            'sample2_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 1) . $row)),
+            'sample3_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 2) . $row)),
+            'sample4_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 3) . $row)),
+            'sample5_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 4) . $row)),
+            'operator_last' => $operatorLastCol ? $this->getCellValue($sheet, $operatorLastCol . $row) : null,
+            'judgment_last' => $this->getCellValue($sheet, $judgmentLastCol . $row),
+            'checked_by' => $checkedByCol ? $this->getCellValue($sheet, $checkedByCol . $row) : null,
+        ];
+    }
+
+    /**
+     * Extract batch data from a row
+     */
+    protected function extractBatchData($sheet, int $row, array $columnMap, string $productionDate): array
+    {
+        return [
+            'production_date' => $productionDate,
+            'letter_code' => $this->getCellValue($sheet, ($columnMap['letter_col'] ?? 'I') . $row),
+            'material_lot_number' => $this->getCellValue($sheet, ($columnMap['material_lot_col'] ?? 'J') . $row),
+            'qr_code' => $this->getCellValue($sheet, ($columnMap['qr_code_col'] ?? 'K') . $row),
+            'produce_qty' => $this->parseInteger($this->getCellValue($sheet, ($columnMap['produce_qty_col'] ?? 'L') . $row)),
+            'job_number' => $this->getCellValue($sheet, ($columnMap['job_number_col'] ?? 'M') . $row),
+            'remarks' => $this->getCellValue($sheet, ($columnMap['remarks_col'] ?? null) ? $columnMap['remarks_col'] . $row : null),
         ];
     }
 

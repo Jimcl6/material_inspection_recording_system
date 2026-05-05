@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ProductionBatch;
 use App\Models\InspectionCheckpoint;
 use App\Models\InspectionSample;
+use App\Services\ActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -53,6 +54,14 @@ class InspectionCheckpointController extends Controller
             ]);
         }
 
+        ActivityService::log(
+            'create',
+            "Created inspection checkpoint #{$cp->CheckpointNumber}",
+            $cp,
+            $cp->toArray(),
+            'inspection_checkpoints'
+        );
+
         if ($request->boolean('stay')) {
             return redirect()->route('production-batches.index')->with('success', 'Checkpoint created.');
         }
@@ -100,13 +109,33 @@ class InspectionCheckpointController extends Controller
 
         $checkpoint->update($data);
 
+        ActivityService::log(
+            'update',
+            "Updated inspection checkpoint #{$checkpoint->CheckpointNumber}",
+            $checkpoint,
+            $checkpoint->toArray(),
+            'inspection_checkpoints'
+        );
+
         return back()->with('success', 'Checkpoint updated.');
     }
 
     public function destroy(InspectionCheckpoint $checkpoint)
     {
         $batchId = $checkpoint->BatchID;
+        $checkpointData = $checkpoint->toArray();
+        $checkpointNumber = $checkpoint->CheckpointNumber;
+        
         $checkpoint->delete();
+
+        ActivityService::log(
+            'delete',
+            "Deleted inspection checkpoint #{$checkpointNumber}",
+            null,
+            $checkpointData,
+            'inspection_checkpoints'
+        );
+
         return redirect()->route('batches.show', ['batch' => $batchId])
             ->with('success', 'Checkpoint deleted.');
     }

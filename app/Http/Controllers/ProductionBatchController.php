@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ProductionBatch;
 use App\Models\InspectionCheckpoint;
 use App\Models\InspectionSample;
+use App\Services\ActivityService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -157,6 +158,14 @@ class ProductionBatchController extends Controller
             }
         }
 
+        ActivityService::log(
+            'create',
+            "Added checkpoint #{$checkpoint->CheckpointNumber} to batch {$productionBatch->QRCode}",
+            $checkpoint,
+            $checkpoint->toArray(),
+            'production_batches'
+        );
+
         return redirect()->route('magnetism-checksheet.show', $productionBatch->BatchID)
             ->with('success', 'Checkpoint created successfully!');
     }
@@ -296,6 +305,14 @@ class ProductionBatchController extends Controller
             }
         }
 
+        ActivityService::log(
+            'update',
+            "Updated checkpoints for batch {$productionBatch->QRCode}",
+            $productionBatch,
+            ['checkpoints_updated' => count($data['checkpoints'])],
+            'production_batches'
+        );
+
         return redirect()->route('magnetism-checksheet.show', $productionBatch->BatchID)
             ->with('success', 'Inspection samples updated successfully!');
     }
@@ -303,11 +320,22 @@ class ProductionBatchController extends Controller
     public function destroyCheckpoint($magnetism_checksheet, $checkpoint)
     {
         $productionBatch = ProductionBatch::findOrFail($magnetism_checksheet);
-        $checkpoint = InspectionCheckpoint::where('BatchID', $productionBatch->BatchID)
+        $checkpointModel = InspectionCheckpoint::where('BatchID', $productionBatch->BatchID)
             ->findOrFail($checkpoint);
         
+        $checkpointData = $checkpointModel->toArray();
+        $checkpointNumber = $checkpointModel->CheckpointNumber;
+        
         // Delete the checkpoint and its samples (cascade delete should handle samples)
-        $checkpoint->delete();
+        $checkpointModel->delete();
+
+        ActivityService::log(
+            'delete',
+            "Deleted checkpoint #{$checkpointNumber} from batch {$productionBatch->QRCode}",
+            null,
+            $checkpointData,
+            'production_batches'
+        );
 
         return redirect()->route('magnetism-checksheet.show', $productionBatch->BatchID)
             ->with('success', 'Checkpoint deleted successfully!');
@@ -392,6 +420,14 @@ class ProductionBatchController extends Controller
             }
         }
 
+        ActivityService::log(
+            'create',
+            "Created production batch: {$batch->QRCode}",
+            $batch,
+            $batch->toArray(),
+            'production_batches'
+        );
+
         // If stay=1 (modal flow), return to index with new_batch_id instead of show
         if ($request->boolean('stay')) {
             return redirect()->route('magnetism-checksheet.index')
@@ -442,6 +478,14 @@ class ProductionBatchController extends Controller
 
         $batch->update($data);
 
+        ActivityService::log(
+            'update',
+            "Updated production batch: {$batch->QRCode}",
+            $batch,
+            $batch->toArray(),
+            'production_batches'
+        );
+
         if ($request->boolean('stay')) {
             return redirect()->route('magnetism-checksheet.index')->with('success', 'Batch updated.');
         }
@@ -453,7 +497,19 @@ class ProductionBatchController extends Controller
     public function destroy($magnetism_checksheet)
     {
         $batch = ProductionBatch::findOrFail($magnetism_checksheet);
+        $batchData = $batch->toArray();
+        $qrCode = $batch->QRCode;
+        
         $batch->delete();
+
+        ActivityService::log(
+            'delete',
+            "Deleted production batch: {$qrCode}",
+            null,
+            $batchData,
+            'production_batches'
+        );
+
         return redirect()->route('magnetism-checksheet.index')->with('success', 'Batch deleted.');
     }
 

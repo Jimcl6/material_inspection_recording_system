@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TempRecord;
 use App\Imports\TempRecordImport;
+use App\Services\ActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -111,6 +112,15 @@ class TempRecordController extends Controller
         ]);
 
         $rec = TempRecord::create($data);
+
+        ActivityService::log(
+            'create',
+            "Created temperature record for {$rec->model_series}",
+            $rec,
+            $rec->toArray(),
+            'temperature'
+        );
+
         return redirect()->route('temp-records.show', $rec->id)->with('success', 'Record created.');
     }
 
@@ -152,12 +162,33 @@ class TempRecordController extends Controller
         ]);
 
         $temp_record->update($data);
+
+        ActivityService::log(
+            'update',
+            "Updated temperature record for {$temp_record->model_series}",
+            $temp_record,
+            $temp_record->toArray(),
+            'temperature'
+        );
+
         return redirect()->route('temp-records.show', $temp_record->id)->with('success', 'Record updated.');
     }
 
     public function destroy(TempRecord $temp_record)
     {
+        $recordData = $temp_record->toArray();
+        $modelSeries = $temp_record->model_series;
+        
         $temp_record->delete();
+
+        ActivityService::log(
+            'delete',
+            "Deleted temperature record for {$modelSeries}",
+            null,
+            $recordData,
+            'temperature'
+        );
+
         return redirect()->route('temp-records.index')->with('success', 'Record deleted.');
     }
 
@@ -274,6 +305,14 @@ class TempRecordController extends Controller
             if ($results['updated'] > 0) $message .= ", {$results['updated']} updated";
             if ($results['skipped'] > 0) $message .= ", {$results['skipped']} skipped";
             if (count($results['errors']) > 0) $message .= ", " . count($results['errors']) . " errors";
+
+            ActivityService::logImport('temperature', $results['imported'] + $results['updated'], [
+                'imported' => $results['imported'],
+                'updated' => $results['updated'],
+                'skipped' => $results['skipped'],
+                'errors' => count($results['errors']),
+                'equipment_type' => $equipmentType,
+            ]);
 
             return response()->json([
                 'success' => true,
