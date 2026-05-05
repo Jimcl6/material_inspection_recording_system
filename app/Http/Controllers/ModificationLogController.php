@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ModificationLog;
+use App\Services\ActivityService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -113,6 +114,14 @@ class ModificationLogController extends Controller
         ]);
 
         $log = ModificationLog::create($data);
+
+        ActivityService::log(
+            'create',
+            "Created modification log for {$log->model_code}",
+            $log,
+            $log->toArray(),
+            'modification_logs'
+        );
         
         return redirect()->route('modification-logs.show', $log->id)
             ->with('success', 'Modification log created successfully!');
@@ -158,6 +167,14 @@ class ModificationLogController extends Controller
         ]);
 
         $modification_log->update($data);
+
+        ActivityService::log(
+            'update',
+            "Updated modification log for {$modification_log->model_code}",
+            $modification_log,
+            $modification_log->toArray(),
+            'modification_logs'
+        );
         
         return redirect()->route('modification-logs.show', $modification_log->id)
             ->with('success', 'Modification log updated successfully!');
@@ -168,7 +185,18 @@ class ModificationLogController extends Controller
      */
     public function destroy(ModificationLog $modification_log)
     {
+        $recordData = $modification_log->toArray();
+        $modelCode = $modification_log->model_code;
+        
         $modification_log->delete();
+
+        ActivityService::log(
+            'delete',
+            "Deleted modification log for {$modelCode}",
+            null,
+            $recordData,
+            'modification_logs'
+        );
         
         return redirect()->route('modification-logs.index')
             ->with('success', 'Modification log deleted successfully!');

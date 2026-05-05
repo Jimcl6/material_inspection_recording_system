@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MaterialPart;
 use App\Models\MaterialSubLotTitle;
+use App\Services\ActivityService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -87,7 +88,15 @@ class MaterialPartController extends Controller
             );
         }
 
-        MaterialPart::create($validated);
+        $materialPart = MaterialPart::create($validated);
+
+        ActivityService::log(
+            'create',
+            "Created material part: {$materialPart->item_block_code}",
+            $materialPart,
+            $materialPart->toArray(),
+            'material_monitoring'
+        );
 
         return redirect()->route('material-monitoring-checksheets.index')
             ->with('success', 'Material part created successfully.');
@@ -161,6 +170,14 @@ class MaterialPartController extends Controller
 
         $materialPart->update($validated);
 
+        ActivityService::log(
+            'update',
+            "Updated material part: {$materialPart->item_block_code}",
+            $materialPart,
+            $materialPart->toArray(),
+            'material_monitoring'
+        );
+
         return redirect()->route('material-monitoring-checksheets.index')
             ->with('success', 'Material part updated successfully.');
     }
@@ -171,7 +188,18 @@ class MaterialPartController extends Controller
     public function destroy($material_monitoring_checksheet)
     {
         $materialPart = MaterialPart::findOrFail($material_monitoring_checksheet);
+        $recordData = $materialPart->toArray();
+        $itemBlockCode = $materialPart->item_block_code;
+        
         $materialPart->delete();
+
+        ActivityService::log(
+            'delete',
+            "Deleted material part: {$itemBlockCode}",
+            null,
+            $recordData,
+            'material_monitoring'
+        );
 
         return redirect()->route('material-monitoring-checksheets.index')
             ->with('success', 'Material part deleted successfully.');

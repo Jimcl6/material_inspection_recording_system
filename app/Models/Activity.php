@@ -13,10 +13,13 @@ class Activity extends Model
     protected $fillable = [
         'user_id',
         'type',
+        'module',
         'subject_type',
         'subject_id',
         'description',
         'properties',
+        'ip_address',
+        'user_agent',
     ];
 
     protected $casts = [

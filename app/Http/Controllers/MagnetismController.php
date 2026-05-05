@@ -8,6 +8,7 @@ use App\Models\MagnetismCheckpoint;
 use App\Http\Requests\MagnetismCheckSheetRequest;
 use App\Http\Requests\MagnetismBatchRequest;
 use App\Imports\MagnetismChecksheetImport;
+use App\Services\ActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -62,6 +63,14 @@ class MagnetismController extends Controller
     public function store(MagnetismCheckSheetRequest $request)
     {
         $checksheet = MagnetismChecksheet::create($request->validated());
+
+        ActivityService::log(
+            'create',
+            "Created magnetism checksheet for {$checksheet->item_code}",
+            $checksheet,
+            $checksheet->toArray(),
+            'magnetism'
+        );
 
         return redirect()->route('magnetism-checksheet.show', $checksheet->id)
             ->with('success', 'Checksheet created successfully.');
@@ -180,6 +189,14 @@ class MagnetismController extends Controller
     {
         $magnetism_checksheet->update($request->validated());
 
+        ActivityService::log(
+            'update',
+            "Updated magnetism checksheet for {$magnetism_checksheet->item_code}",
+            $magnetism_checksheet,
+            $magnetism_checksheet->toArray(),
+            'magnetism'
+        );
+
         return redirect()->route('magnetism-checksheet.show', $magnetism_checksheet->id)
             ->with('success', 'Checksheet updated successfully.');
     }
@@ -189,7 +206,18 @@ class MagnetismController extends Controller
      */
     public function destroy(MagnetismChecksheet $magnetism_checksheet)
     {
+        $recordData = $magnetism_checksheet->toArray();
+        $itemCode = $magnetism_checksheet->item_code;
+        
         $magnetism_checksheet->delete();
+
+        ActivityService::log(
+            'delete',
+            "Deleted magnetism checksheet for {$itemCode}",
+            null,
+            $recordData,
+            'magnetism'
+        );
 
         return redirect()->route('magnetism-checksheet.index')
             ->with('success', 'Checksheet deleted successfully.');
@@ -203,7 +231,15 @@ class MagnetismController extends Controller
         $data = $request->validated();
         $data['checksheet_id'] = $magnetism_checksheet->id;
 
-        MagnetismBatch::create($data);
+        $batch = MagnetismBatch::create($data);
+
+        ActivityService::log(
+            'create',
+            "Added batch {$batch->letter_code} to checksheet {$magnetism_checksheet->item_code}",
+            $batch,
+            $batch->toArray(),
+            'magnetism'
+        );
 
         return redirect()->route('magnetism-checksheet.show', [
             'magnetism_checksheet' => $magnetism_checksheet->id,
@@ -218,6 +254,14 @@ class MagnetismController extends Controller
     {
         $batch->update($request->validated());
 
+        ActivityService::log(
+            'update',
+            "Updated batch {$batch->letter_code} in checksheet {$magnetism_checksheet->item_code}",
+            $batch,
+            $batch->toArray(),
+            'magnetism'
+        );
+
         return redirect()->route('magnetism-checksheet.show', [
             'magnetism_checksheet' => $magnetism_checksheet->id,
             'date' => $batch->production_date->format('Y-m-d'),
@@ -230,7 +274,18 @@ class MagnetismController extends Controller
     public function destroyBatch(MagnetismChecksheet $magnetism_checksheet, MagnetismBatch $batch)
     {
         $date = $batch->production_date->format('Y-m-d');
+        $batchData = $batch->toArray();
+        $letterCode = $batch->letter_code;
+        
         $batch->delete();
+
+        ActivityService::log(
+            'delete',
+            "Deleted batch {$letterCode} from checksheet {$magnetism_checksheet->item_code}",
+            null,
+            $batchData,
+            'magnetism'
+        );
 
         return redirect()->route('magnetism-checksheet.show', [
             'magnetism_checksheet' => $magnetism_checksheet->id,
@@ -288,6 +343,14 @@ class MagnetismController extends Controller
                 );
             }
         });
+
+        ActivityService::log(
+            'update',
+            "Updated checkpoints for {$magnetism_checksheet->item_code} on {$productionDate}",
+            $magnetism_checksheet,
+            ['production_date' => $productionDate, 'checkpoints_count' => 4],
+            'magnetism'
+        );
 
         return redirect()->route('magnetism-checksheet.show', [
             'magnetism_checksheet' => $magnetism_checksheet->id,
@@ -461,6 +524,14 @@ class MagnetismController extends Controller
             $message = "Import completed: {$totalImported} created";
             if ($totalUpdated > 0) $message .= ", {$totalUpdated} updated";
             if ($totalSkipped > 0) $message .= ", {$totalSkipped} skipped";
+
+            ActivityService::logImport('magnetism', $totalImported + $totalUpdated, [
+                'item_code' => $itemCode,
+                'batches_imported' => $results['batches_imported'],
+                'batches_updated' => $results['batches_updated'],
+                'checkpoints_imported' => $results['checkpoints_imported'],
+                'checkpoints_updated' => $results['checkpoints_updated'],
+            ]);
 
             // Get first checksheet ID for redirect
             $redirectId = null;

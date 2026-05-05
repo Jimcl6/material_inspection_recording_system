@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TorqueRecord;
 use App\Imports\TorqueChecksheetImport;
+use App\Services\ActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -108,6 +109,15 @@ class TorqueRecordController extends Controller
         ]);
 
         $rec = TorqueRecord::create($data);
+
+        ActivityService::log(
+            'create',
+            "Created torque record for {$rec->model_series}",
+            $rec,
+            $rec->toArray(),
+            'torque'
+        );
+
         return redirect()->route('torque-records.show', $rec->id)->with('success', 'Record created.');
     }
 
@@ -146,12 +156,33 @@ class TorqueRecordController extends Controller
         ]);
 
         $torque_record->update($data);
+
+        ActivityService::log(
+            'update',
+            "Updated torque record for {$torque_record->model_series}",
+            $torque_record,
+            $torque_record->toArray(),
+            'torque'
+        );
+
         return redirect()->route('torque-records.show', $torque_record->id)->with('success', 'Record updated.');
     }
 
     public function destroy(TorqueRecord $torque_record)
     {
+        $recordData = $torque_record->toArray();
+        $modelSeries = $torque_record->model_series;
+        
         $torque_record->delete();
+
+        ActivityService::log(
+            'delete',
+            "Deleted torque record for {$modelSeries}",
+            null,
+            $recordData,
+            'torque'
+        );
+
         return redirect()->route('torque-records.index')->with('success', 'Record deleted.');
     }
 
@@ -245,6 +276,13 @@ class TorqueRecordController extends Controller
             if ($results['skipped'] > 0) $message .= ", {$results['skipped']} skipped";
             if (count($results['errors']) > 0) $message .= ", " . count($results['errors']) . " errors";
 
+            ActivityService::logImport('torque', $results['imported'] + $results['updated'], [
+                'imported' => $results['imported'],
+                'updated' => $results['updated'],
+                'skipped' => $results['skipped'],
+                'errors' => count($results['errors']),
+            ]);
+
             return response()->json([
                 'success' => true,
                 'results' => $results,
@@ -291,6 +329,13 @@ class TorqueRecordController extends Controller
             if ($results['updated'] > 0) $message .= ", {$results['updated']} updated";
             if ($results['skipped'] > 0) $message .= ", {$results['skipped']} skipped";
             if (count($results['errors']) > 0) $message .= ", " . count($results['errors']) . " errors";
+
+            ActivityService::logImport('torque', $results['imported'] + $results['updated'], [
+                'imported' => $results['imported'],
+                'updated' => $results['updated'],
+                'skipped' => $results['skipped'],
+                'errors' => count($results['errors']),
+            ]);
 
             return Inertia::render('TorqueRecords/Import', [
                 'import_results' => $results,
