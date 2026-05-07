@@ -172,4 +172,71 @@ class QrCodeService
 
         return $status;
     }
+
+    /**
+     * Parse employee badge QR code data
+     * Format: "Employee ID , Full Name , Employee Status"
+     * Example: "25-431 , JED IAN MICHAEL CABUSORA LLORENTE , REGULAR"
+     */
+    public function parseEmployeeBadgeQr(string $qrData): ?array
+    {
+        try {
+            // Split by comma and trim whitespace
+            $parts = array_map('trim', explode(',', $qrData));
+            
+            if (count($parts) !== 3) {
+                Log::warning('Invalid employee badge QR format - expected 3 parts', [
+                    'qr_data' => $qrData,
+                    'parts_count' => count($parts)
+                ]);
+                return null;
+            }
+
+            $employeeId = $parts[0];
+            $fullName = $parts[1];
+            $employmentStatus = strtolower($parts[2]);
+
+            // Validate employee ID format (e.g., "25-431")
+            if (empty($employeeId)) {
+                Log::warning('Empty employee ID in badge QR', ['qr_data' => $qrData]);
+                return null;
+            }
+
+            // Validate name
+            if (empty($fullName)) {
+                Log::warning('Empty name in badge QR', ['qr_data' => $qrData]);
+                return null;
+            }
+
+            // Normalize employment status
+            $validStatuses = ['regular', 'contractual', 'probationary'];
+            if (!in_array($employmentStatus, $validStatuses)) {
+                Log::warning('Invalid employment status in badge QR', [
+                    'qr_data' => $qrData,
+                    'status' => $employmentStatus
+                ]);
+                return null;
+            }
+
+            return [
+                'employee_id' => $employeeId,
+                'name' => $fullName,
+                'employment_status' => $employmentStatus,
+            ];
+        } catch (\Exception $e) {
+            Log::error('Failed to parse employee badge QR', [
+                'error' => $e->getMessage(),
+                'qr_data' => $qrData
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Check if employee ID already exists in the system
+     */
+    public function findUserByEmployeeId(string $employeeId): ?User
+    {
+        return User::where('employee_id', $employeeId)->first();
+    }
 }
