@@ -428,4 +428,60 @@ class UserManagementController extends Controller
             return back()->with('error', 'Failed to perform bulk action: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Show scan-to-create page
+     */
+    public function scanCreate(): Response
+    {
+        return Inertia::render('UserManagement/ScanCreate', [
+            'roles' => Role::orderBy('name')->get(),
+            'departments' => Department::active()->orderBy('name')->get(),
+            'positions' => Position::with('department')->active()->get(),
+        ]);
+    }
+
+    /**
+     * Parse employee badge QR code and check for duplicates
+     */
+    public function parseEmployeeBadge(Request $request)
+    {
+        $request->validate([
+            'qr_data' => 'required|string',
+        ]);
+
+        $qrData = $request->get('qr_data');
+        $parsed = $this->qrCodeService->parseEmployeeBadgeQr($qrData);
+
+        if (!$parsed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid QR code format. Expected format: "Employee ID , Full Name , Employment Status"',
+            ], 400);
+        }
+
+        // Check if employee already exists
+        $existingUser = $this->qrCodeService->findUserByEmployeeId($parsed['employee_id']);
+
+        if ($existingUser) {
+            return response()->json([
+                'success' => false,
+                'exists' => true,
+                'message' => 'An account with this Employee ID already exists.',
+                'existing_user' => [
+                    'id' => $existingUser->id,
+                    'name' => $existingUser->name,
+                    'email' => $existingUser->email,
+                    'employee_id' => $existingUser->employee_id,
+                    'status' => $existingUser->status,
+                ],
+            ], 409);
+        }
+
+        return response()->json([
+            'success' => true,
+            'exists' => false,
+            'data' => $parsed,
+        ]);
+    }
 }

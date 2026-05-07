@@ -345,6 +345,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Custom routes must come BEFORE the resource route
         Route::get('users/scanner', [UserManagementController::class, 'scanner'])
             ->name('users.scanner');
+        Route::get('users/scan-create', [UserManagementController::class, 'scanCreate'])
+            ->name('users.scan-create');
+        Route::post('users/parse-badge', [UserManagementController::class, 'parseEmployeeBadge'])
+            ->name('users.parse-badge');
         Route::post('users/scan', [UserManagementController::class, 'processScan'])
             ->name('users.scan');
         Route::post('users/bulk-action', [UserManagementController::class, 'bulkAction'])
