@@ -331,35 +331,35 @@ const submit = () => {
                                             <td class="px-4 py-3 text-sm font-medium text-gray-900">
                                                 {{ checkItems[sample.check_item] || sample.check_item }}
                                             </td>
-                                            <td class="px-4 py-3">
+                                            <td class="px-4 py-3 mx-auto">
                                                 <input 
                                                     type="text"
                                                     v-model="sample.sample_1"
                                                     class="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-center"
                                                 />
                                             </td>
-                                            <td class="px-4 py-3">
+                                            <td class="px-4 py-3 mx-auto">
                                                 <input 
                                                     type="text"
                                                     v-model="sample.sample_2"
                                                     class="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-center"
                                                 />
                                             </td>
-                                            <td class="px-4 py-3">
+                                            <td class="px-4 py-3 mx-auto">
                                                 <input 
                                                     type="text"
                                                     v-model="sample.sample_3"
                                                     class="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-center"
                                                 />
                                             </td>
-                                            <td class="px-4 py-3">
+                                            <td class="px-4 py-3 mx-auto">
                                                 <input 
                                                     type="text"
                                                     v-model="sample.sample_4"
                                                     class="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-center"
                                                 />
                                             </td>
-                                            <td class="px-4 py-3">
+                                            <td class="px-4 py-3 mx-auto">
                                                 <input 
                                                     type="text"
                                                     v-model="sample.sample_5"
