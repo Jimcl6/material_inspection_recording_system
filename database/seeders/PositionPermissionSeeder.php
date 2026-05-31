@@ -43,6 +43,7 @@ class PositionPermissionSeeder extends Seeder
             'torque',
             'magnetism',
             'diaphragm',
+            'welding',
             'material',
             'modification',
         ];

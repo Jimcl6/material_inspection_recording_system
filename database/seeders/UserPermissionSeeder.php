@@ -20,6 +20,7 @@ class UserPermissionSeeder extends Seeder
             'torque' => ['view', 'create', 'update', 'delete', 'import', 'export'],
             'magnetism' => ['view', 'create', 'update', 'delete', 'import', 'export'],
             'diaphragm' => ['view', 'create', 'update', 'delete', 'approve', 'reject', 'import', 'export'],
+            'welding' => ['view', 'create', 'update', 'delete', 'approve', 'reject', 'import', 'export'],
             'material' => ['view', 'create', 'update', 'delete', 'import', 'export'],
             'modification' => ['view', 'create', 'update', 'delete'],
             'production' => ['view', 'create', 'update', 'delete', 'import', 'export'],

@@ -160,7 +160,7 @@
                         </div>
                     </div>
 
-                    <!-- Material Monitoring Checksheet -->
+                    <!-- Welding Checksheet -->
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-orange-500">
                         <div class="p-6">
                             <div class="flex items-center">
@@ -171,7 +171,7 @@
                                 </div>
                                 <div class="ml-4">
                                     <h3 class="text-lg font-medium text-gray-900">Material Monitoring Checksheet</h3>
-                                    <p class="text-sm text-gray-500">View material monitor checksheets</p>
+                                    <p class="text-sm text-gray-500">View welding checksheets</p>
                                 </div>
                             </div>
                             <div class="mt-4 flex justify-end">
@@ -197,7 +197,7 @@
                                 </div>
                             </div>
                             <div class="mt-4 flex justify-end">
-                                <Link :href="route('diaphragm-welding.index')" class="text-sm font-medium text-orange-600 hover:text-red-500">
+                                <Link :href="route('welding-checksheets.index')" class="text-sm font-medium text-orange-600 hover:text-red-500">
                                     View All <span aria-hidden="true">&rarr;</span>
                                 </Link>
                             </div>

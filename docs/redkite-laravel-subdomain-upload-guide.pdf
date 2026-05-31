@@ -1,0 +1,192 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [7 0 R 9 0 R 11 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+6 0 obj
+<< /Length 3162 >>
+stream
+BT /F2 24 Tf 54 788.00 Td (Uploading the MIRS Laravel App to a Redkite Subdomain) Tj ET
+BT /F1 9 Tf 54 758.00 Td (Generated 2026-05-31) Tj ET
+BT /F1 11 Tf 54 740.00 Td (Prepared for deploying the Material Inspection Recording System to a z.com/cPanel) Tj ET
+BT /F1 11 Tf 54 725.00 Td (subdomain such as mirs.redkite.com.ph.) Tj ET
+BT /F2 10.5 Tf 62 705.00 Td (NOTE: Important difference from WordPress: WordPress is usually uploaded directly) Tj ET
+BT /F2 10.5 Tf 62 690.50 Td (into public_html. Laravel should not be deployed that way. Only Laravel's public) Tj ET
+BT /F2 10.5 Tf 62 676.00 Td (folder should be visible to browsers.) Tj ET
+BT /F2 15 Tf 54 645.50 Td (1. Recommended Folder Layout) Tj ET
+q 0.82 0.86 0.90 RG 54 630.50 m 541 630.50 l S Q
+BT /F1 11 Tf 54 619.50 Td (Use two server folders: one private folder for the Laravel application, and one public) Tj ET
+BT /F1 11 Tf 54 604.50 Td (folder for the subdomain document root.) Tj ET
+q 0.96 0.97 0.98 rg 50 329.50 495 262.00 re f Q
+BT /F3 9 Tf 58 576.50 Td (/home/YOUR_CPANEL_USER/mirs_app/) Tj ET
+BT /F3 9 Tf 58 564.50 Td (    app/) Tj ET
+BT /F3 9 Tf 58 552.50 Td (    bootstrap/) Tj ET
+BT /F3 9 Tf 58 540.50 Td (    config/) Tj ET
+BT /F3 9 Tf 58 528.50 Td (    database/) Tj ET
+BT /F3 9 Tf 58 516.50 Td (    public/) Tj ET
+BT /F3 9 Tf 58 504.50 Td (    resources/) Tj ET
+BT /F3 9 Tf 58 492.50 Td (    routes/) Tj ET
+BT /F3 9 Tf 58 480.50 Td (    storage/) Tj ET
+BT /F3 9 Tf 58 468.50 Td (    vendor/) Tj ET
+BT /F3 9 Tf 58 456.50 Td (    .env) Tj ET
+BT /F3 9 Tf 58 444.50 Td (    artisan) Tj ET
+BT /F3 9 Tf 58 432.50 Td (    composer.json) Tj ET
+BT /F3 9 Tf 58 420.50 Td (    composer.lock) Tj ET
+BT /F3 9 Tf 58 408.50 Td () Tj ET
+BT /F3 9 Tf 58 396.50 Td (/home/YOUR_CPANEL_USER/public_html/mirs/) Tj ET
+BT /F3 9 Tf 58 384.50 Td (    index.php) Tj ET
+BT /F3 9 Tf 58 372.50 Td (    .htaccess) Tj ET
+BT /F3 9 Tf 58 360.50 Td (    build/) Tj ET
+BT /F3 9 Tf 58 348.50 Td (    favicon.ico) Tj ET
+BT /F3 9 Tf 58 336.50 Td (    robots.txt) Tj ET
+BT /F2 15 Tf 54 310.50 Td (2. Files to Upload) Tj ET
+q 0.82 0.86 0.90 RG 54 295.50 m 541 295.50 l S Q
+BT /F1 11 Tf 54 284.50 Td (Upload: app, bootstrap, config, database, public, resources, routes, storage, vendor,) Tj ET
+BT /F1 11 Tf 54 269.50 Td (artisan, composer.json, composer.lock, and .env.) Tj ET
+BT /F1 11 Tf 54 249.50 Td (Do not upload: .git, node_modules, tests, temp_backup, local-only notes, or temporary) Tj ET
+BT /F1 11 Tf 54 234.50 Td (helper files.) Tj ET
+BT /F2 15 Tf 54 208.50 Td (3. Create the Subdomain in z.com/cPanel) Tj ET
+q 0.82 0.86 0.90 RG 54 193.50 m 541 193.50 l S Q
+BT /F1 11 Tf 62 182.50 Td (- Log in to z.com and open cPanel.) Tj ET
+BT /F1 11 Tf 62 167.50 Td (- Go to Domains and create the subdomain, for example mirs.redkite.com.ph.) Tj ET
+BT /F1 11 Tf 62 152.50 Td (- Set the document root to public_html/mirs.) Tj ET
+BT /F1 11 Tf 62 137.50 Td (- If cPanel offers Share document root, leave it unchecked.) Tj ET
+BT /F2 15 Tf 54 112.50 Td (4. Build the Frontend Before Uploading) Tj ET
+q 0.82 0.86 0.90 RG 54 97.50 m 541 97.50 l S Q
+BT /F1 11 Tf 54 86.50 Td (Run this locally from the project folder before uploading:) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 2751 >>
+stream
+q 0.96 0.97 0.98 rg 50 773.00 495 22.00 re f Q
+BT /F3 9 Tf 58 780.00 Td (npm run build) Tj ET
+BT /F1 11 Tf 54 760.00 Td (This creates production frontend files inside public/build. The public/build folder must) Tj ET
+BT /F1 11 Tf 54 745.00 Td (be uploaded with the other public files.) Tj ET
+BT /F2 15 Tf 54 719.00 Td (5. Upload the App) Tj ET
+q 0.82 0.86 0.90 RG 54 704.00 m 541 704.00 l S Q
+BT /F1 11 Tf 62 693.00 Td (- Upload the Laravel project files to /home/YOUR_CPANEL_USER/mirs_app.) Tj ET
+BT /F1 11 Tf 62 678.00 Td (- Upload the contents of the local public folder to) Tj ET
+BT /F1 11 Tf 62 663.00 Td (  /home/YOUR_CPANEL_USER/public_html/mirs.) Tj ET
+BT /F1 11 Tf 62 648.00 Td (- Make sure hidden files are included, especially .htaccess.) Tj ET
+BT /F1 11 Tf 62 633.00 Td (- Do not put .env, app, config, database, storage, or vendor inside the) Tj ET
+BT /F1 11 Tf 62 618.00 Td (  public_html/mirs folder.) Tj ET
+BT /F2 15 Tf 54 593.00 Td (6. Edit public_html/mirs/index.php) Tj ET
+q 0.82 0.86 0.90 RG 54 578.00 m 541 578.00 l S Q
+BT /F1 11 Tf 54 567.00 Td (On the server, open /home/YOUR_CPANEL_USER/public_html/mirs/index.php and update the) Tj ET
+BT /F1 11 Tf 54 552.00 Td (Laravel paths.) Tj ET
+BT /F1 11 Tf 54 532.00 Td (Change this:) Tj ET
+q 0.96 0.97 0.98 rg 50 485.00 495 34.00 re f Q
+BT /F3 9 Tf 58 504.00 Td (require __DIR__.'/../vendor/autoload.php';) Tj ET
+BT /F3 9 Tf 58 492.00 Td ($app = require_once __DIR__.'/../bootstrap/app.php';) Tj ET
+BT /F1 11 Tf 54 472.00 Td (To this typical cPanel layout:) Tj ET
+q 0.96 0.97 0.98 rg 50 425.00 495 34.00 re f Q
+BT /F3 9 Tf 58 444.00 Td (require __DIR__.'/../../mirs_app/vendor/autoload.php';) Tj ET
+BT /F3 9 Tf 58 432.00 Td ($app = require_once __DIR__.'/../../mirs_app/bootstrap/app.php';) Tj ET
+BT /F1 11 Tf 54 412.00 Td (The exact number of ../ segments depends on the real cPanel path. The goal is for) Tj ET
+BT /F1 11 Tf 54 397.00 Td (index.php in the public folder to load vendor/autoload.php and bootstrap/app.php from) Tj ET
+BT /F1 11 Tf 54 382.00 Td (the private Laravel folder.) Tj ET
+BT /F2 15 Tf 54 356.00 Td (7. Create and Import the Database) Tj ET
+q 0.82 0.86 0.90 RG 54 341.00 m 541 341.00 l S Q
+BT /F1 11 Tf 62 330.00 Td (- In cPanel, open MySQL Databases or MySQL Database Wizard.) Tj ET
+BT /F1 11 Tf 62 315.00 Td (- Create a database, database user, and password.) Tj ET
+BT /F1 11 Tf 62 300.00 Td (- Assign the user to the database with full privileges.) Tj ET
+BT /F1 11 Tf 62 285.00 Td (- Export the current local database from XAMPP phpMyAdmin.) Tj ET
+BT /F1 11 Tf 62 270.00 Td (- Import the SQL file into the z.com database using phpMyAdmin.) Tj ET
+BT /F2 15 Tf 54 245.00 Td (8. Configure .env on the Server) Tj ET
+q 0.82 0.86 0.90 RG 54 230.00 m 541 230.00 l S Q
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 3505 >>
+stream
+q 0.96 0.97 0.98 rg 50 629.00 495 166.00 re f Q
+BT /F3 9 Tf 58 780.00 Td (APP_NAME="Material Inspection Recording System") Tj ET
+BT /F3 9 Tf 58 768.00 Td (APP_ENV=production) Tj ET
+BT /F3 9 Tf 58 756.00 Td (APP_DEBUG=false) Tj ET
+BT /F3 9 Tf 58 744.00 Td (APP_URL=https://mirs.redkite.com.ph) Tj ET
+BT /F3 9 Tf 58 732.00 Td () Tj ET
+BT /F3 9 Tf 58 720.00 Td (DB_CONNECTION=mysql) Tj ET
+BT /F3 9 Tf 58 708.00 Td (DB_HOST=localhost) Tj ET
+BT /F3 9 Tf 58 696.00 Td (DB_PORT=3306) Tj ET
+BT /F3 9 Tf 58 684.00 Td (DB_DATABASE=your_cpanel_database) Tj ET
+BT /F3 9 Tf 58 672.00 Td (DB_USERNAME=your_cpanel_database_user) Tj ET
+BT /F3 9 Tf 58 660.00 Td (DB_PASSWORD=your_database_password) Tj ET
+BT /F3 9 Tf 58 648.00 Td () Tj ET
+BT /F3 9 Tf 58 636.00 Td (SESSION_SECURE_COOKIE=true) Tj ET
+BT /F2 15 Tf 54 610.00 Td (9. Run Laravel Commands If SSH Is Available) Tj ET
+q 0.82 0.86 0.90 RG 54 595.00 m 541 595.00 l S Q
+q 0.96 0.97 0.98 rg 50 521.00 495 70.00 re f Q
+BT /F3 9 Tf 58 576.00 Td (php artisan key:generate) Tj ET
+BT /F3 9 Tf 58 564.00 Td (php artisan config:cache) Tj ET
+BT /F3 9 Tf 58 552.00 Td (php artisan route:cache) Tj ET
+BT /F3 9 Tf 58 540.00 Td (php artisan view:cache) Tj ET
+BT /F3 9 Tf 58 528.00 Td (php artisan storage:link) Tj ET
+BT /F1 11 Tf 54 508.00 Td (If z.com does not provide SSH or Terminal access, deployment is still possible, but) Tj ET
+BT /F1 11 Tf 54 493.00 Td (Composer and artisan tasks must be handled locally or through available cPanel tools.) Tj ET
+BT /F2 15 Tf 54 467.00 Td (10. No-Index Safeguards Included) Tj ET
+q 0.82 0.86 0.90 RG 54 452.00 m 541 452.00 l S Q
+BT /F1 11 Tf 54 441.00 Td (The project includes these search engine no-index safeguards:) Tj ET
+BT /F1 11 Tf 62 421.00 Td (- public/robots.txt blocks crawling with Disallow: /.) Tj ET
+BT /F1 11 Tf 62 406.00 Td (- The main Blade layout includes a robots meta tag: noindex, nofollow, noarchive,) Tj ET
+BT /F1 11 Tf 62 391.00 Td (  nosnippet.) Tj ET
+BT /F1 11 Tf 62 376.00 Td (- Laravel responses include X-Robots-Tag: noindex, nofollow, noarchive, nosnippet.) Tj ET
+BT /F1 11 Tf 62 361.00 Td (- public/.htaccess adds the same X-Robots-Tag header for Apache-hosted public/static) Tj ET
+BT /F1 11 Tf 62 346.00 Td (  files when mod_headers is enabled.) Tj ET
+BT /F2 10.5 Tf 62 327.00 Td (NOTE: Security reminder: no-index is not the same as private access. It tells search) Tj ET
+BT /F2 10.5 Tf 62 312.50 Td (engines not to index the app. For this phase, use Laravel login plus no-index. For) Tj ET
+BT /F2 10.5 Tf 62 298.00 Td (stricter employee-only access later, add cPanel password protection, office-IP) Tj ET
+BT /F2 10.5 Tf 62 283.50 Td (restrictions, Cloudflare Access, or VPN access.) Tj ET
+BT /F2 15 Tf 54 253.00 Td (11. Launch Checklist) Tj ET
+q 0.82 0.86 0.90 RG 54 238.00 m 541 238.00 l S Q
+BT /F1 11 Tf 62 227.00 Td (- Subdomain created, e.g. mirs.redkite.com.ph.) Tj ET
+BT /F1 11 Tf 62 212.00 Td (- Subdomain document root points to the copied Laravel public files.) Tj ET
+BT /F1 11 Tf 62 197.00 Td (- index.php paths point to the private Laravel folder.) Tj ET
+BT /F1 11 Tf 62 182.00 Td (- .env uses production settings and z.com database credentials.) Tj ET
+BT /F1 11 Tf 62 167.00 Td (- Database imported successfully.) Tj ET
+BT /F1 11 Tf 62 152.00 Td (- public/build exists after npm run build.) Tj ET
+BT /F1 11 Tf 62 137.00 Td (- HTTPS is enabled.) Tj ET
+BT /F1 11 Tf 62 122.00 Td (- No-index safeguards are uploaded.) Tj ET
+BT /F1 11 Tf 62 107.00 Td (- The app login page loads correctly.) Tj ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 10 0 R >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000134 00000 n 
+0000000204 00000 n 
+0000000279 00000 n 
+0000000347 00000 n 
+0000003561 00000 n 
+0000003707 00000 n 
+0000006510 00000 n 
+0000006656 00000 n 
+0000010214 00000 n 
+trailer
+<< /Size 12 /Root 1 0 R >>
+startxref
+10362
+%%EOF
