@@ -16,6 +16,8 @@ use App\Http\Controllers\PositionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\DiaphragmWeldingController;
+use App\Http\Controllers\WeldingChecksheetController;
+use App\Models\WeldingChecksheet;
 
 // Public routes
 Route::get('/', function () {
@@ -285,60 +287,72 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('module.permission:material,delete')
         ->name('material-monitoring-checksheets.destroy');
 
-    // Diaphragm Welding Checksheet
+    // Welding Checksheet
     // Import/Export routes must come BEFORE the resource route
-    Route::get('diaphragm-welding/import', [DiaphragmWeldingController::class, 'importForm'])
-        ->middleware('module.permission:diaphragm,import')
-        ->name('diaphragm-welding.import.form');
-    Route::post('diaphragm-welding/import', [DiaphragmWeldingController::class, 'import'])
-        ->middleware('module.permission:diaphragm,import')
-        ->name('diaphragm-welding.import');
-    Route::post('diaphragm-welding/import/preview', [DiaphragmWeldingController::class, 'importPreview'])
-        ->middleware('module.permission:diaphragm,import')
-        ->name('diaphragm-welding.import.preview');
-    Route::post('diaphragm-welding/import/execute', [DiaphragmWeldingController::class, 'importExecute'])
-        ->middleware('module.permission:diaphragm,import')
-        ->name('diaphragm-welding.import.execute');
-    Route::get('diaphragm-welding/export', [DiaphragmWeldingController::class, 'export'])
-        ->middleware('module.permission:diaphragm,export')
-        ->name('diaphragm-welding.export');
-    Route::get('diaphragm-welding/item-code-rules', [DiaphragmWeldingController::class, 'getItemCodeRules'])
-        ->name('diaphragm-welding.item-code-rules');
+    Route::get('welding-checksheets/import', [WeldingChecksheetController::class, 'importForm'])
+        ->middleware('module.permission:welding,import')
+        ->name('welding-checksheets.import.form');
+    Route::post('welding-checksheets/import/preview', [WeldingChecksheetController::class, 'importPreview'])
+        ->middleware('module.permission:welding,import')
+        ->name('welding-checksheets.import.preview');
+    Route::post('welding-checksheets/import/execute', [WeldingChecksheetController::class, 'importExecute'])
+        ->middleware('module.permission:welding,import')
+        ->name('welding-checksheets.import.execute');
+    Route::get('welding-checksheets/export', [WeldingChecksheetController::class, 'export'])
+        ->middleware('module.permission:welding,export')
+        ->name('welding-checksheets.export');
+    Route::get('welding-checksheets/item-code-rules', [WeldingChecksheetController::class, 'itemCodeRules'])
+        ->name('welding-checksheets.item-code-rules');
 
-    // Approval routes (admin/inspector only)
-    Route::middleware(['auth', 'module.permission:diaphragm,approve'])->group(function () {
-        Route::get('diaphragm-welding/approval', [DiaphragmWeldingController::class, 'approval'])
-            ->name('diaphragm-welding.approval');
-        Route::post('diaphragm-welding/bulk-approve', [DiaphragmWeldingController::class, 'bulkApprove'])
-            ->name('diaphragm-welding.bulk-approve');
-        Route::post('diaphragm-welding/bulk-reject', [DiaphragmWeldingController::class, 'bulkReject'])
-            ->name('diaphragm-welding.bulk-reject');
+    Route::middleware(['auth', 'module.permission:welding,approve'])->group(function () {
+        Route::get('welding-checksheets/approval', [WeldingChecksheetController::class, 'approval'])
+            ->name('welding-checksheets.approval');
+        Route::post('welding-checksheets/bulk-approve', [WeldingChecksheetController::class, 'bulkApprove'])
+            ->name('welding-checksheets.bulk-approve');
+        Route::post('welding-checksheets/bulk-reject', [WeldingChecksheetController::class, 'bulkReject'])
+            ->name('welding-checksheets.bulk-reject');
     });
 
-    // Diaphragm Welding Resource Routes with permission middleware
-    Route::get('diaphragm-welding', [DiaphragmWeldingController::class, 'index'])
-        ->middleware('module.permission:diaphragm,view')
-        ->name('diaphragm-welding.index');
-    Route::get('diaphragm-welding/create', [DiaphragmWeldingController::class, 'create'])
-        ->middleware('module.permission:diaphragm,create')
-        ->name('diaphragm-welding.create');
-    Route::post('diaphragm-welding', [DiaphragmWeldingController::class, 'store'])
-        ->middleware('module.permission:diaphragm,create')
-        ->name('diaphragm-welding.store');
-    Route::get('diaphragm-welding/{diaphragm_welding}', [DiaphragmWeldingController::class, 'show'])
-        ->middleware('module.permission:diaphragm,view')
-        ->name('diaphragm-welding.show');
-    Route::get('diaphragm-welding/{diaphragm_welding}/edit', [DiaphragmWeldingController::class, 'edit'])
-        ->middleware('module.permission:diaphragm,update')
-        ->name('diaphragm-welding.edit');
-    Route::put('diaphragm-welding/{diaphragm_welding}', [DiaphragmWeldingController::class, 'update'])
-        ->middleware('module.permission:diaphragm,update')
-        ->name('diaphragm-welding.update');
-    Route::patch('diaphragm-welding/{diaphragm_welding}', [DiaphragmWeldingController::class, 'update'])
-        ->middleware('module.permission:diaphragm,update');
-    Route::delete('diaphragm-welding/{diaphragm_welding}', [DiaphragmWeldingController::class, 'destroy'])
-        ->middleware('module.permission:diaphragm,delete')
-        ->name('diaphragm-welding.destroy');
+    Route::get('welding-checksheets', [WeldingChecksheetController::class, 'index'])
+        ->middleware('module.permission:welding,view')
+        ->name('welding-checksheets.index');
+    Route::get('welding-checksheets/create', [WeldingChecksheetController::class, 'create'])
+        ->middleware('module.permission:welding,create')
+        ->name('welding-checksheets.create');
+    Route::post('welding-checksheets', [WeldingChecksheetController::class, 'store'])
+        ->middleware('module.permission:welding,create')
+        ->name('welding-checksheets.store');
+    Route::get('welding-checksheets/{welding_checksheet}', [WeldingChecksheetController::class, 'show'])
+        ->middleware('module.permission:welding,view')
+        ->name('welding-checksheets.show');
+    Route::get('welding-checksheets/{welding_checksheet}/edit', [WeldingChecksheetController::class, 'edit'])
+        ->middleware('module.permission:welding,update')
+        ->name('welding-checksheets.edit');
+    Route::put('welding-checksheets/{welding_checksheet}', [WeldingChecksheetController::class, 'update'])
+        ->middleware('module.permission:welding,update')
+        ->name('welding-checksheets.update');
+    Route::patch('welding-checksheets/{welding_checksheet}', [WeldingChecksheetController::class, 'update'])
+        ->middleware('module.permission:welding,update');
+    Route::delete('welding-checksheets/{welding_checksheet}', [WeldingChecksheetController::class, 'destroy'])
+        ->middleware('module.permission:welding,delete')
+        ->name('welding-checksheets.destroy');
+
+    // Legacy Diaphragm Welding links redirect to the new Welding Checksheet module.
+    Route::redirect('diaphragm-welding', 'welding-checksheets', 301)->name('diaphragm-welding.index');
+    Route::redirect('diaphragm-welding/create', 'welding-checksheets/create', 301)->name('diaphragm-welding.create');
+    Route::redirect('diaphragm-welding/import', 'welding-checksheets/import', 301)->name('diaphragm-welding.import.form');
+    Route::redirect('diaphragm-welding/approval', 'welding-checksheets/approval', 301)->name('diaphragm-welding.approval');
+    Route::redirect('diaphragm-welding/export', 'welding-checksheets/export', 301)->name('diaphragm-welding.export');
+    Route::get('diaphragm-welding/{diaphragm_welding}/edit', function ($diaphragmWelding) {
+        $weldingId = WeldingChecksheet::where('legacy_diaphragm_id', $diaphragmWelding)->value('id') ?: $diaphragmWelding;
+
+        return redirect()->route('welding-checksheets.edit', $weldingId);
+    })->name('diaphragm-welding.edit');
+    Route::get('diaphragm-welding/{diaphragm_welding}', function ($diaphragmWelding) {
+        $weldingId = WeldingChecksheet::where('legacy_diaphragm_id', $diaphragmWelding)->value('id') ?: $diaphragmWelding;
+
+        return redirect()->route('welding-checksheets.show', $weldingId);
+    })->name('diaphragm-welding.show');
 
     // User Management (Admin only)
     Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {

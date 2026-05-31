@@ -181,41 +181,41 @@ const mainMargin = computed(() => {
                             Magnetism Checksheet
                         </SidebarNavLink>
 
-                        <!-- Diaphragm Welding -->
+                        <!-- Welding Checksheet -->
                         <SidebarNavGroup 
-                            v-if="canView('diaphragm')"
-                            title="Diaphragm Welding"
+                            v-if="canView('welding')"
+                            title="Welding Checksheet"
                             :icon="DocumentTextIcon"
-                            :active="route().current('diaphragm-welding.*')"
-                            :default-open="route().current('diaphragm-welding.*')"
+                            :active="route().current('welding-checksheets.*')"
+                            :default-open="route().current('welding-checksheets.*')"
                         >
                             <SidebarNavLink 
-                                :href="route('diaphragm-welding.index')" 
-                                :active="route().current('diaphragm-welding.index')"
+                                :href="route('welding-checksheets.index')" 
+                                :active="route().current('welding-checksheets.index')"
                                 :nested="true"
                             >
                                 All Checksheets
                             </SidebarNavLink>
                             <SidebarNavLink 
-                                v-if="canCreate('diaphragm')"
-                                :href="route('diaphragm-welding.create')" 
-                                :active="route().current('diaphragm-welding.create')"
+                                v-if="canCreate('welding')"
+                                :href="route('welding-checksheets.create')" 
+                                :active="route().current('welding-checksheets.create')"
                                 :nested="true"
                             >
                                 Add New
                             </SidebarNavLink>
                             <SidebarNavLink 
-                                v-if="canImport('diaphragm')"
-                                :href="route('diaphragm-welding.import.form')" 
-                                :active="route().current('diaphragm-welding.import.form')"
+                                v-if="canImport('welding')"
+                                :href="route('welding-checksheets.import.form')" 
+                                :active="route().current('welding-checksheets.import.form')"
                                 :nested="true"
                             >
                                 Import
                             </SidebarNavLink>
                             <SidebarNavLink 
-                                v-if="canApprove('diaphragm')"
-                                :href="route('diaphragm-welding.approval')" 
-                                :active="route().current('diaphragm-welding.approval')"
+                                v-if="canApprove('welding')"
+                                :href="route('welding-checksheets.approval')" 
+                                :active="route().current('welding-checksheets.approval')"
                                 :nested="true"
                             >
                                 Pending Approvals
@@ -421,42 +421,42 @@ const mainMargin = computed(() => {
                         Magnetism Checksheet
                     </SidebarNavLink>
 
-                    <!-- Diaphragm Welding -->
+                    <!-- Welding Checksheet -->
                     <SidebarNavGroup 
-                        v-if="canView('diaphragm')"
-                        title="Diaphragm Welding"
+                        v-if="canView('welding')"
+                        title="Welding Checksheet"
                         :icon="DocumentTextIcon"
-                        :active="route().current('diaphragm-welding.*')"
-                        :default-open="route().current('diaphragm-welding.*')"
+                        :active="route().current('welding-checksheets.*')"
+                        :default-open="route().current('welding-checksheets.*')"
                         :collapsed="sidebarCollapsed"
                     >
                         <SidebarNavLink 
-                            :href="route('diaphragm-welding.index')" 
-                            :active="route().current('diaphragm-welding.index')"
+                            :href="route('welding-checksheets.index')" 
+                            :active="route().current('welding-checksheets.index')"
                             :nested="true"
                         >
                             All Checksheets
                         </SidebarNavLink>
                         <SidebarNavLink 
-                            v-if="canCreate('diaphragm')"
-                            :href="route('diaphragm-welding.create')" 
-                            :active="route().current('diaphragm-welding.create')"
+                            v-if="canCreate('welding')"
+                            :href="route('welding-checksheets.create')" 
+                            :active="route().current('welding-checksheets.create')"
                             :nested="true"
                         >
                             Add New
                         </SidebarNavLink>
                         <SidebarNavLink 
-                            v-if="canImport('diaphragm')"
-                            :href="route('diaphragm-welding.import.form')" 
-                            :active="route().current('diaphragm-welding.import.form')"
+                            v-if="canImport('welding')"
+                            :href="route('welding-checksheets.import.form')" 
+                            :active="route().current('welding-checksheets.import.form')"
                             :nested="true"
                         >
                             Import
                         </SidebarNavLink>
                         <SidebarNavLink 
-                            v-if="canApprove('diaphragm')"
-                            :href="route('diaphragm-welding.approval')" 
-                            :active="route().current('diaphragm-welding.approval')"
+                            v-if="canApprove('welding')"
+                            :href="route('welding-checksheets.approval')" 
+                            :active="route().current('welding-checksheets.approval')"
                             :nested="true"
                         >
                             Pending Approvals
