@@ -319,7 +319,7 @@ const mainMargin = computed(() => {
                         leave-to-class="opacity-0"
                     >
                         <span v-show="!sidebarCollapsed" class="ml-2 text-lg font-semibold text-gray-900 whitespace-nowrap">
-                            MIRS
+                            ICRS
                         </span>
                     </transition>
                 </Link>
