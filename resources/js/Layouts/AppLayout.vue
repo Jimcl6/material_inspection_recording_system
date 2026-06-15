@@ -80,7 +80,7 @@ const mainMargin = computed(() => {
             leave-from-class="translate-x-0"
             leave-to-class="-translate-x-full"
         >
-            <div 
+            <div
                 v-show="sidebarOpen"
                 class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl lg:hidden flex flex-col"
             >
@@ -88,7 +88,7 @@ const mainMargin = computed(() => {
                 <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200">
                     <Link :href="route('dashboard')" class="flex items-center">
                         <ApplicationLogo class="h-8 w-auto text-indigo-600" />
-                        <span class="ml-2 text-lg font-semibold text-gray-900">MIRS</span>
+                        <span class="ml-2 text-lg font-semibold text-gray-900">ICRS</span>
                     </Link>
                     <button
                         @click="closeSidebar"
@@ -102,8 +102,8 @@ const mainMargin = computed(() => {
                 <nav class="flex-1 px-2 py-4 space-y-6 overflow-y-auto">
                     <!-- Main -->
                     <SidebarSection>
-                        <SidebarNavLink 
-                            :href="route('dashboard')" 
+                        <SidebarNavLink
+                            :href="route('dashboard')"
                             :active="route().current('dashboard')"
                             :icon="HomeIcon"
                         >
@@ -114,39 +114,39 @@ const mainMargin = computed(() => {
                     <!-- Inspection Records -->
                     <SidebarSection title="Inspection Records">
                         <!-- Annealing Checks -->
-                        <SidebarNavGroup 
+                        <SidebarNavGroup
                             v-if="canView('annealing')"
                             title="Annealing Checks"
                             :icon="ClipboardDocumentCheckIcon"
                             :active="route().current('annealing-checks.*')"
                             :default-open="route().current('annealing-checks.*')"
                         >
-                            <SidebarNavLink 
-                                :href="route('annealing-checks.index')" 
+                            <SidebarNavLink
+                                :href="route('annealing-checks.index')"
                                 :active="route().current('annealing-checks.index')"
                                 :nested="true"
                             >
                                 All Checks
                             </SidebarNavLink>
-                            <SidebarNavLink 
+                            <SidebarNavLink
                                 v-if="canCreate('annealing')"
-                                :href="route('annealing-checks.create')" 
+                                :href="route('annealing-checks.create')"
                                 :active="route().current('annealing-checks.create')"
                                 :nested="true"
                             >
                                 Add New
                             </SidebarNavLink>
-                            <SidebarNavLink 
+                            <SidebarNavLink
                                 v-if="canImport('annealing')"
-                                :href="route('annealing-checks.import.form')" 
+                                :href="route('annealing-checks.import.form')"
                                 :active="route().current('annealing-checks.import.form')"
                                 :nested="true"
                             >
                                 Import
                             </SidebarNavLink>
-                            <SidebarNavLink 
+                            <SidebarNavLink
                                 v-if="canApprove('annealing')"
-                                :href="route('annealing-checks.approval')" 
+                                :href="route('annealing-checks.approval')"
                                 :active="route().current('annealing-checks.approval')"
                                 :nested="true"
                             >
@@ -154,27 +154,27 @@ const mainMargin = computed(() => {
                             </SidebarNavLink>
                         </SidebarNavGroup>
 
-                        <SidebarNavLink 
+                        <SidebarNavLink
                             v-if="canView('temperature')"
-                            :href="route('temp-records.index')" 
+                            :href="route('temp-records.index')"
                             :active="route().current('temp-records.*')"
                             :icon="FireIcon"
                         >
                             Temperature Records
                         </SidebarNavLink>
 
-                        <SidebarNavLink 
+                        <SidebarNavLink
                             v-if="canView('torque')"
-                            :href="route('torque-records.index')" 
+                            :href="route('torque-records.index')"
                             :active="route().current('torque-records.*')"
                             :icon="WrenchScrewdriverIcon"
                         >
                             Torque Records
                         </SidebarNavLink>
 
-                        <SidebarNavLink 
+                        <SidebarNavLink
                             v-if="canView('magnetism')"
-                            :href="route('magnetism-checksheet.index')" 
+                            :href="route('magnetism-checksheet.index')"
                             :active="route().current('magnetism-checksheet.*')"
                             :icon="MagnifyingGlassIcon"
                         >
@@ -182,39 +182,39 @@ const mainMargin = computed(() => {
                         </SidebarNavLink>
 
                         <!-- Welding Checksheet -->
-                        <SidebarNavGroup 
+                        <SidebarNavGroup
                             v-if="canView('welding')"
                             title="Welding Checksheet"
                             :icon="DocumentTextIcon"
                             :active="route().current('welding-checksheets.*')"
                             :default-open="route().current('welding-checksheets.*')"
                         >
-                            <SidebarNavLink 
-                                :href="route('welding-checksheets.index')" 
+                            <SidebarNavLink
+                                :href="route('welding-checksheets.index')"
                                 :active="route().current('welding-checksheets.index')"
                                 :nested="true"
                             >
                                 All Checksheets
                             </SidebarNavLink>
-                            <SidebarNavLink 
+                            <SidebarNavLink
                                 v-if="canCreate('welding')"
-                                :href="route('welding-checksheets.create')" 
+                                :href="route('welding-checksheets.create')"
                                 :active="route().current('welding-checksheets.create')"
                                 :nested="true"
                             >
                                 Add New
                             </SidebarNavLink>
-                            <SidebarNavLink 
+                            <SidebarNavLink
                                 v-if="canImport('welding')"
-                                :href="route('welding-checksheets.import.form')" 
+                                :href="route('welding-checksheets.import.form')"
                                 :active="route().current('welding-checksheets.import.form')"
                                 :nested="true"
                             >
                                 Import
                             </SidebarNavLink>
-                            <SidebarNavLink 
+                            <SidebarNavLink
                                 v-if="canApprove('welding')"
-                                :href="route('welding-checksheets.approval')" 
+                                :href="route('welding-checksheets.approval')"
                                 :active="route().current('welding-checksheets.approval')"
                                 :nested="true"
                             >
@@ -222,9 +222,9 @@ const mainMargin = computed(() => {
                             </SidebarNavLink>
                         </SidebarNavGroup>
 
-                        <SidebarNavLink 
+                        <SidebarNavLink
                             v-if="canView('material')"
-                            :href="route('material-monitoring-checksheets.index')" 
+                            :href="route('material-monitoring-checksheets.index')"
                             :active="route().current('material-monitoring-checksheets.*')"
                             :icon="CubeIcon"
                         >
@@ -234,9 +234,9 @@ const mainMargin = computed(() => {
 
                     <!-- System -->
                     <SidebarSection title="System">
-                        <SidebarNavLink 
+                        <SidebarNavLink
                             v-if="canView('modification')"
-                            :href="route('modification-logs.index')" 
+                            :href="route('modification-logs.index')"
                             :active="route().current('modification-logs.*')"
                             :icon="ClockIcon"
                         >
@@ -246,39 +246,39 @@ const mainMargin = computed(() => {
 
                     <!-- Administration -->
                     <SidebarSection v-if="isAdmin" title="Administration">
-                        <SidebarNavLink 
-                            :href="route('users.index')" 
+                        <SidebarNavLink
+                            :href="route('users.index')"
                             :active="route().current('users.*')"
                             :icon="UsersIcon"
                         >
                             User Management
                         </SidebarNavLink>
 
-                        <SidebarNavGroup 
+                        <SidebarNavGroup
                             v-if="isSuperAdmin"
                             title="Settings"
                             :icon="ShieldCheckIcon"
                             :active="route().current('admin.*')"
                             :default-open="route().current('admin.*')"
                         >
-                            <SidebarNavLink 
-                                :href="route('admin.departments.index')" 
+                            <SidebarNavLink
+                                :href="route('admin.departments.index')"
                                 :active="route().current('admin.departments.*')"
                                 :icon="BuildingOfficeIcon"
                                 :nested="true"
                             >
                                 Departments
                             </SidebarNavLink>
-                            <SidebarNavLink 
-                                :href="route('admin.positions.index')" 
+                            <SidebarNavLink
+                                :href="route('admin.positions.index')"
                                 :active="route().current('admin.positions.*')"
                                 :icon="BriefcaseIcon"
                                 :nested="true"
                             >
                                 Positions
                             </SidebarNavLink>
-                            <SidebarNavLink 
-                                :href="route('admin.roles.index')" 
+                            <SidebarNavLink
+                                :href="route('admin.roles.index')"
                                 :active="route().current('admin.roles.*')"
                                 :icon="ShieldCheckIcon"
                                 :nested="true"
@@ -287,8 +287,8 @@ const mainMargin = computed(() => {
                             </SidebarNavLink>
                         </SidebarNavGroup>
 
-                        <SidebarNavLink 
-                            :href="route('activity-logs.index')" 
+                        <SidebarNavLink
+                            :href="route('activity-logs.index')"
                             :active="route().current('activity-logs.*')"
                             :icon="ListBulletIcon"
                         >
@@ -300,7 +300,7 @@ const mainMargin = computed(() => {
         </transition>
 
         <!-- Desktop sidebar -->
-        <div 
+        <div
             :class="[
                 'hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col bg-white border-r border-gray-200 transition-all duration-300',
                 sidebarWidth
@@ -337,8 +337,8 @@ const mainMargin = computed(() => {
             <nav class="flex-1 px-2 py-4 space-y-6 overflow-y-auto overflow-x-hidden">
                 <!-- Main -->
                 <SidebarSection :collapsed="sidebarCollapsed">
-                    <SidebarNavLink 
-                        :href="route('dashboard')" 
+                    <SidebarNavLink
+                        :href="route('dashboard')"
                         :active="route().current('dashboard')"
                         :icon="HomeIcon"
                         :collapsed="sidebarCollapsed"
@@ -350,7 +350,7 @@ const mainMargin = computed(() => {
                 <!-- Inspection Records -->
                 <SidebarSection title="Inspection Records" :collapsed="sidebarCollapsed">
                     <!-- Annealing Checks -->
-                    <SidebarNavGroup 
+                    <SidebarNavGroup
                         v-if="canView('annealing')"
                         title="Annealing Checks"
                         :icon="ClipboardDocumentCheckIcon"
@@ -358,32 +358,32 @@ const mainMargin = computed(() => {
                         :default-open="route().current('annealing-checks.*')"
                         :collapsed="sidebarCollapsed"
                     >
-                        <SidebarNavLink 
-                            :href="route('annealing-checks.index')" 
+                        <SidebarNavLink
+                            :href="route('annealing-checks.index')"
                             :active="route().current('annealing-checks.index')"
                             :nested="true"
                         >
                             All Checks
                         </SidebarNavLink>
-                        <SidebarNavLink 
+                        <SidebarNavLink
                             v-if="canCreate('annealing')"
-                            :href="route('annealing-checks.create')" 
+                            :href="route('annealing-checks.create')"
                             :active="route().current('annealing-checks.create')"
                             :nested="true"
                         >
                             Add New
                         </SidebarNavLink>
-                        <SidebarNavLink 
+                        <SidebarNavLink
                             v-if="canImport('annealing')"
-                            :href="route('annealing-checks.import.form')" 
+                            :href="route('annealing-checks.import.form')"
                             :active="route().current('annealing-checks.import.form')"
                             :nested="true"
                         >
                             Import
                         </SidebarNavLink>
-                        <SidebarNavLink 
+                        <SidebarNavLink
                             v-if="canApprove('annealing')"
-                            :href="route('annealing-checks.approval')" 
+                            :href="route('annealing-checks.approval')"
                             :active="route().current('annealing-checks.approval')"
                             :nested="true"
                         >
@@ -391,9 +391,9 @@ const mainMargin = computed(() => {
                         </SidebarNavLink>
                     </SidebarNavGroup>
 
-                    <SidebarNavLink 
+                    <SidebarNavLink
                         v-if="canView('temperature')"
-                        :href="route('temp-records.index')" 
+                        :href="route('temp-records.index')"
                         :active="route().current('temp-records.*')"
                         :icon="FireIcon"
                         :collapsed="sidebarCollapsed"
@@ -401,9 +401,9 @@ const mainMargin = computed(() => {
                         Temperature Records
                     </SidebarNavLink>
 
-                    <SidebarNavLink 
+                    <SidebarNavLink
                         v-if="canView('torque')"
-                        :href="route('torque-records.index')" 
+                        :href="route('torque-records.index')"
                         :active="route().current('torque-records.*')"
                         :icon="WrenchScrewdriverIcon"
                         :collapsed="sidebarCollapsed"
@@ -411,9 +411,9 @@ const mainMargin = computed(() => {
                         Torque Records
                     </SidebarNavLink>
 
-                    <SidebarNavLink 
+                    <SidebarNavLink
                         v-if="canView('magnetism')"
-                        :href="route('magnetism-checksheet.index')" 
+                        :href="route('magnetism-checksheet.index')"
                         :active="route().current('magnetism-checksheet.*')"
                         :icon="MagnifyingGlassIcon"
                         :collapsed="sidebarCollapsed"
@@ -422,7 +422,7 @@ const mainMargin = computed(() => {
                     </SidebarNavLink>
 
                     <!-- Welding Checksheet -->
-                    <SidebarNavGroup 
+                    <SidebarNavGroup
                         v-if="canView('welding')"
                         title="Welding Checksheet"
                         :icon="DocumentTextIcon"
@@ -430,32 +430,32 @@ const mainMargin = computed(() => {
                         :default-open="route().current('welding-checksheets.*')"
                         :collapsed="sidebarCollapsed"
                     >
-                        <SidebarNavLink 
-                            :href="route('welding-checksheets.index')" 
+                        <SidebarNavLink
+                            :href="route('welding-checksheets.index')"
                             :active="route().current('welding-checksheets.index')"
                             :nested="true"
                         >
                             All Checksheets
                         </SidebarNavLink>
-                        <SidebarNavLink 
+                        <SidebarNavLink
                             v-if="canCreate('welding')"
-                            :href="route('welding-checksheets.create')" 
+                            :href="route('welding-checksheets.create')"
                             :active="route().current('welding-checksheets.create')"
                             :nested="true"
                         >
                             Add New
                         </SidebarNavLink>
-                        <SidebarNavLink 
+                        <SidebarNavLink
                             v-if="canImport('welding')"
-                            :href="route('welding-checksheets.import.form')" 
+                            :href="route('welding-checksheets.import.form')"
                             :active="route().current('welding-checksheets.import.form')"
                             :nested="true"
                         >
                             Import
                         </SidebarNavLink>
-                        <SidebarNavLink 
+                        <SidebarNavLink
                             v-if="canApprove('welding')"
-                            :href="route('welding-checksheets.approval')" 
+                            :href="route('welding-checksheets.approval')"
                             :active="route().current('welding-checksheets.approval')"
                             :nested="true"
                         >
@@ -463,9 +463,9 @@ const mainMargin = computed(() => {
                         </SidebarNavLink>
                     </SidebarNavGroup>
 
-                    <SidebarNavLink 
+                    <SidebarNavLink
                         v-if="canView('material')"
-                        :href="route('material-monitoring-checksheets.index')" 
+                        :href="route('material-monitoring-checksheets.index')"
                         :active="route().current('material-monitoring-checksheets.*')"
                         :icon="CubeIcon"
                         :collapsed="sidebarCollapsed"
@@ -476,9 +476,9 @@ const mainMargin = computed(() => {
 
                 <!-- System -->
                 <SidebarSection title="System" :collapsed="sidebarCollapsed">
-                    <SidebarNavLink 
+                    <SidebarNavLink
                         v-if="canView('modification')"
-                        :href="route('modification-logs.index')" 
+                        :href="route('modification-logs.index')"
                         :active="route().current('modification-logs.*')"
                         :icon="ClockIcon"
                         :collapsed="sidebarCollapsed"
@@ -489,8 +489,8 @@ const mainMargin = computed(() => {
 
                 <!-- Administration -->
                 <SidebarSection v-if="isAdmin" title="Administration" :collapsed="sidebarCollapsed">
-                    <SidebarNavLink 
-                        :href="route('users.index')" 
+                    <SidebarNavLink
+                        :href="route('users.index')"
                         :active="route().current('users.*')"
                         :icon="UsersIcon"
                         :collapsed="sidebarCollapsed"
@@ -498,7 +498,7 @@ const mainMargin = computed(() => {
                         User Management
                     </SidebarNavLink>
 
-                    <SidebarNavGroup 
+                    <SidebarNavGroup
                         v-if="isSuperAdmin"
                         title="Settings"
                         :icon="ShieldCheckIcon"
@@ -506,24 +506,24 @@ const mainMargin = computed(() => {
                         :default-open="route().current('admin.*')"
                         :collapsed="sidebarCollapsed"
                     >
-                        <SidebarNavLink 
-                            :href="route('admin.departments.index')" 
+                        <SidebarNavLink
+                            :href="route('admin.departments.index')"
                             :active="route().current('admin.departments.*')"
                             :icon="BuildingOfficeIcon"
                             :nested="true"
                         >
                             Departments
                         </SidebarNavLink>
-                        <SidebarNavLink 
-                            :href="route('admin.positions.index')" 
+                        <SidebarNavLink
+                            :href="route('admin.positions.index')"
                             :active="route().current('admin.positions.*')"
                             :icon="BriefcaseIcon"
                             :nested="true"
                         >
                             Positions
                         </SidebarNavLink>
-                        <SidebarNavLink 
-                            :href="route('admin.roles.index')" 
+                        <SidebarNavLink
+                            :href="route('admin.roles.index')"
                             :active="route().current('admin.roles.*')"
                             :icon="ShieldCheckIcon"
                             :nested="true"
@@ -532,8 +532,8 @@ const mainMargin = computed(() => {
                         </SidebarNavLink>
                     </SidebarNavGroup>
 
-                    <SidebarNavLink 
-                        :href="route('activity-logs.index')" 
+                    <SidebarNavLink
+                        :href="route('activity-logs.index')"
                         :active="route().current('activity-logs.*')"
                         :icon="ListBulletIcon"
                         :collapsed="sidebarCollapsed"
