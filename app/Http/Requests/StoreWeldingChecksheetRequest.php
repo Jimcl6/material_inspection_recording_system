@@ -105,6 +105,10 @@ class StoreWeldingChecksheetRequest extends FormRequest
             $this->validateNumericRange($validator, $samples, 'measurement_1', (float) $min, (float) $max, "Measurement 1 must be between {$min} and {$max}.");
         }
 
+        if (($rules['measurement_1_type'] ?? null) === 'not_recorded') {
+            $this->validateNotRecorded($validator, $samples, 'measurement_1', 'Measurement 1 is not recorded for this item code.');
+        }
+
         if (($rules['circumference_diff_type'] ?? null) === 'max_limit') {
             $maxDiff = (float) $rules['circumference_diff_max'];
             $center = $samples->get('measurement_1')['sample_values'] ?? [];
@@ -179,6 +183,18 @@ class StoreWeldingChecksheetRequest extends FormRequest
             if ($num < $min || $num > $max) {
                 $validator->errors()->add('samples', $message . ' Sample ' . ($index + 1) . " got {$value}.");
             }
+        }
+    }
+
+    protected function validateNotRecorded(Validator $validator, $samples, string $key, string $message): void
+    {
+        foreach (($samples->get($key)['sample_values'] ?? []) as $index => $value) {
+            $value = trim((string) ($value ?? ''));
+            if ($value === '' || $value === '/') {
+                continue;
+            }
+
+            $validator->errors()->add('samples', $message . ' Sample ' . ($index + 1) . " got {$value}.");
         }
     }
 

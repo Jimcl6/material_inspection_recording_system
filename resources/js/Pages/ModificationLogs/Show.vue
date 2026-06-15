@@ -2,6 +2,9 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { format } from 'date-fns';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { usePermissions } from '@/Composables/usePermissions';
+
+const { canUpdate } = usePermissions();
 
 // Import route helper
 declare function route(name: string, params?: any): string;
@@ -63,6 +66,7 @@ function formatDateTime(dateTime: string): string {
                 </h2>
                 <div class="flex space-x-3">
                     <Link
+                        v-if="canUpdate('modification')"
                         :href="route('modification-logs.edit', log.id)"
                         class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
@@ -98,6 +102,7 @@ function formatDateTime(dateTime: string): string {
                             </div>
                             <div class="flex space-x-2">
                                 <Link
+                                    v-if="canUpdate('modification')"
                                     :href="route('modification-logs.edit', log.id)"
                                     class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                                 >

@@ -70,6 +70,67 @@ interface Checksheet {
     samples?: ChecksheetSample[];
 }
 
+const diaphragmDataRecordingRules = (strengthMin = 0.30): Record<string, any> => ({
+    strength_min: strengthMin,
+    measurement_1_type: 'data_recording',
+    measurement_1_min: null,
+    measurement_1_max: null,
+    circumference_diff_type: 'data_recording',
+    circumference_diff_max: null,
+});
+
+const diaphragmFormulaRules = (
+    strengthMin: number,
+    measurementOneMin: number,
+    measurementOneMax: number,
+): Record<string, any> => ({
+    strength_min: strengthMin,
+    measurement_1_type: 'range',
+    measurement_1_min: measurementOneMin,
+    measurement_1_max: measurementOneMax,
+    circumference_diff_type: 'max_limit',
+    circumference_diff_max: 0.30,
+});
+
+const LEGACY_DIAPHRAGM_RULES: Record<string, Record<string, any>> = {
+    DFB8402000: diaphragmDataRecordingRules(0.40),
+    DFB8402001: diaphragmDataRecordingRules(0.40),
+    DFB660220P: diaphragmDataRecordingRules(),
+    DFB660023P: {
+        ...diaphragmFormulaRules(0.30, 7.890, 7.950),
+    },
+    DFB660024P: {
+        ...diaphragmFormulaRules(0.30, 7.890, 7.950),
+    },
+    DFB660050P: {
+        ...diaphragmFormulaRules(0.30, 8.250, 8.390),
+    },
+    DFB6602000: diaphragmDataRecordingRules(),
+    DFB6602001: diaphragmDataRecordingRules(),
+    DFB5902000: diaphragmDataRecordingRules(),
+    DFB5902001: diaphragmDataRecordingRules(),
+    DFB4805004: diaphragmDataRecordingRules(),
+    DFB6602201: diaphragmDataRecordingRules(),
+    DFB660240P: {
+        ...diaphragmFormulaRules(0.30, 7.890, 7.950),
+    },
+    DFB660221P: diaphragmDataRecordingRules(),
+    DFB480300P: {
+        ...diaphragmFormulaRules(0.15, 7.280, 7.590),
+    },
+    DFB660024V: {
+        ...diaphragmFormulaRules(0.30, 7.890, 7.950),
+    },
+    DFB4803000: {
+        strength_min: 0.15,
+        measurement_1_type: 'not_recorded',
+        measurement_1_min: null,
+        measurement_1_max: null,
+        circumference_diff_type: 'data_recording',
+        circumference_diff_max: null,
+    },
+};
+
 const props = defineProps<{
     users: User[];
     types: ChecksheetType[];
@@ -109,6 +170,28 @@ const selectedType = computed(() => props.types.find(type => type.id === Number(
 const itemConfigs = computed(() => selectedType.value?.item_configs || []);
 
 const selectedItemConfig = computed(() => itemConfigs.value.find(config => config.id === Number(form.item_config_id)) || null);
+
+const typedItemConfig = computed(() => {
+    const itemCode = String(form.item_code || '').trim().toUpperCase();
+    if (!itemCode) {
+        return null;
+    }
+
+    return itemConfigs.value.find(config => String(config.item_code).trim().toUpperCase() === itemCode) || null;
+});
+
+const activeValidationRules = computed<Record<string, any>>(() => {
+    const itemCode = String(form.item_code || selectedItemConfig.value?.item_code || '').trim().toUpperCase();
+
+    return selectedItemConfig.value?.validation_rules
+        || typedItemConfig.value?.validation_rules
+        || LEGACY_DIAPHRAGM_RULES[itemCode]
+        || {};
+});
+
+const hasActiveValidationRules = computed(() => Object.keys(activeValidationRules.value).length > 0);
+
+const needsItemCodeValidation = computed(() => selectedType.value?.key === 'diaphragm' && !hasActiveValidationRules.value);
 
 const normalizedRequirement = (item: CheckItem): string => item.requirement_text || item.requirement || '';
 
@@ -166,6 +249,17 @@ watch(() => form.item_config_id, () => {
     }
 });
 
+watch(activeValidationRules, rules => {
+    if (rules.measurement_1_type !== 'not_recorded') {
+        return;
+    }
+
+    const measurementOne = sampleByKey('measurement_1');
+    if (measurementOne) {
+        measurementOne.sample_values = ['', '', '', '', ''];
+    }
+});
+
 if (!form.samples.length && firstType) {
     syncTemplateFields(true);
 } else {
@@ -182,17 +276,29 @@ const submit = () => {
 };
 
 const validationSummary = computed(() => {
-    const rules = selectedItemConfig.value?.validation_rules || {};
+    const rules = activeValidationRules.value;
     const entries: string[] = [];
 
+    if (selectedType.value?.check_items?.some(item => item.key === 'appearance')) {
+        entries.push('Appearance P or /');
+    }
     if (rules.strength_min) {
         entries.push(`Strength >= ${rules.strength_min}`);
     }
     if (rules.measurement_1_type === 'range') {
         entries.push(`Measurement 1 ${rules.measurement_1_min} to ${rules.measurement_1_max}`);
     }
+    if (rules.measurement_1_type === 'data_recording') {
+        entries.push('Measurement 1 data recording only');
+    }
+    if (rules.measurement_1_type === 'not_recorded') {
+        entries.push('Measurement 1 not recorded');
+    }
     if (rules.circumference_diff_type === 'max_limit') {
         entries.push(`Circumference diff <= ${rules.circumference_diff_max}`);
+    }
+    if (rules.circumference_diff_type === 'data_recording') {
+        entries.push('Circumference diff data recording only');
     }
     if (rules.collapse_depth_min) {
         entries.push(`Collapse depth >= ${rules.collapse_depth_min}`);
@@ -203,6 +309,196 @@ const validationSummary = computed(() => {
 
     return entries;
 });
+
+const numericSampleValue = (value: string | null | undefined): number | null => {
+    const trimmed = String(value ?? '').trim();
+    if (!trimmed || trimmed === '/') {
+        return null;
+    }
+
+    const numericValue = Number(trimmed);
+    return Number.isFinite(numericValue) ? numericValue : null;
+};
+
+const sampleByKey = (key: string): ChecksheetSample | undefined => {
+    return form.samples.find(sample => sample.check_item_key === key);
+};
+
+const circumferenceDiffLimit = computed<number | null>(() => {
+    const rules = activeValidationRules.value;
+    if (rules.circumference_diff_type !== 'max_limit') {
+        return null;
+    }
+
+    const limit = Number(rules.circumference_diff_max);
+    return Number.isFinite(limit) ? limit : null;
+});
+
+const measurementOneRange = computed<{ min: number; max: number } | null>(() => {
+    const rules = activeValidationRules.value;
+    if (rules.measurement_1_type !== 'range') {
+        return null;
+    }
+
+    const min = Number(rules.measurement_1_min);
+    const max = Number(rules.measurement_1_max);
+    return Number.isFinite(min) && Number.isFinite(max) ? { min, max } : null;
+});
+
+const strengthMinimum = computed<number | null>(() => {
+    if (selectedType.value?.key !== 'diaphragm') {
+        return null;
+    }
+
+    const min = Number(activeValidationRules.value.strength_min ?? 0.30);
+    return Number.isFinite(min) ? min : null;
+});
+
+const circumferenceDiff = (sample: ChecksheetSample, index: number): number | null => {
+    if (!['measurement_2', 'measurement_3', 'measurement_4', 'measurement_5'].includes(sample.check_item_key)) {
+        return null;
+    }
+
+    const centerValue = numericSampleValue(sampleByKey('measurement_1')?.sample_values[index]);
+    const measuredValue = numericSampleValue(sample.sample_values[index]);
+    if (centerValue === null || measuredValue === null) {
+        return null;
+    }
+
+    return Math.abs(measuredValue - centerValue) / 2;
+};
+
+const hasCircumferenceDiffError = (sample: ChecksheetSample, index: number): boolean => {
+    const limit = circumferenceDiffLimit.value;
+    const diff = circumferenceDiff(sample, index);
+
+    return limit !== null && diff !== null && diff > limit;
+};
+
+const hasAppearanceError = (sample: ChecksheetSample, index: number): boolean => {
+    if (sample.check_item_key !== 'appearance') {
+        return false;
+    }
+
+    const value = String(sample.sample_values[index] ?? '').trim().toUpperCase();
+    return value !== '' && value !== '/' && value !== 'P';
+};
+
+const hasStrengthError = (sample: ChecksheetSample, index: number): boolean => {
+    const min = strengthMinimum.value;
+    const value = numericSampleValue(sample.sample_values[index]);
+
+    return sample.check_item_key === 'strength'
+        && min !== null
+        && value !== null
+        && value < min;
+};
+
+const hasMeasurementOneError = (sample: ChecksheetSample, index: number): boolean => {
+    const range = measurementOneRange.value;
+    const value = numericSampleValue(sample.sample_values[index]);
+
+    return sample.check_item_key === 'measurement_1'
+        && range !== null
+        && value !== null
+        && (value < range.min || value > range.max);
+};
+
+const hasMeasurementOneNotRecordedError = (sample: ChecksheetSample, index: number): boolean => {
+    const value = String(sample.sample_values[index] ?? '').trim();
+
+    return sample.check_item_key === 'measurement_1'
+        && activeValidationRules.value.measurement_1_type === 'not_recorded'
+        && value !== ''
+        && value !== '/';
+};
+
+const hasSampleInputError = (sample: ChecksheetSample, index: number): boolean => {
+    return hasAppearanceError(sample, index)
+        || hasStrengthError(sample, index)
+        || hasMeasurementOneError(sample, index)
+        || hasMeasurementOneNotRecordedError(sample, index)
+        || hasCircumferenceDiffError(sample, index);
+};
+
+const sampleInputClass = (sample: ChecksheetSample, index: number): string[] => {
+    if (isSampleInputDisabled(sample)) {
+        return ['border-gray-200', 'bg-gray-100', 'text-gray-400', 'cursor-not-allowed'];
+    }
+
+    if (!hasSampleInputError(sample, index)) {
+        return ['border-gray-300', 'focus:border-indigo-500', 'focus:ring-indigo-500'];
+    }
+
+    return ['sample-input-invalid'];
+};
+
+const isSampleInputDisabled = (sample: ChecksheetSample): boolean => {
+    return sample.check_item_key === 'measurement_1'
+        && activeValidationRules.value.measurement_1_type === 'not_recorded';
+};
+
+const sampleRequirementText = (sample: ChecksheetSample): string => {
+    const rules = activeValidationRules.value;
+
+    if (sample.check_item_key === 'measurement_1') {
+        if (rules.measurement_1_type === 'range') {
+            return `${rules.measurement_1_min} to ${rules.measurement_1_max}`;
+        }
+        if (rules.measurement_1_type === 'not_recorded') {
+            return 'Not recorded';
+        }
+        if (rules.measurement_1_type === 'data_recording') {
+            return 'Data recording';
+        }
+    }
+
+    if (['measurement_2', 'measurement_3', 'measurement_4', 'measurement_5'].includes(sample.check_item_key)) {
+        if (rules.circumference_diff_type === 'max_limit') {
+            return `Difference <= ${rules.circumference_diff_max}`;
+        }
+        if (rules.circumference_diff_type === 'data_recording') {
+            return 'Data recording';
+        }
+    }
+
+    return sample.requirement_text || '-';
+};
+
+const sampleInputTitle = (sample: ChecksheetSample, index: number): string | undefined => {
+    if (hasAppearanceError(sample, index)) {
+        return 'Appearance must be P or /.';
+    }
+
+    const min = strengthMinimum.value;
+    const strengthValue = numericSampleValue(sample.sample_values[index]);
+    if (sample.check_item_key === 'strength' && min !== null && strengthValue !== null && strengthValue < min) {
+        return `Strength is ${strengthValue}. Minimum allowed is ${min}.`;
+    }
+
+    if (hasMeasurementOneNotRecordedError(sample, index)) {
+        return 'Measurement 1 is not recorded for this item code.';
+    }
+
+    const range = measurementOneRange.value;
+    const value = numericSampleValue(sample.sample_values[index]);
+    if (
+        sample.check_item_key === 'measurement_1'
+        && range !== null
+        && value !== null
+        && (value < range.min || value > range.max)
+    ) {
+        return `Measurement 1 is ${value}. Allowed range is ${range.min} to ${range.max}.`;
+    }
+
+    const limit = circumferenceDiffLimit.value;
+    const diff = circumferenceDiff(sample, index);
+    if (limit === null || diff === null || diff <= limit) {
+        return undefined;
+    }
+
+    return `Circumference difference is ${diff.toFixed(3)}. Maximum allowed is ${limit}.`;
+};
 </script>
 
 <template>
@@ -242,6 +538,10 @@ const validationSummary = computed(() => {
                 <div v-if="validationSummary.length" class="mt-4 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
                     <span class="font-medium">Validation:</span>
                     {{ validationSummary.join(' | ') }}
+                </div>
+                <div v-else-if="needsItemCodeValidation" class="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                    <span class="font-medium">Validation inactive:</span>
+                    select a configured Diaphragm item code to apply the real-time sample checks.
                 </div>
             </div>
         </div>
@@ -305,6 +605,9 @@ const validationSummary = computed(() => {
                 <div v-if="form.errors.samples" class="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                     {{ form.errors.samples }}
                 </div>
+                <div v-if="needsItemCodeValidation" class="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                    Sample textboxes will validate after a configured Diaphragm item code is selected.
+                </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
@@ -319,9 +622,17 @@ const validationSummary = computed(() => {
                         <tbody class="bg-white divide-y divide-gray-200">
                             <tr v-for="sample in form.samples" :key="sample.check_item_key">
                                 <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ sample.check_item_label }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-500">{{ sample.requirement_text || '-' }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-500">{{ sampleRequirementText(sample) }}</td>
                                 <td v-for="(_, index) in sample.sample_values" :key="index" class="px-4 py-3">
-                                    <input v-model="sample.sample_values[index]" type="text" class="w-24 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-center" />
+                                    <input
+                                        v-model="sample.sample_values[index]"
+                                        type="text"
+                                        class="w-24 rounded-md shadow-sm sm:text-sm text-center"
+                                        :class="sampleInputClass(sample, index)"
+                                        :disabled="isSampleInputDisabled(sample)"
+                                        :aria-invalid="hasSampleInputError(sample, index)"
+                                        :title="sampleInputTitle(sample, index)"
+                                    />
                                 </td>
                             </tr>
                         </tbody>
@@ -376,3 +687,16 @@ const validationSummary = computed(() => {
         </div>
     </form>
 </template>
+
+<style scoped>
+.sample-input-invalid {
+    border-color: rgb(239 68 68) !important;
+    background-color: rgb(254 242 242);
+    color: rgb(127 29 29);
+}
+
+.sample-input-invalid:focus {
+    border-color: rgb(239 68 68) !important;
+    box-shadow: 0 0 0 1px rgb(239 68 68);
+}
+</style>
