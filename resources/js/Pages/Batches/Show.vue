@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { usePermissions } from '@/Composables/usePermissions';
+
+const { canUpdate } = usePermissions();
 
 // Import route helper
 declare function route(name: string, params?: any): string;
@@ -55,6 +58,7 @@ const formatDate = (dateString: string) => {
                 </h2>
                 <div class="space-x-2">
                     <Link
+                        v-if="canUpdate('magnetism')"
                         :href="route('magnetism-checksheet.edit', { magnetism_checksheet: batch.BatchID })"
                         class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
@@ -133,6 +137,7 @@ const formatDate = (dateString: string) => {
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-lg font-medium text-gray-900">Inspection Samples</h3>
                             <Link
+                                v-if="canUpdate('magnetism')"
                                 :href="route('magnetism-checksheet.checkpoints.create', { magnetism_checksheet: batch.BatchID })"
                                 class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
                             >
@@ -234,6 +239,7 @@ const formatDate = (dateString: string) => {
                             <p class="mt-1 text-sm text-gray-500">Get started by adding inspection samples.</p>
                             <div class="mt-6">
                                 <Link
+                                    v-if="canUpdate('magnetism')"
                                     :href="route('magnetism-checksheet.checkpoints.create', { magnetism_checksheet: batch.BatchID })"
                                     class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700"
                                 >

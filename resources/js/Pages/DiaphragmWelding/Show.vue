@@ -2,6 +2,9 @@
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { route } from 'ziggy-js';
+import { usePermissions } from '@/Composables/usePermissions';
+
+const { canUpdate } = usePermissions();
 
 interface Sample {
     id: number;
@@ -120,15 +123,16 @@ const checkItemOrder = [
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                     Diaphragm Welding Checksheet Details
                 </h2>
-                <div class="space-x-2">
-                    <Link 
-                        :href="route('diaphragm-welding.edit', checksheet.id)" 
+                <div class="space-x-2 mx-8">
+                    <Link
+                        v-if="canUpdate('diaphragm')"
+                        :href="route('diaphragm-welding.edit', checksheet.id)"
                         class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700"
                     >
                         Edit
                     </Link>
-                    <Link 
-                        :href="route('diaphragm-welding.index')" 
+                    <Link
+                        :href="route('diaphragm-welding.index')"
                         class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700"
                     >
                         Back to List
@@ -140,13 +144,13 @@ const checkItemOrder = [
         <div class="py-6">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <!-- Status Banner -->
-                <div 
+                <div
                     class="mb-6 p-4 rounded-lg border"
                     :class="statusClass(checksheet.status)"
                 >
                     <div class="flex justify-between items-center">
                         <div>
-                            <span class="font-semibold">Status:</span> 
+                            <span class="font-semibold">Status:</span>
                             {{ checksheet.status ? checksheet.status.charAt(0).toUpperCase() + checksheet.status.slice(1) : 'Unknown' }}
                         </div>
                         <div v-if="checksheet.approved_at" class="text-sm">
@@ -162,7 +166,7 @@ const checkItemOrder = [
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2">Material Monitoring</h3>
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-500">Item Code</label>
@@ -271,7 +275,7 @@ const checkItemOrder = [
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2">Personnel & Additional Info</h3>
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-500">Temperature (°C)</label>
@@ -301,7 +305,7 @@ const checkItemOrder = [
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2">Audit Information</h3>
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-500">Created By</label>

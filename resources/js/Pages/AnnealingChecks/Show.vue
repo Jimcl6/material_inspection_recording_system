@@ -1,6 +1,9 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { usePermissions } from '@/Composables/usePermissions';
+
+const { canUpdate } = usePermissions();
 
 const props = defineProps({
     annealingCheck: {
@@ -41,6 +44,7 @@ const formatTime = (timeString) => {
                 </h2>
                 <div class="flex space-x-2">
                     <Link 
+                        v-if="canUpdate('annealing')"
                         :href="route('annealing-checks.edit', annealingCheck.id)" 
                         class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
