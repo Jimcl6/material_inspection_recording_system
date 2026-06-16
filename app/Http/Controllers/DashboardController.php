@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ApprovalWorkflowService;
 use App\Services\ActivityService;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Models\AnnealingCheck;
 
 class DashboardController extends Controller
 {
-    public function index(): \Inertia\Response
+    public function index(ApprovalWorkflowService $approvalWorkflowService): \Inertia\Response
     {
         $user = Auth::user();
         
@@ -25,6 +25,9 @@ class DashboardController extends Controller
         $lastMonthTotal = AnnealingCheck::where('created_at', '<', $lastMonth)->count();
         $thisMonthTotal = AnnealingCheck::where('created_at', '>=', $lastMonth)->count();
         $totalChange = $lastMonthTotal > 0 ? round((($thisMonthTotal - $lastMonthTotal) / $lastMonthTotal) * 100, 0) : 0;
+
+        $approvalModules = $approvalWorkflowService->modulesForUser($user);
+        $pendingApprovalsCount = $approvalWorkflowService->totalPending($approvalModules);
         
         return Inertia::render('Dashboard', [
             'stats' => [
@@ -34,7 +37,8 @@ class DashboardController extends Controller
                 ['name' => 'Pending Review', 'value' => number_format($pending), 'change' => '+18%', 'changeType' => 'increase'],
             ],
             'recentActivity' => ActivityService::getTodayActivitiesForUser(20), // Get more for scrolling
-            'pendingApprovalsCount' => in_array($user->role?->slug, ['admin', 'inspector']) ? $pending : null,
+            'approvalModules' => $approvalModules,
+            'pendingApprovalsCount' => $approvalModules->isNotEmpty() ? $pendingApprovalsCount : null,
         ]);
     }
 }

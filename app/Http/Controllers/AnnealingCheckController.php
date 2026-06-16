@@ -490,14 +490,14 @@ class AnnealingCheckController extends Controller
     }
 
     /**
-     * Show the approval page for administrators and inspectors
+     * Show the approval page for users with annealing approval permission.
      */
     public function approval(): \Inertia\Response
     {
         $user = Auth::user();
         
         // Check if user has permission to view approvals
-        if (!in_array($user->role?->slug, ['admin', 'inspector'])) {
+        if (!$user->hasPermission('annealing', 'approve')) {
             abort(403, 'Unauthorized');
         }
 

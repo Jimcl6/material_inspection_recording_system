@@ -94,7 +94,7 @@ const statusClass = (value: string): string => {
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">Welding Checksheet</h2>
-                <div class="space-x-2">
+                <div class="space-x-2 flex items-end mx-3">
                     <a
                         v-if="canExport('welding')"
                         :href="route('welding-checksheets.export')"
