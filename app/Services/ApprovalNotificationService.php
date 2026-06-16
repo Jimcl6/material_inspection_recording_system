@@ -11,13 +11,13 @@ use App\Mail\AnnealingCheckNotification;
 class ApprovalNotificationService
 {
     /**
-     * Create notifications for all administrators and inspectors
+     * Create notifications for all administrators, inspectors, and super admins.
      */
     public function notifyApprovers(AnnealingCheck $annealingCheck, string $type = 'new_submission')
     {
-        // Get all users with admin or inspector roles
+        // Get all users with approval-oriented roles.
         $approvers = User::whereHas('role', function ($query) {
-            $query->whereIn('slug', ['admin', 'inspector']);
+            $query->whereIn('slug', ['admin', 'inspector', 'super_admin']);
         })->get();
 
         foreach ($approvers as $approver) {

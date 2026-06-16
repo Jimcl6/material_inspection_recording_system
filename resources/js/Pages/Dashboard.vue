@@ -25,30 +25,30 @@
                     </div>
                 </div> -->
 
-                <!-- Main Modules Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    <!-- Pending Approvals (Admin/Inspector only) -->
-                    <div v-if="pendingApprovalsCount !== null" class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-red-500">
-                        <div class="p-6">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-red-100">
-                                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <div class="ml-4 flex-1">
-                                    <h3 class="text-lg font-medium text-gray-900">Pending Approvals</h3>
-                                    <p class="text-sm text-gray-500">{{ pendingApprovalsCount }} item(s) waiting</p>
-                                </div>
+                <div v-if="approvalModules.length > 0" class="mb-6">
+                    <Link
+                        :href="route('approvals.index')"
+                        class="flex flex-col gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-900 transition hover:border-red-300 hover:bg-red-100 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 01-6 0m6 0H9" />
+                                </svg>
                             </div>
-                            <div class="mt-4 flex justify-end">
-                                <Link :href="route('annealing-checks.approval')" class="text-sm font-medium text-red-600 hover:text-red-500">
-                                    Review Now <span aria-hidden="true">&rarr;</span>
-                                </Link>
+                            <div>
+                                <p class="text-sm font-semibold">Pending Approvals</p>
+                                <p class="text-sm text-red-700">{{ pendingApprovalsCount }} item(s) waiting for review</p>
                             </div>
                         </div>
-                    </div>
-                    
+                        <span class="text-sm font-medium text-red-700">
+                            Open approvals <span aria-hidden="true">&rarr;</span>
+                        </span>
+                    </Link>
+                </div>
+
+                <!-- Main Modules Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                     <!-- Annealing Checks -->
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-blue-500">
                         <div class="p-6">
@@ -258,6 +258,10 @@ const props = defineProps({
     pendingApprovalsCount: {
         type: Number,
         default: null,
+    },
+    approvalModules: {
+        type: Array,
+        default: () => [],
     },
 });
 </script>
