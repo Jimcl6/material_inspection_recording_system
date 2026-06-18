@@ -4,7 +4,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { route } from 'ziggy-js';
 import { usePermissions } from '@/Composables/usePermissions';
 
-const { canUpdate } = usePermissions();
+const { canUpdate, approvalsEnabled } = usePermissions();
 
 const props = defineProps<{
     checksheet: any;
@@ -38,7 +38,7 @@ const sampleValues = (sample: any): string[] => sample.sample_values || [];
                             <div><dt class="font-medium text-gray-500">Type</dt><dd>{{ checksheet.type?.name || 'N/A' }}</dd></div>
                             <div><dt class="font-medium text-gray-500">Item Code</dt><dd>{{ checksheet.item_code || 'N/A' }}</dd></div>
                             <div><dt class="font-medium text-gray-500">Production Date</dt><dd>{{ formatDate(checksheet.production_date) }}</dd></div>
-                            <div><dt class="font-medium text-gray-500">Status</dt><dd class="capitalize">{{ checksheet.status }}</dd></div>
+                            <div v-if="approvalsEnabled"><dt class="font-medium text-gray-500">Status</dt><dd class="capitalize">{{ checksheet.status }}</dd></div>
                             <div><dt class="font-medium text-gray-500">Machine No.</dt><dd>{{ checksheet.machine_no || 'N/A' }}</dd></div>
                             <div><dt class="font-medium text-gray-500">Letter Code</dt><dd>{{ checksheet.letter_code || 'N/A' }}</dd></div>
                             <div><dt class="font-medium text-gray-500">Job Number</dt><dd>{{ checksheet.job_number || 'N/A' }}</dd></div>

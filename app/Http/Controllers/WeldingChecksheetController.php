@@ -12,6 +12,7 @@ use App\Models\WeldingChecksheet;
 use App\Models\WeldingChecksheetType;
 use App\Models\WeldingItemConfig;
 use App\Services\ActivityService;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -74,13 +75,15 @@ class WeldingChecksheetController extends Controller
         return Inertia::render('WeldingChecksheets/Create', $this->formOptions());
     }
 
-    public function store(StoreWeldingChecksheetRequest $request)
+    public function store(
+        StoreWeldingChecksheetRequest $request,
+        ApprovalWorkflowService $approvalWorkflowService
+    )
     {
         $data = $this->prepareChecksheetData($request->validated());
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
-        $data['status'] = 'pending';
-        $data['submitted_at'] = now();
+        $data = array_merge($data, $approvalWorkflowService->initialState());
 
         $samples = $data['samples'] ?? [];
         unset($data['samples']);

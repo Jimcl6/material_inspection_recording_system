@@ -14,6 +14,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AnnealingChecksExport;
 use App\Imports\AnnealingChecksWithHeadersImport;
 use App\Services\ActivityService;
+use App\Services\ApprovalWorkflowService;
 
 class AnnealingCheckController extends Controller
 {
@@ -58,12 +59,16 @@ class AnnealingCheckController extends Controller
      * @param  \App\Http\Requests\StoreAnnealingCheckRequest  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(StoreAnnealingCheckRequest $request): \Illuminate\Http\RedirectResponse
+    public function store(
+        StoreAnnealingCheckRequest $request,
+        ApprovalWorkflowService $approvalWorkflowService
+    ): \Illuminate\Http\RedirectResponse
     {
         $data = $request->validated();
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
-        $data['status'] = 'pending'; // Manual entries start as pending
+        $data = array_merge($data, $approvalWorkflowService->initialState());
+        $approvalsEnabled = $data['status'] === 'pending';
 
         // Convert user names back to IDs for database storage
         // pic_id is required, so pass true as second parameter
@@ -98,7 +103,12 @@ class AnnealingCheckController extends Controller
         );
 
         return redirect()->route('annealing-checks.index')
-            ->with('success', 'Annealing check created successfully and submitted for approval.');
+            ->with(
+                'success',
+                $approvalsEnabled
+                    ? 'Annealing check created successfully and submitted for approval.'
+                    : 'Annealing check created successfully.'
+            );
     }
 
     /**

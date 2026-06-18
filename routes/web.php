@@ -34,6 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
     Route::get('/approvals', [PendingApprovalController::class, 'index'])
+        ->middleware('feature:approvals')
         ->name('approvals.index');
 
     // Profile
@@ -155,7 +156,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('annealing-checks/debug', [AnnealingCheckController::class, 'debug']);
     
     // Approval routes (admin/inspector only)
-    Route::middleware(['auth', 'module.permission:annealing,approve'])->group(function () {
+    Route::middleware(['auth', 'feature:approvals', 'module.permission:annealing,approve'])->group(function () {
         Route::get('annealing-checks/approval', [AnnealingCheckController::class, 'approval'])
             ->name('annealing-checks.approval');
         Route::post('annealing-checks/bulk-approve', [AnnealingCheckController::class, 'bulkApprove'])
@@ -307,7 +308,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('welding-checksheets/item-code-rules', [WeldingChecksheetController::class, 'itemCodeRules'])
         ->name('welding-checksheets.item-code-rules');
 
-    Route::middleware(['auth', 'module.permission:welding,approve'])->group(function () {
+    Route::middleware(['auth', 'feature:approvals', 'module.permission:welding,approve'])->group(function () {
         Route::get('welding-checksheets/approval', [WeldingChecksheetController::class, 'approval'])
             ->name('welding-checksheets.approval');
         Route::post('welding-checksheets/bulk-approve', [WeldingChecksheetController::class, 'bulkApprove'])
@@ -344,7 +345,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::redirect('diaphragm-welding', 'welding-checksheets', 301)->name('diaphragm-welding.index');
     Route::redirect('diaphragm-welding/create', 'welding-checksheets/create', 301)->name('diaphragm-welding.create');
     Route::redirect('diaphragm-welding/import', 'welding-checksheets/import', 301)->name('diaphragm-welding.import.form');
-    Route::redirect('diaphragm-welding/approval', 'welding-checksheets/approval', 301)->name('diaphragm-welding.approval');
+    Route::redirect('diaphragm-welding/approval', 'welding-checksheets/approval', 301)
+        ->middleware('feature:approvals')
+        ->name('diaphragm-welding.approval');
     Route::redirect('diaphragm-welding/export', 'welding-checksheets/export', 301)->name('diaphragm-welding.export');
     Route::get('diaphragm-welding/{diaphragm_welding}/edit', function ($diaphragmWelding) {
         $weldingId = WeldingChecksheet::where('legacy_diaphragm_id', $diaphragmWelding)->value('id') ?: $diaphragmWelding;

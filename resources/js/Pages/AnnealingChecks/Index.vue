@@ -6,7 +6,7 @@ import { ref, computed } from 'vue';
 import { route } from 'ziggy-js';
 import { usePermissions } from '@/Composables/usePermissions';
 
-const { canCreate, canUpdate, canDelete, canImport } = usePermissions();
+const { canCreate, canUpdate, canDelete, canImport, approvalsEnabled } = usePermissions();
 
 type Filters = {
     search?: string;
@@ -243,7 +243,7 @@ const formatDate = (dateString: string): string => {
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Annealing Time
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th v-if="approvalsEnabled" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status
                                         </th>
                                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -253,7 +253,7 @@ const formatDate = (dateString: string): string => {
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     <tr v-for="check in annealingChecks.data" :key="check.id" class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td v-if="approvalsEnabled" class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm font-medium text-gray-900">
                                                 {{ check.item_code }}
                                             </div>
@@ -329,7 +329,7 @@ const formatDate = (dateString: string): string => {
                                         </td>
                                     </tr>
                                     <tr v-if="!annealingChecks.data.length">
-                                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                                        <td :colspan="approvalsEnabled ? 8 : 7" class="px-6 py-4 text-center text-sm text-gray-500">
                                             No annealing checks found.
                                         </td>
                                     </tr>

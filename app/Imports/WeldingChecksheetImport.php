@@ -6,6 +6,7 @@ use App\Models\WeldingChecksheet;
 use App\Models\WeldingChecksheetType;
 use App\Models\WeldingItemConfig;
 use App\Models\User;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
@@ -180,14 +181,17 @@ class WeldingChecksheetImport
 
     protected function baseRecord(WeldingChecksheetType $type, ?WeldingItemConfig $itemConfig, ?string $itemCode, ?string $itemName, string $productionDate, string $sheetName, string $sourceFile, int $sourceRow): array
     {
+        $approvalState = app(ApprovalWorkflowService::class)->initialState();
+
         return [
             'checksheet_type_id' => $type->id,
             'item_config_id' => $itemConfig?->id,
             'item_code' => $itemConfig?->item_code ?? $itemCode,
             'item_name' => $itemName ?: $itemConfig?->item_name,
             'production_date' => $productionDate,
-            'status' => 'pending',
-            'submitted_at' => now(),
+            'status' => $approvalState['status'],
+            'submitted_at' => $approvalState['submitted_at'],
+            'approved_at' => $approvalState['approved_at'],
             'created_by' => auth()->id(),
             'updated_by' => auth()->id(),
             'source_file' => $sourceFile,

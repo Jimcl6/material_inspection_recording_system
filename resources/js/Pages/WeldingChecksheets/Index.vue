@@ -5,7 +5,7 @@ import { ref } from 'vue';
 import { route } from 'ziggy-js';
 import { usePermissions } from '@/Composables/usePermissions';
 
-const { canCreate, canUpdate, canDelete, canImport, canExport } = usePermissions();
+const { canCreate, canUpdate, canDelete, canImport, canExport, approvalsEnabled } = usePermissions();
 
 interface Checksheet {
     id: number;
@@ -57,7 +57,7 @@ const applyFilters = () => {
         machine_no: machineNo.value || undefined,
         date_from: dateFrom.value || undefined,
         date_to: dateTo.value || undefined,
-        status: status.value || undefined,
+        status: approvalsEnabled.value ? status.value || undefined : undefined,
     }, { preserveState: true, replace: true });
 };
 
@@ -124,7 +124,10 @@ const statusClass = (value: string): string => {
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6">
-                        <div class="grid grid-cols-1 md:grid-cols-7 gap-4">
+                        <div
+                            class="grid grid-cols-1 gap-4"
+                            :class="approvalsEnabled ? 'md:grid-cols-7' : 'md:grid-cols-6'"
+                        >
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
                                 <input v-model="search" @keyup.enter="applyFilters" type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
@@ -155,7 +158,7 @@ const statusClass = (value: string): string => {
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
                                 <input v-model="dateTo" type="date" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
                             </div>
-                            <div>
+                            <div v-if="approvalsEnabled">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                                 <select v-model="status" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                                     <option value="">All Status</option>
@@ -184,7 +187,7 @@ const statusClass = (value: string): string => {
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Machine</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Number</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th v-if="approvalsEnabled" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
@@ -196,7 +199,7 @@ const statusClass = (value: string): string => {
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ checksheet.machine_no || 'N/A' }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ checksheet.job_number || 'N/A' }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ checksheet.prod_qty ?? checksheet.quantity ?? 'N/A' }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td v-if="approvalsEnabled" class="px-6 py-4 whitespace-nowrap">
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="statusClass(checksheet.status)">
                                                 {{ checksheet.status }}
                                             </span>
@@ -237,7 +240,7 @@ const statusClass = (value: string): string => {
                                         </td>
                                     </tr>
                                     <tr v-if="!checksheets.data.length">
-                                        <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">No welding checksheets found.</td>
+                                        <td :colspan="approvalsEnabled ? 8 : 7" class="px-6 py-4 text-center text-sm text-gray-500">No welding checksheets found.</td>
                                     </tr>
                                 </tbody>
                             </table>

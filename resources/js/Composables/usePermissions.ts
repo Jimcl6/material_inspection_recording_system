@@ -17,6 +17,9 @@ interface PageProps {
         } | null;
         permissions: Record<string, boolean>;
     };
+    features?: {
+        approvals?: boolean;
+    };
 }
 
 export function usePermissions() {
@@ -24,6 +27,7 @@ export function usePermissions() {
 
     const permissions = computed(() => page.props.auth?.permissions ?? {});
     const user = computed(() => page.props.auth?.user);
+    const approvalsEnabled = computed(() => page.props.features?.approvals === true);
 
     /**
      * Check if user has a specific permission
@@ -75,7 +79,7 @@ export function usePermissions() {
     /**
      * Check if user can approve in a module
      */
-    const canApprove = (module: string): boolean => can(module, 'approve');
+    const canApprove = (module: string): boolean => approvalsEnabled.value && can(module, 'approve');
 
     /**
      * Check if user is a super admin
@@ -110,6 +114,7 @@ export function usePermissions() {
     return {
         permissions,
         user,
+        approvalsEnabled,
         can,
         canView,
         canCreate,
