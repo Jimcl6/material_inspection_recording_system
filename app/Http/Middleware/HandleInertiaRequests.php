@@ -40,6 +40,9 @@ class HandleInertiaRequests extends Middleware
                     return $this->getUserPermissions($request->user());
                 },
             ],
+            'features' => [
+                'approvals' => (bool) config('features.approvals', false),
+            ],
             'ziggy' => function () use ($request) {
                 return array_merge((new Ziggy)->toArray(), [
                     'location' => $request->url(),

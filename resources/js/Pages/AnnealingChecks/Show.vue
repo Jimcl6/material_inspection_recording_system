@@ -3,7 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { usePermissions } from '@/Composables/usePermissions';
 
-const { canUpdate } = usePermissions();
+const { canUpdate, approvalsEnabled } = usePermissions();
 
 const props = defineProps({
     annealingCheck: {
@@ -74,7 +74,7 @@ const formatTime = (timeString) => {
                                     Annealed on {{ formatDate(annealingCheck.annealing_date) }}
                                 </p>
                             </div>
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            <span v-if="approvalsEnabled" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                                 Completed
                             </span>
                         </div>
@@ -162,7 +162,7 @@ const formatTime = (timeString) => {
                                             </div>
                                         </dd>
                                     </div>
-                                    <div class="sm:grid sm:grid-cols-3 sm:gap-4">
+                                    <div v-if="approvalsEnabled" class="sm:grid sm:grid-cols-3 sm:gap-4">
                                         <dt class="text-sm font-medium text-gray-500">Status</dt>
                                         <dd class="mt-1 text-sm text-gray-900 sm:col-span-2">
                                             <span :class="{

@@ -15,6 +15,10 @@ class ApprovalNotificationService
      */
     public function notifyApprovers(AnnealingCheck $annealingCheck, string $type = 'new_submission')
     {
+        if (!config('features.approvals', false)) {
+            return;
+        }
+
         // Get all users with approval-oriented roles.
         $approvers = User::whereHas('role', function ($query) {
             $query->whereIn('slug', ['admin', 'inspector', 'super_admin']);
@@ -76,6 +80,10 @@ class ApprovalNotificationService
      */
     public function getPendingNotifications(User $user)
     {
+        if (!config('features.approvals', false)) {
+            return collect();
+        }
+
         return ApprovalNotification::where('user_id', $user->id)
             ->where('status', 'pending')
             ->with('annealingCheck')

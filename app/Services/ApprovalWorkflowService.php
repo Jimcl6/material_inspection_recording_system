@@ -9,8 +9,29 @@ use Illuminate\Support\Collection;
 
 class ApprovalWorkflowService
 {
+    public function initialState(): array
+    {
+        if (config('features.approvals', false)) {
+            return [
+                'status' => 'pending',
+                'submitted_at' => now(),
+                'approved_at' => null,
+            ];
+        }
+
+        return [
+            'status' => 'approved',
+            'submitted_at' => null,
+            'approved_at' => now(),
+        ];
+    }
+
     public function modulesForUser(User $user, bool $includeRecords = false, int $recordLimit = 5): Collection
     {
+        if (!config('features.approvals', false)) {
+            return collect();
+        }
+
         return collect($this->workflows())
             ->filter(fn (array $workflow) => $user->hasPermission($workflow['module'], 'approve'))
             ->map(fn (array $workflow) => $this->moduleSummary($workflow, $includeRecords, $recordLimit))
