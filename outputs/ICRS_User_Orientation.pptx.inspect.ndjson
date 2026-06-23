@@ -1,0 +1,426 @@
+{"kind":"deck","id":"pr/ud4xwl","name":"Deck"}
+{"kind":"layout","layoutId":"04614f93-0822-4563-b9e5-af0d05615153","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"a2c6b478-4f94-40b8-8cb8-bdbb4625fc9e","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/l8464t","slide":1,"title":"Operator / Inspector","textShapes":6}
+{"kind":"shape","id":"sh/rqd4vmtw","slide":1,"bbox":[690,82,530,555]}
+{"kind":"shape","id":"sh/25kb6xkf","slide":1,"bbox":[1121.9,89,90.1,38]}
+{"kind":"textbox","id":"sh/9knih4by","slide":1,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[1129.9,98,80.1,18]}
+{"kind":"shape","id":"sh/kzupwb2h","slide":1,"bbox":[688,80,534,559]}
+{"kind":"textbox","id":"sh/re1w7mp0","slide":1,"text":"ICRS","textPreview":"ICRS","textChars":4,"textLines":1,"bbox":[64,72,200,30]}
+{"kind":"textbox","id":"sh/2t83itgf","slide":1,"text":"Using the Inspection\nChecksheet Recording\nSystem","textPreview":"Using the Inspection | Checksheet Recording | System","textChars":48,"textLines":3,"bbox":[64,150,570,230]}
+{"kind":"textbox","id":"sh/9gr2p8nq","slide":1,"text":"Operator & Inspector Orientation","textPreview":"Operator & Inspector Orientation","textChars":32,"textLines":1,"bbox":[66,404,500,40]}
+{"kind":"textbox","id":"sh/gvy90je9","slide":1,"text":"A practical guide to finding, recording,\nreviewing, and updating inspection data.","textPreview":"A practical guide to finding, recording, | reviewing, and updating inspection data.","textChars":81,"textLines":2,"bbox":[66,468,500,70]}
+{"kind":"shape","id":"sh/yd0z6103","slide":1,"bbox":[66,580,300,50]}
+{"kind":"textbox","id":"sh/rytsvu9k","slide":1,"text":"20–25 minute guided session","textPreview":"20–25 minute guided session","textChars":27,"textLines":1,"bbox":[85,594,265,22]}
+{"kind":"image","id":"im/d8bat47y","slide":1,"name":"","geometry":"roundRect","alt":"ICRS dashboard overview","bbox":[690,82,530,555]}
+{"kind":"notes","id":"nt/l8464t","slide":1,"text":"Welcome the group and explain that this session focuses on the daily operator and inspector workflow.\nThe screenshots are from the current ICRS interface with personal and production-sensitive details hidden."}
+{"kind":"slide","id":"sl/pkzx6e","slide":2,"title":"ICRS USER ORIENTATION","textShapes":13}
+{"kind":"textbox","id":"sh/c7u54zid","slide":2,"text":"ICRS USER ORIENTATION","textPreview":"ICRS USER ORIENTATION","textChars":21,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/jm1cfa9w","slide":2,"text":"What you will be able to do","textPreview":"What you will be able to do","textChars":27,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/u18jqh0f","slide":2,"bbox":[62,124,1156,0]}
+{"kind":"shape","id":"sh/1032lszq","slide":2,"bbox":[70,174,350,360]}
+{"kind":"textbox","id":"sh/cfa9w3m9","slide":2,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[183,205,124,124]}
+{"kind":"textbox","id":"sh/judg7ads","slide":2,"text":"Navigate confidently","textPreview":"Navigate confidently","textChars":20,"textLines":1,"bbox":[105,360,280,38]}
+{"kind":"textbox","id":"sh/u9knih4b","slide":2,"text":"Move between the dashboard and the inspection modules.","textPreview":"Move between the dashboard and the inspection modules.","textChars":54,"textLines":1,"bbox":[112,417,266,86]}
+{"kind":"shape","id":"sh/54zidony","slide":2,"bbox":[465,174,350,360]}
+{"kind":"textbox","id":"sh/cj6tovah","slide":2,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[578,205,124,124]}
+{"kind":"textbox","id":"sh/ex0nuxc3","slide":2,"text":"Record correctly","textPreview":"Record correctly","textChars":16,"textLines":1,"bbox":[500,360,280,38]}
+{"kind":"textbox","id":"sh/3itgfmlk","slide":2,"text":"Create a new record and recognize required fields.","textPreview":"Create a new record and recognize required fields.","textChars":50,"textLines":1,"bbox":[507,417,266,86]}
+{"kind":"shape","id":"sh/w3m94fu1","slide":2,"bbox":[860,174,350,360]}
+{"kind":"textbox","id":"sh/loj2t83i","slide":2,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[973,205,124,124]}
+{"kind":"textbox","id":"sh/e9cvixcz","slide":2,"text":"Review safely","textPreview":"Review safely","textChars":13,"textLines":1,"bbox":[895,360,280,38]}
+{"kind":"textbox","id":"sh/3q5o7qpg","slide":2,"text":"Search, verify, update, import, and avoid common mistakes.","textPreview":"Search, verify, update, import, and avoid common mistakes.","textChars":58,"textLines":1,"bbox":[902,417,266,86]}
+{"kind":"textbox","id":"sh/wb2hwfyx","slide":2,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/lwval87e","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"notes","id":"nt/pkzx6e","slide":2,"text":"Set expectations: this is a practical orientation, not a detailed system-administration session.\nTell participants they will complete two short practice tasks near the end."}
+{"kind":"slide","id":"sl/aixp3x","slide":3,"title":"ICRS USER ORIENTATION","textShapes":13}
+{"kind":"textbox","id":"sh/9knih4by","slide":3,"text":"ICRS USER ORIENTATION","textPreview":"ICRS USER ORIENTATION","textChars":21,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/2t83itgf","slide":3,"text":"Log in securely","textPreview":"Log in securely","textChars":15,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/re1w7mp0","slide":3,"bbox":[62,124,1156,0]}
+{"kind":"shape","id":"sh/9w3m94fu","slide":3,"bbox":[72,164,650,430]}
+{"kind":"shape","id":"sh/25kb6xkf","slide":3,"bbox":[770,164,440,430]}
+{"kind":"textbox","id":"sh/rqd4vmtw","slide":3,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[808,210,38,38]}
+{"kind":"textbox","id":"sh/kjm1cfa9","slide":3,"text":"Enter your assigned email.","textPreview":"Enter your assigned email.","textChars":26,"textLines":1,"bbox":[858,211,290,40]}
+{"kind":"textbox","id":"sh/94fu18jq","slide":3,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[808,282,38,38]}
+{"kind":"textbox","id":"sh/1orytsvu","slide":3,"text":"Enter your password.","textPreview":"Enter your password.","textChars":20,"textLines":1,"bbox":[858,283,290,40]}
+{"kind":"textbox","id":"sh/c7u54zid","slide":3,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[808,354,38,38]}
+{"kind":"textbox","id":"sh/jm1cfa9w","slide":3,"text":"Use “Remember me” only on an assigned device.","textPreview":"Use “Remember me” only on an assigned device.","textChars":45,"textLines":1,"bbox":[858,355,300,40]}
+{"kind":"textbox","id":"sh/u18jqh0f","slide":3,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[808,446,38,38]}
+{"kind":"textbox","id":"sh/1032lszq","slide":3,"text":"Select Log in.","textPreview":"Select Log in.","textChars":14,"textLines":1,"bbox":[858,447,290,40]}
+{"kind":"textbox","id":"sh/cfa9w3m9","slide":3,"text":"Never share credentials or save them on a public/shared computer.","textPreview":"Never share credentials or save them on a public/shared computer.","textChars":65,"textLines":1,"bbox":[806,526,350,45]}
+{"kind":"textbox","id":"sh/judg7ads","slide":3,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/u9knih4b","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"image","id":"im/loj2t83i","slide":3,"name":"","geometry":"roundRect","alt":"ICRS login screen","bbox":[72,164,650,430]}
+{"kind":"notes","id":"nt/aixp3x","slide":3,"text":"Point to the email and password fields.\nExplain that Remember me is appropriate only for a device assigned to the user and protected by company policy.\nIf access fails, verify the email first, then contact the assigned system administrator."}
+{"kind":"slide","id":"sl/x3mtj3","slide":4,"title":"ICRS USER ORIENTATION","textShapes":11}
+{"kind":"textbox","id":"sh/7qpg3ex0","slide":4,"text":"ICRS USER ORIENTATION","textPreview":"ICRS USER ORIENTATION","textChars":21,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/0bi9s36h","slide":4,"text":"Your starting point: the dashboard","textPreview":"Your starting point: the dashboard","textChars":34,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/pwb2hwfy","slide":4,"bbox":[62,124,1156,0]}
+{"kind":"shape","id":"sh/7y1kre1w","slide":4,"bbox":[60,150,1160,470]}
+{"kind":"shape","id":"sh/wjudg7ad","slide":4,"bbox":[1060,157,152,32.9]}
+{"kind":"textbox","id":"sh/p4r65wju","slide":4,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[1068,166,142,18]}
+{"kind":"textbox","id":"sh/ih4byhgn","slide":4,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[260,172,38,38]}
+{"kind":"textbox","id":"sh/72x4nap4","slide":4,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[620,276,38,38]}
+{"kind":"textbox","id":"sh/zqtcj6to","slide":4,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[1120,170,38,38]}
+{"kind":"shape","id":"sh/65wjudg7","slide":4,"bbox":[142,586,950,58]}
+{"kind":"textbox","id":"sh/hwfyxobm","slide":4,"text":"1  Sidebar navigation","textPreview":"1  Sidebar navigation","textChars":21,"textLines":1,"bbox":[170,604,250,24]}
+{"kind":"textbox","id":"sh/obm58z25","slide":4,"text":"2  Module shortcuts","textPreview":"2  Module shortcuts","textChars":19,"textLines":1,"bbox":[492,604,250,24]}
+{"kind":"textbox","id":"sh/zed8v6ps","slide":4,"text":"3  Profile & log out","textPreview":"3  Profile & log out","textChars":20,"textLines":1,"bbox":[817,604,250,24]}
+{"kind":"textbox","id":"sh/6xkf6dcb","slide":4,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/hk3q5o7q","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"image","id":"im/rqd4vmtw","slide":4,"name":"","geometry":"roundRect","alt":"Operator dashboard","bbox":[60,150,1160,470]}
+{"kind":"notes","id":"nt/x3mtj3","slide":4,"text":"The dashboard is the safest place to return when unsure where to go.\nThe visible modules depend on the user's assigned access.\nUse the top-right profile menu to review profile information or log out."}
+{"kind":"slide","id":"sl/jin4qy","slide":5,"title":"ICRS USER ORIENTATION","textShapes":13}
+{"kind":"textbox","id":"sh/xczed8v6","slide":5,"text":"ICRS USER ORIENTATION","textPreview":"ICRS USER ORIENTATION","textChars":21,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/qpg3ex0n","slide":5,"text":"Use the sidebar to choose a module","textPreview":"Use the sidebar to choose a module","textChars":34,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/fa9w3m94","slide":5,"bbox":[62,124,1156,0]}
+{"kind":"shape","id":"sh/x4nap4r6","slide":5,"bbox":[62,150,635,500]}
+{"kind":"shape","id":"sh/qd4vmtwr","slide":5,"bbox":[581.05,157,107.95,35]}
+{"kind":"textbox","id":"sh/fyxobm58","slide":5,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[589.05,166,97.95,18]}
+{"kind":"shape","id":"sh/87ed8bat","slide":5,"bbox":[262,332,418,300]}
+{"kind":"textbox","id":"sh/xs72x4na","slide":5,"text":"Record data hidden","textPreview":"Record data hidden","textChars":18,"textLines":1,"bbox":[370,458,210,24]}
+{"kind":"shape","id":"sh/xkf6dcbu","slide":5,"bbox":[742,150,478,500]}
+{"kind":"shape","id":"sh/4zidonyd","slide":5,"bbox":[778,188,28,28]}
+{"kind":"textbox","id":"sh/fepkzupw","slide":5,"text":"Annealing Checks","textPreview":"Annealing Checks","textChars":16,"textLines":1,"bbox":[824,184,330,36]}
+{"kind":"shape","id":"sh/mtwra5gb","slide":5,"bbox":[778,254,28,28]}
+{"kind":"textbox","id":"sh/xc3ylc7u","slide":5,"text":"Temperature Records","textPreview":"Temperature Records","textChars":19,"textLines":1,"bbox":[824,250,330,36]}
+{"kind":"shape","id":"sh/4r65wjud","slide":5,"bbox":[778,320,28,28]}
+{"kind":"textbox","id":"sh/f6dcbulw","slide":5,"text":"Torque Records","textPreview":"Torque Records","textChars":14,"textLines":1,"bbox":[824,316,330,36]}
+{"kind":"shape","id":"sh/mlkjm1cf","slide":5,"bbox":[778,386,28,28]}
+{"kind":"textbox","id":"sh/x0nuxc3y","slide":5,"text":"Magnetism Checksheet","textPreview":"Magnetism Checksheet","textChars":20,"textLines":1,"bbox":[824,382,330,36]}
+{"kind":"shape","id":"sh/4fu18jqh","slide":5,"bbox":[778,452,28,28]}
+{"kind":"textbox","id":"sh/4nap4r65","slide":5,"text":"Welding Checksheet","textPreview":"Welding Checksheet","textChars":18,"textLines":1,"bbox":[824,448,330,36]}
+{"kind":"shape","id":"sh/t83itgfm","slide":5,"bbox":[778,518,28,28]}
+{"kind":"textbox","id":"sh/mhk3q5o7","slide":5,"text":"Material Monitoring","textPreview":"Material Monitoring","textChars":19,"textLines":1,"bbox":[824,514,330,36]}
+{"kind":"textbox","id":"sh/b2hwfyxo","slide":5,"text":"Tip: select Dashboard whenever you want to restart your navigation.","textPreview":"Tip: select Dashboard whenever you want to restart your navigation.","textChars":67,"textLines":1,"bbox":[780,589,380,38]}
+{"kind":"textbox","id":"sh/4byhgn29","slide":5,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/twra5gbq","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"image","id":"im/5o7qpg3e","slide":5,"name":"","geometry":"roundRect","alt":"ICRS sidebar and Annealing screen","bbox":[62,150,635,500]}
+{"kind":"notes","id":"nt/jin4qy","slide":5,"text":"Read the sidebar from top to bottom and connect each module to the corresponding inspection process.\nAnnealing and Welding expand to show additional actions when the user has permission."}
+{"kind":"slide","id":"sl/o7f3xw","slide":6,"title":"ICRS USER ORIENTATION","textShapes":12}
+{"kind":"textbox","id":"sh/al87ed8b","slide":6,"text":"ICRS USER ORIENTATION","textPreview":"ICRS USER ORIENTATION","textChars":21,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/hcrmhk3q","slide":6,"text":"Your screen follows your assigned permission","textPreview":"Your screen follows your assigned permission","textChars":44,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/orytsvu9","slide":6,"bbox":[62,124,1156,0]}
+{"kind":"shape","id":"sh/a9w3m94f","slide":6,"bbox":[60,166,558,365]}
+{"kind":"shape","id":"sh/h0fepkzu","slide":6,"bbox":[515.14,173,94.86,25.55]}
+{"kind":"textbox","id":"sh/sfil0rqd","slide":6,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[523.14,182,84.86,18]}
+{"kind":"shape","id":"sh/65wjudg7","slide":6,"bbox":[662,166,558,365]}
+{"kind":"shape","id":"sh/g3ex0nux","slide":6,"bbox":[1117.14,173,94.86,25.55]}
+{"kind":"textbox","id":"sh/5o7qpg3e","slide":6,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[1125.14,182,84.86,18]}
+{"kind":"shape","id":"sh/yxobm58z","slide":6,"bbox":[200,344,398,168]}
+{"kind":"textbox","id":"sh/nih4byhg","slide":6,"text":"Production records hidden","textPreview":"Production records hidden","textChars":25,"textLines":1,"bbox":[286,414,230,22]}
+{"kind":"shape","id":"sh/gr2p8nqx","slide":6,"bbox":[94,502,488,110]}
+{"kind":"textbox","id":"sh/9cvixcze","slide":6,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[120,520,440,28]}
+{"kind":"textbox","id":"sh/ylc7u54z","slide":6,"text":"Daily inspection modules and only the actions assigned to you.","textPreview":"Daily inspection modules and only the actions assigned to you.","textChars":62,"textLines":1,"bbox":[120,556,425,38]}
+{"kind":"shape","id":"sh/r65wjudg","slide":6,"bbox":[696,502,488,110]}
+{"kind":"textbox","id":"sh/gfmlkjm1","slide":6,"text":"Different role","textPreview":"Different role","textChars":14,"textLines":1,"bbox":[722,520,440,28]}
+{"kind":"textbox","id":"sh/90je9cvi","slide":6,"text":"May see additional menus or buttons. This is expected—not an error.","textPreview":"May see additional menus or buttons. This is expected—not an error.","textChars":67,"textLines":1,"bbox":[722,556,425,38]}
+{"kind":"textbox","id":"sh/t83itgfm","slide":6,"text":"If a required action is missing, request access—do not use another person’s account.","textPreview":"If a required action is missing, request access—do not use another person’s account.","textChars":84,"textLines":1,"bbox":[140,635,1000,28]}
+{"kind":"textbox","id":"sh/4nap4r65","slide":6,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/b2hwfyxo","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"image","id":"im/yxobm58z","slide":6,"name":"","geometry":"roundRect","alt":"Operator Welding screen","bbox":[60,166,558,365]}
+{"kind":"image","id":"im/y1kre1w7","slide":6,"name":"","geometry":"roundRect","alt":"Administrative navigation example","bbox":[662,166,558,365]}
+{"kind":"notes","id":"nt/o7f3xw","slide":6,"text":"Permissions determine which modules and actions appear.\nA missing Create, Edit, Import, Export, or Delete action normally means the account is not assigned that permission.\nNever work around access rules by borrowing another account."}
+{"kind":"slide","id":"sl/nchulf","slide":7,"title":"ICRS USER ORIENTATION","textShapes":14}
+{"kind":"textbox","id":"sh/kb6xkf6d","slide":7,"text":"ICRS USER ORIENTATION","textPreview":"ICRS USER ORIENTATION","textChars":21,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/rqd4vmtw","slide":7,"text":"The same four-step workflow works across modules","textPreview":"The same four-step workflow works across modules","textChars":48,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/25kb6xkf","slide":7,"bbox":[62,124,1156,0]}
+{"kind":"textbox","id":"sh/9knih4by","slide":7,"text":"1\nFIND","textPreview":"1 | FIND","textChars":6,"textLines":2,"bbox":[72,240,270,84]}
+{"kind":"textbox","id":"sh/kzupwb2h","slide":7,"text":"2\nCREATE","textPreview":"2 | CREATE","textChars":8,"textLines":2,"bbox":[350,240,270,84]}
+{"kind":"textbox","id":"sh/re1w7mp0","slide":7,"text":"3\nREVIEW","textPreview":"3 | REVIEW","textChars":8,"textLines":2,"bbox":[628,240,270,84]}
+{"kind":"textbox","id":"sh/2t83itgf","slide":7,"text":"4\nUPDATE","textPreview":"4 | UPDATE","textChars":8,"textLines":2,"bbox":[906,240,270,84]}
+{"kind":"textbox","id":"sh/9gr2p8nq","slide":7,"text":"Search or filter the list","textPreview":"Search or filter the list","textChars":25,"textLines":1,"bbox":[90,352,240,44]}
+{"kind":"textbox","id":"sh/gvy90je9","slide":7,"text":"Enter the required details","textPreview":"Enter the required details","textChars":26,"textLines":1,"bbox":[368,352,240,44]}
+{"kind":"textbox","id":"sh/yd0z6103","slide":7,"text":"Check the saved record","textPreview":"Check the saved record","textChars":22,"textLines":1,"bbox":[646,352,240,44]}
+{"kind":"textbox","id":"sh/rytsvu9k","slide":7,"text":"Correct it only when permitted","textPreview":"Correct it only when permitted","textChars":30,"textLines":1,"bbox":[924,352,240,44]}
+{"kind":"shape","id":"sh/gfmlkjm1","slide":7,"bbox":[210,458,860,104]}
+{"kind":"textbox","id":"sh/90je9cvi","slide":7,"text":"Accuracy first","textPreview":"Accuracy first","textChars":14,"textLines":1,"bbox":[242,478,190,30]}
+{"kind":"textbox","id":"sh/y1kre1w7","slide":7,"text":"Take a final look before leaving the page. Correct item code, date, machine, quantity, readings, and responsible person.","textPreview":"Take a final look before leaving the page. Correct item code, date, machine, quantity, readings, and responsible person.","textChars":120,"textLines":1,"bbox":[438,474,588,62]}
+{"kind":"textbox","id":"sh/rmhk3q5o","slide":7,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/g7adsji5","slide":7,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"notes","id":"nt/nchulf","slide":7,"text":"Use this slide as the mental model for the remainder of the training.\nMost modules differ in their fields, but the overall find-create-review-update pattern is consistent."}
+{"kind":"slide","id":"sl/ckjtdu","slide":8,"title":"ICRS USER ORIENTATION","textShapes":12}
+{"kind":"textbox","id":"sh/vy90je9c","slide":8,"text":"ICRS USER ORIENTATION","textPreview":"ICRS USER ORIENTATION","textChars":21,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/oj2t83it","slide":8,"text":"Find the correct record before creating another","textPreview":"Find the correct record before creating another","textChars":47,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/d4vmtwra","slide":8,"bbox":[62,124,1156,0]}
+{"kind":"shape","id":"sh/vmtwra5g","slide":8,"bbox":[62,150,1158,438]}
+{"kind":"shape","id":"sh/o7qpg3ex","slide":8,"bbox":[1060,157,152,30.66]}
+{"kind":"textbox","id":"sh/dsji5sne","slide":8,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[1068,166,142,18]}
+{"kind":"shape","id":"sh/6tovahoz","slide":8,"bbox":[62,376,1158,212]}
+{"kind":"textbox","id":"sh/vahoza1g","slide":8,"text":"Example record rows hidden for orientation","textPreview":"Example record rows hidden for orientation","textChars":42,"textLines":1,"bbox":[460,466,360,22]}
+{"kind":"textbox","id":"sh/7qpg3ex0","slide":8,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[88,608,38,38]}
+{"kind":"textbox","id":"sh/i5sneloj","slide":8,"text":"Use Search for a model, item, person, or code.","textPreview":"Use Search for a model, item, person, or code.","textChars":46,"textLines":1,"bbox":[138,609,305,40]}
+{"kind":"textbox","id":"sh/pwb2hwfy","slide":8,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[465,608,38,38]}
+{"kind":"textbox","id":"sh/0bi9s36h","slide":8,"text":"Use date and module-specific filters.","textPreview":"Use date and module-specific filters.","textChars":37,"textLines":1,"bbox":[515,609,280,40]}
+{"kind":"textbox","id":"sh/7y1kre1w","slide":8,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[820,608,38,38]}
+{"kind":"textbox","id":"sh/ed8v6psf","slide":8,"text":"Open the matching row to review it.","textPreview":"Open the matching row to review it.","textChars":35,"textLines":1,"bbox":[870,609,290,40]}
+{"kind":"textbox","id":"sh/p4r65wju","slide":8,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/wjudg7ad","slide":8,"text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"image","id":"im/zqtcj6to","slide":8,"name":"","geometry":"roundRect","alt":"Torque record filters","bbox":[62,150,1158,438]}
+{"kind":"notes","id":"nt/ckjtdu","slide":8,"text":"Encourage users to search first to avoid duplicate records.\nThe available filters change by module—for example, machine number, driver model, line, type, or date.\nOpen and review the matching result before deciding to create a new entry."}
+{"kind":"slide","id":"sl/rbu0lq","slide":9,"title":"ICRS USER ORIENTATION","textShapes":14}
+{"kind":"textbox","id":"sh/0fepkzup","slide":9,"text":"ICRS USER ORIENTATION","textPreview":"ICRS USER ORIENTATION","textChars":21,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/bulwval8","slide":9,"text":"Create a record: complete required fields first","textPreview":"Create a record: complete required fields first","textChars":47,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/i9s36hcr","slide":9,"bbox":[62,124,1156,0]}
+{"kind":"shape","id":"sh/032lszqt","slide":9,"bbox":[58,150,840,500]}
+{"kind":"shape","id":"sh/bi9s36hc","slide":9,"bbox":[747.2,157,142.8,35]}
+{"kind":"textbox","id":"sh/ixczed8v","slide":9,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[755.2,166,132.8,18]}
+{"kind":"shape","id":"sh/tcj6tova","slide":9,"bbox":[930,150,290,500]}
+{"kind":"textbox","id":"sh/0rqd4vmt","slide":9,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[956,190,38,38]}
+{"kind":"textbox","id":"sh/i9s36hcr","slide":9,"text":"Start with fields marked *","textPreview":"Start with fields marked *","textChars":26,"textLines":1,"bbox":[1006,191,182,40]}
+{"kind":"textbox","id":"sh/bulwval8","slide":9,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[956,266,38,38]}
+{"kind":"textbox","id":"sh/0fepkzup","slide":9,"text":"Use the correct date","textPreview":"Use the correct date","textChars":20,"textLines":1,"bbox":[1006,267,182,40]}
+{"kind":"textbox","id":"sh/p0bi9s36","slide":9,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[956,342,38,38]}
+{"kind":"textbox","id":"sh/ixczed8v","slide":9,"text":"Match the equipment and process","textPreview":"Match the equipment and process","textChars":31,"textLines":1,"bbox":[1006,343,185,40]}
+{"kind":"textbox","id":"sh/bi9s36hc","slide":9,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[956,438,38,38]}
+{"kind":"textbox","id":"sh/032lszqt","slide":9,"text":"Enter readings exactly as measured","textPreview":"Enter readings exactly as measured","textChars":34,"textLines":1,"bbox":[1006,439,185,40]}
+{"kind":"textbox","id":"sh/tovahoza","slide":9,"text":"Scroll to the bottom, review the full form, then save.","textPreview":"Scroll to the bottom, review the full form, then save.","textChars":54,"textLines":1,"bbox":[954,556,236,62]}
+{"kind":"textbox","id":"sh/il0rqd4v","slide":9,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/b6xkf6dc","slide":9,"text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"image","id":"im/cj6tovah","slide":9,"name":"","geometry":"roundRect","alt":"Create Torque Record form","bbox":[58,150,840,500]}
+{"kind":"notes","id":"nt/rbu0lq","slide":9,"text":"Demonstrate the required-field asterisk.\nExplain that the visible upper section is only part of the form; users must scroll to complete readings and remarks.\nValues must come from the actual inspection source, not from memory or a previous entry."}
+{"kind":"slide","id":"sl/gymhr5","slide":10,"title":"ICRS USER ORIENTATION","textShapes":13}
+{"kind":"textbox","id":"sh/yd0z6103","slide":10,"text":"ICRS USER ORIENTATION","textPreview":"ICRS USER ORIENTATION","textChars":21,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/90je9cvi","slide":10,"text":"Review first; edit or delete only when appropriate","textPreview":"Review first; edit or delete only when appropriate","textChars":50,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/gfmlkjm1","slide":10,"bbox":[62,124,1156,0]}
+{"kind":"shape","id":"sh/y1kre1w7","slide":10,"bbox":[60,150,720,488]}
+{"kind":"shape","id":"sh/9s36hcrm","slide":10,"bbox":[649.6,157,122.4,34.16]}
+{"kind":"textbox","id":"sh/g7adsji5","slide":10,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[657.6,166,112.4,18]}
+{"kind":"shape","id":"sh/nih4byhg","slide":10,"bbox":[60,386,720,252]}
+{"kind":"textbox","id":"sh/yxobm58z","slide":10,"text":"Record values and names hidden","textPreview":"Record values and names hidden","textChars":30,"textLines":1,"bbox":[260,492,320,24]}
+{"kind":"shape","id":"sh/obm58z25","slide":10,"bbox":[818,150,402,488]}
+{"kind":"shape","id":"sh/hwfyxobm","slide":10,"bbox":[848,190,342,102]}
+{"kind":"textbox","id":"sh/65wjudg7","slide":10,"text":"VIEW","textPreview":"VIEW","textChars":4,"textLines":1,"bbox":[870,206,100,26]}
+{"kind":"textbox","id":"sh/zqtcj6to","slide":10,"text":"Open the record and verify the details.","textPreview":"Open the record and verify the details.","textChars":39,"textLines":1,"bbox":[870,237,286,42]}
+{"kind":"shape","id":"sh/oza1gvy9","slide":10,"bbox":[848,320,342,102]}
+{"kind":"textbox","id":"sh/hk3q5o7q","slide":10,"text":"EDIT","textPreview":"EDIT","textChars":4,"textLines":1,"bbox":[870,336,100,26]}
+{"kind":"textbox","id":"sh/6xkf6dcb","slide":10,"text":"Correct an authorized mistake; do not rewrite history.","textPreview":"Correct an authorized mistake; do not rewrite history.","textChars":54,"textLines":1,"bbox":[870,367,286,42]}
+{"kind":"shape","id":"sh/zed8v6ps","slide":10,"bbox":[848,450,342,102]}
+{"kind":"textbox","id":"sh/orytsvu9","slide":10,"text":"DELETE","textPreview":"DELETE","textChars":6,"textLines":1,"bbox":[870,466,100,26]}
+{"kind":"textbox","id":"sh/hcrmhk3q","slide":10,"text":"Use only for an invalid or duplicate record, and confirm carefully.","textPreview":"Use only for an invalid or duplicate record, and confirm carefully.","textChars":67,"textLines":1,"bbox":[870,497,286,42]}
+{"kind":"textbox","id":"sh/5gbq1ory","slide":10,"text":"Actions may be hidden when your account does not have permission.","textPreview":"Actions may be hidden when your account does not have permission.","textChars":65,"textLines":1,"bbox":[860,588,300,34]}
+{"kind":"textbox","id":"sh/cvixczed","slide":10,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/nap4r65w","slide":10,"text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"image","id":"im/6psfil0r","slide":10,"name":"","geometry":"roundRect","alt":"Temperature record list and actions","bbox":[60,150,720,488]}
+{"kind":"notes","id":"nt/gymhr5","slide":10,"text":"Show the actions column and explain the difference between viewing, editing, and deleting.\nIf uncertain whether a record should be deleted, stop and ask the responsible supervisor or inspector."}
+{"kind":"slide","id":"sl/4mkhg6","slide":11,"title":"ICRS USER ORIENTATION","textShapes":10}
+{"kind":"textbox","id":"sh/5o7qpg3e","slide":11,"text":"ICRS USER ORIENTATION","textPreview":"ICRS USER ORIENTATION","textChars":21,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/yxobm58z","slide":11,"text":"Import safely: Upload → Preview → Confirm","textPreview":"Import safely: Upload → Preview → Confirm","textChars":41,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/nih4byhg","slide":11,"bbox":[62,124,1156,0]}
+{"kind":"shape","id":"sh/9cvixcze","slide":11,"bbox":[60,150,760,494]}
+{"kind":"shape","id":"sh/ylc7u54z","slide":11,"bbox":[682.8,157,129.2,34.58]}
+{"kind":"textbox","id":"sh/r65wjudg","slide":11,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[690.8,166,119.2,18]}
+{"kind":"textbox","id":"sh/gfmlkjm1","slide":11,"text":"1\nUPLOAD","textPreview":"1 | UPLOAD","textChars":8,"textLines":2,"bbox":[850,184,310,84]}
+{"kind":"textbox","id":"sh/90je9cvi","slide":11,"text":"2\nPREVIEW","textPreview":"2 | PREVIEW","textChars":9,"textLines":2,"bbox":[850,300,310,84]}
+{"kind":"textbox","id":"sh/lc7u54zi","slide":11,"text":"3\nCONFIRM","textPreview":"3 | CONFIRM","textChars":9,"textLines":2,"bbox":[850,416,310,84]}
+{"kind":"textbox","id":"sh/wra5gbq1","slide":11,"text":"Use the correct template.","textPreview":"Use the correct template.","textChars":25,"textLines":1,"bbox":[866,540,280,28]}
+{"kind":"textbox","id":"sh/36hcrmhk","slide":11,"text":"Read duplicate and error results before confirming.","textPreview":"Read duplicate and error results before confirming.","textChars":51,"textLines":1,"bbox":[866,577,280,58]}
+{"kind":"textbox","id":"sh/eloj2t83","slide":11,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/l0rqd4vm","slide":11,"text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"image","id":"im/tgfmlkjm","slide":11,"name":"","geometry":"roundRect","alt":"Torque import screen","bbox":[60,150,760,494]}
+{"kind":"notes","id":"nt/4mkhg6","slide":11,"text":"Import is never a one-click action.\nUsers upload a supported Excel file, preview the parsed rows, review new records, duplicates, and errors, then confirm.\nIf the preview looks wrong, cancel and fix the workbook rather than forcing the import."}
+{"kind":"slide","id":"sl/8b7ucv","slide":12,"title":"ICRS USER ORIENTATION","textShapes":19}
+{"kind":"textbox","id":"sh/nuxc3ylc","slide":12,"text":"ICRS USER ORIENTATION","textPreview":"ICRS USER ORIENTATION","textChars":21,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/gbq1oryt","slide":12,"text":"Annealing, Temperature, and Torque use the shared pattern","textPreview":"Annealing, Temperature, and Torque use the shared pattern","textChars":57,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/5wjudg7a","slide":12,"bbox":[62,124,1156,0]}
+{"kind":"shape","id":"sh/yhgn29gr","slide":12,"bbox":[58,160,368,450]}
+{"kind":"shape","id":"sh/gn29gr2p","slide":12,"bbox":[72,176,340,220]}
+{"kind":"shape","id":"sh/58z25kb6","slide":12,"bbox":[346.2,183,57.8,15.4]}
+{"kind":"textbox","id":"sh/ytsvu9kn","slide":12,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[354.2,192,47.8,18]}
+{"kind":"shape","id":"sh/neloj2t8","slide":12,"bbox":[72,310,340,86]}
+{"kind":"textbox","id":"sh/nap4r65w","slide":12,"text":"Sample rows hidden","textPreview":"Sample rows hidden","textChars":18,"textLines":1,"bbox":[152,342,180,20]}
+{"kind":"textbox","id":"sh/upwb2hwf","slide":12,"text":"ANNEALING","textPreview":"ANNEALING","textChars":9,"textLines":1,"bbox":[88,420,308,30]}
+{"kind":"textbox","id":"sh/5gbq1ory","slide":12,"text":"Item, supplier lot, machine, temperature, and time","textPreview":"Item, supplier lot, machine, temperature, and time","textChars":50,"textLines":1,"bbox":[93,470,298,84]}
+{"kind":"textbox","id":"sh/cvixczed","slide":12,"text":"Search • Create • Review • Update","textPreview":"Search • Create • Review • Update","textChars":33,"textLines":1,"bbox":[93,566,298,22]}
+{"kind":"shape","id":"sh/nyd0z610","slide":12,"bbox":[464,160,368,450]}
+{"kind":"shape","id":"sh/54zidony","slide":12,"bbox":[478,176,340,220]}
+{"kind":"shape","id":"sh/cj6tovah","slide":12,"bbox":[752.2,183,57.8,15.4]}
+{"kind":"textbox","id":"sh/judg7ads","slide":12,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[760.2,192,47.8,18]}
+{"kind":"shape","id":"sh/u9knih4b","slide":12,"bbox":[478,310,340,86]}
+{"kind":"textbox","id":"sh/2hwfyxob","slide":12,"text":"Sample rows hidden","textPreview":"Sample rows hidden","textChars":18,"textLines":1,"bbox":[558,342,180,20]}
+{"kind":"textbox","id":"sh/r2p8nqxs","slide":12,"text":"TEMPERATURE","textPreview":"TEMPERATURE","textChars":11,"textLines":1,"bbox":[494,420,308,30]}
+{"kind":"textbox","id":"sh/kjm1cfa9","slide":12,"text":"Equipment, person in charge, AM/PM readings, and dates","textPreview":"Equipment, person in charge, AM/PM readings, and dates","textChars":54,"textLines":1,"bbox":[499,470,298,84]}
+{"kind":"textbox","id":"sh/94fu18jq","slide":12,"text":"Search • Create • Review • Update","textPreview":"Search • Create • Review • Update","textChars":33,"textLines":1,"bbox":[499,566,298,22]}
+{"kind":"shape","id":"sh/2p8nqxs7","slide":12,"bbox":[870,160,368,450]}
+{"kind":"shape","id":"sh/gvy90je9","slide":12,"bbox":[884,176,340,220]}
+{"kind":"shape","id":"sh/9gr2p8nq","slide":12,"bbox":[1158.2,183,57.8,15.4]}
+{"kind":"textbox","id":"sh/2t83itgf","slide":12,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[1166.2,192,47.8,18]}
+{"kind":"shape","id":"sh/re1w7mp0","slide":12,"bbox":[884,310,340,86]}
+{"kind":"textbox","id":"sh/x4nap4r6","slide":12,"text":"Sample rows hidden","textPreview":"Sample rows hidden","textChars":18,"textLines":1,"bbox":[964,342,180,20]}
+{"kind":"textbox","id":"sh/8jqh0fep","slide":12,"text":"TORQUE","textPreview":"TORQUE","textChars":6,"textLines":1,"bbox":[900,420,308,30]}
+{"kind":"textbox","id":"sh/fyxobm58","slide":12,"text":"Driver details, line, screw type, process, and readings","textPreview":"Driver details, line, screw type, process, and readings","textChars":55,"textLines":1,"bbox":[905,470,298,84]}
+{"kind":"textbox","id":"sh/qd4vmtwr","slide":12,"text":"Search • Create • Review • Update","textPreview":"Search • Create • Review • Update","textChars":33,"textLines":1,"bbox":[905,566,298,22]}
+{"kind":"textbox","id":"sh/xczed8v6","slide":12,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/8v6psfil","slide":12,"text":"12","textPreview":"12","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"image","id":"im/itgfmlkj","slide":12,"name":"","geometry":"roundRect","alt":"ANNEALING list filters","bbox":[72,176,340,220]}
+{"kind":"image","id":"im/pkzupwb2","slide":12,"name":"","geometry":"roundRect","alt":"TEMPERATURE list filters","bbox":[478,176,340,220]}
+{"kind":"image","id":"im/gvy90je9","slide":12,"name":"","geometry":"roundRect","alt":"TORQUE list filters","bbox":[884,176,340,220]}
+{"kind":"notes","id":"nt/8b7ucv","slide":12,"text":"Do not repeat the full workflow three times; emphasize that these modules share the same list, filters, create form, details, and edit pattern.\nThe field names differ according to the inspection being recorded."}
+{"kind":"slide","id":"sl/fg0qcj","slide":13,"title":"ICRS USER ORIENTATION","textShapes":15}
+{"kind":"textbox","id":"sh/1orytsvu","slide":13,"text":"ICRS USER ORIENTATION","textPreview":"ICRS USER ORIENTATION","textChars":21,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/u18jqh0f","slide":13,"text":"Magnetism adds batches and inspection checkpoints","textPreview":"Magnetism adds batches and inspection checkpoints","textChars":49,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/jm1cfa9w","slide":13,"bbox":[62,124,1156,0]}
+{"kind":"shape","id":"sh/1032lszq","slide":13,"bbox":[58,150,690,495]}
+{"kind":"shape","id":"sh/u9knih4b","slide":13,"bbox":[622.7,157,117.3,34.65]}
+{"kind":"textbox","id":"sh/judg7ads","slide":13,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[630.7,166,107.3,18]}
+{"kind":"shape","id":"sh/cj6tovah","slide":13,"bbox":[790,150,430,495]}
+{"kind":"textbox","id":"sh/54zidony","slide":13,"text":"Magnetism workflow","textPreview":"Magnetism workflow","textChars":18,"textLines":1,"bbox":[830,184,350,34]}
+{"kind":"textbox","id":"sh/t47y1kre","slide":13,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[832,254,38,38]}
+{"kind":"textbox","id":"sh/0je9cvix","slide":13,"text":"Create the checksheet header","textPreview":"Create the checksheet header","textChars":28,"textLines":1,"bbox":[884,254,280,40]}
+{"kind":"shape","id":"sh/byhgn29g","slide":13,"bbox":[850,294,0,35]}
+{"kind":"textbox","id":"sh/idonyd0z","slide":13,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[832,332,38,38]}
+{"kind":"textbox","id":"sh/tcj6tova","slide":13,"text":"Add the production batch","textPreview":"Add the production batch","textChars":24,"textLines":1,"bbox":[884,332,280,40]}
+{"kind":"shape","id":"sh/0rqd4vmt","slide":13,"bbox":[850,372,0,35]}
+{"kind":"textbox","id":"sh/b6xkf6dc","slide":13,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[832,410,38,38]}
+{"kind":"textbox","id":"sh/il0rqd4v","slide":13,"text":"Enter inspection checkpoints","textPreview":"Enter inspection checkpoints","textChars":28,"textLines":1,"bbox":[884,410,280,40]}
+{"kind":"shape","id":"sh/tovahoza","slide":13,"bbox":[850,450,0,35]}
+{"kind":"textbox","id":"sh/032lszqt","slide":13,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[832,488,38,38]}
+{"kind":"textbox","id":"sh/czed8v6p","slide":13,"text":"Save and review the result","textPreview":"Save and review the result","textChars":26,"textLines":1,"bbox":[884,488,280,40]}
+{"kind":"shape","id":"sh/5kb6xkf6","slide":13,"bbox":[820,576,370,46]}
+{"kind":"textbox","id":"sh/ytsvu9kn","slide":13,"text":"One checksheet can contain multiple batches.","textPreview":"One checksheet can contain multiple batches.","textChars":44,"textLines":1,"bbox":[837,588,338,22]}
+{"kind":"textbox","id":"sh/neloj2t8","slide":13,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/cbulwval","slide":13,"text":"13","textPreview":"13","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"image","id":"im/pg3ex0nu","slide":13,"name":"","geometry":"roundRect","alt":"Create Magnetism Checksheet","bbox":[58,150,690,495]}
+{"kind":"notes","id":"nt/fg0qcj","slide":13,"text":"Magnetism differs from the simple one-form modules.\nStart with the checksheet header, then work inside it to create production batches and enter checkpoints.\nThe current training database has no Magnetism checksheets, so the slide illustrates the live create screen and the verified workflow."}
+{"kind":"slide","id":"sl/g0igsg","slide":14,"title":"ICRS USER ORIENTATION","textShapes":15}
+{"kind":"textbox","id":"sh/lwval87e","slide":14,"text":"ICRS USER ORIENTATION","textPreview":"ICRS USER ORIENTATION","textChars":21,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/e9cvixcz","slide":14,"text":"Welding is driven by checksheet type and item code","textPreview":"Welding is driven by checksheet type and item code","textChars":50,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/3q5o7qpg","slide":14,"bbox":[62,124,1156,0]}
+{"kind":"shape","id":"sh/loj2t83i","slide":14,"bbox":[54,150,870,500]}
+{"kind":"shape","id":"sh/ex0nuxc3","slide":14,"bbox":[768.1,157,147.9,35]}
+{"kind":"textbox","id":"sh/3itgfmlk","slide":14,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[776.1,166,137.9,18]}
+{"kind":"shape","id":"sh/szqtcj6t","slide":14,"bbox":[952,150,268,500]}
+{"kind":"textbox","id":"sh/lkjm1cfa","slide":14,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[974,180,38,38]}
+{"kind":"textbox","id":"sh/hcrmhk3q","slide":14,"text":"Choose the checksheet type.","textPreview":"Choose the checksheet type.","textChars":27,"textLines":1,"bbox":[1024,181,170,40]}
+{"kind":"textbox","id":"sh/orytsvu9","slide":14,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[974,258,38,38]}
+{"kind":"textbox","id":"sh/z61032ls","slide":14,"text":"Select the correct item code.","textPreview":"Select the correct item code.","textChars":29,"textLines":1,"bbox":[1024,259,170,40]}
+{"kind":"textbox","id":"sh/al87ed8b","slide":14,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[974,336,38,38]}
+{"kind":"textbox","id":"sh/h0fepkzu","slide":14,"text":"Read the validation message.","textPreview":"Read the validation message.","textChars":28,"textLines":1,"bbox":[1024,337,170,40]}
+{"kind":"textbox","id":"sh/sfil0rqd","slide":14,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[974,414,38,38]}
+{"kind":"textbox","id":"sh/zupwb2hw","slide":14,"text":"Complete production and material fields.","textPreview":"Complete production and material fields.","textChars":40,"textLines":1,"bbox":[1024,415,170,40]}
+{"kind":"textbox","id":"sh/a9w3m94f","slide":14,"text":"5","textPreview":"5","textChars":1,"textLines":1,"bbox":[974,512,38,38]}
+{"kind":"textbox","id":"sh/hwfyxobm","slide":14,"text":"Enter samples, personnel, and remarks.","textPreview":"Enter samples, personnel, and remarks.","textChars":38,"textLines":1,"bbox":[1024,513,170,40]}
+{"kind":"textbox","id":"sh/obm58z25","slide":14,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/knih4byh","slide":14,"text":"14","textPreview":"14","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"image","id":"im/donyd0z6","slide":14,"name":"","geometry":"roundRect","alt":"Create Welding Checksheet","bbox":[54,150,870,500]}
+{"kind":"notes","id":"nt/g0igsg","slide":14,"text":"The selected checksheet type and item code determine which fields and validation guidance apply.\nUsers should read the blue validation message before entering measurement data.\nContinue below the visible area to complete samples, personnel, and remarks."}
+{"kind":"slide","id":"sl/cparht","slide":15,"title":"ICRS USER ORIENTATION","textShapes":14}
+{"kind":"textbox","id":"sh/udg7adsj","slide":15,"text":"ICRS USER ORIENTATION","textPreview":"ICRS USER ORIENTATION","textChars":21,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/54zidony","slide":15,"text":"Material Monitoring organizes main lots and sub-lots","textPreview":"Material Monitoring organizes main lots and sub-lots","textChars":52,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/cj6tovah","slide":15,"bbox":[62,124,1156,0]}
+{"kind":"shape","id":"sh/upwb2hwf","slide":15,"bbox":[58,150,880,500]}
+{"kind":"shape","id":"sh/5gbq1ory","slide":15,"bbox":[780.4,157,149.6,35]}
+{"kind":"textbox","id":"sh/cvixczed","slide":15,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[788.4,166,139.6,18]}
+{"kind":"shape","id":"sh/jm1cfa9w","slide":15,"bbox":[966,150,254,500]}
+{"kind":"textbox","id":"sh/u18jqh0f","slide":15,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[986,188,38,38]}
+{"kind":"textbox","id":"sh/w3m94fu1","slide":15,"text":"Select Material Type","textPreview":"Select Material Type","textChars":20,"textLines":1,"bbox":[1036,189,156,40]}
+{"kind":"textbox","id":"sh/loj2t83i","slide":15,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[986,270,38,38]}
+{"kind":"textbox","id":"sh/ex0nuxc3","slide":15,"text":"Enter the main lot","textPreview":"Enter the main lot","textChars":18,"textLines":1,"bbox":[1036,271,156,40]}
+{"kind":"textbox","id":"sh/3itgfmlk","slide":15,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[986,352,38,38]}
+{"kind":"textbox","id":"sh/wb2hwfyx","slide":15,"text":"Confirm the auto-generated letter code","textPreview":"Confirm the auto-generated letter code","textChars":38,"textLines":1,"bbox":[1036,353,160,40]}
+{"kind":"textbox","id":"sh/lwval87e","slide":15,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[986,454,38,38]}
+{"kind":"textbox","id":"sh/e9cvixcz","slide":15,"text":"Enter the displayed sub-lot fields","textPreview":"Enter the displayed sub-lot fields","textChars":34,"textLines":1,"bbox":[1036,455,160,40]}
+{"kind":"shape","id":"sh/3q5o7qpg","slide":15,"bbox":[986,572,210,48]}
+{"kind":"textbox","id":"sh/sneloj2t","slide":15,"text":"Sub-lot fields appear after Material Type is selected.","textPreview":"Sub-lot fields appear after Material Type is selected.","textChars":54,"textLines":1,"bbox":[996,580,190,34]}
+{"kind":"textbox","id":"sh/l87ed8ba","slide":15,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/l0rqd4vm","slide":15,"text":"15","textPreview":"15","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"image","id":"im/u18jqh0f","slide":15,"name":"","geometry":"roundRect","alt":"Create Material Monitoring Checksheet","bbox":[58,150,880,500]}
+{"kind":"notes","id":"nt/cparht","slide":15,"text":"Material Type controls which sub-lot fields appear.\nThe letter code is generated by the system and should not be manually guessed.\nVerify the main lot, quantity, operator, job number, and all visible sub-lot numbers before saving."}
+{"kind":"slide","id":"sl/rp3nb3","slide":16,"title":"ICRS USER ORIENTATION","textShapes":15}
+{"kind":"textbox","id":"sh/qpg3ex0n","slide":16,"text":"ICRS USER ORIENTATION","textPreview":"ICRS USER ORIENTATION","textChars":21,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/xczed8v6","slide":16,"text":"Prevent the mistakes that create bad records","textPreview":"Prevent the mistakes that create bad records","textChars":44,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/8v6psfil","slide":16,"bbox":[62,124,1156,0]}
+{"kind":"shape","id":"sh/qd4vmtwr","slide":16,"bbox":[58,150,650,490]}
+{"kind":"shape","id":"sh/x4nap4r6","slide":16,"bbox":[589.5,157,110.5,34.3]}
+{"kind":"textbox","id":"sh/8jqh0fep","slide":16,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[597.5,166,100.5,18]}
+{"kind":"shape","id":"sh/fmlkjm1c","slide":16,"bbox":[750,150,470,490]}
+{"kind":"shape","id":"sh/q1orytsv","slide":16,"bbox":[778,186,96,34]}
+{"kind":"textbox","id":"sh/4nap4r65","slide":16,"text":"DO NOT","textPreview":"DO NOT","textChars":6,"textLines":1,"bbox":[786,194,80,18]}
+{"kind":"textbox","id":"sh/t83itgfm","slide":16,"text":"Create before searching for an existing record.","textPreview":"Create before searching for an existing record.","textChars":47,"textLines":1,"bbox":[895,184,285,48]}
+{"kind":"shape","id":"sh/mhk3q5o7","slide":16,"bbox":[778,268,96,34]}
+{"kind":"textbox","id":"sh/b2hwfyxo","slide":16,"text":"DO NOT","textPreview":"DO NOT","textChars":6,"textLines":1,"bbox":[786,276,80,18]}
+{"kind":"textbox","id":"sh/4byhgn29","slide":16,"text":"Ignore required fields or validation messages.","textPreview":"Ignore required fields or validation messages.","textChars":46,"textLines":1,"bbox":[895,266,285,48]}
+{"kind":"shape","id":"sh/twra5gbq","slide":16,"bbox":[778,350,96,34]}
+{"kind":"textbox","id":"sh/m58z25kb","slide":16,"text":"DO NOT","textPreview":"DO NOT","textChars":6,"textLines":1,"bbox":[786,358,80,18]}
+{"kind":"textbox","id":"sh/bq1oryts","slide":16,"text":"Confirm an import without reviewing duplicates and errors.","textPreview":"Confirm an import without reviewing duplicates and errors.","textChars":58,"textLines":1,"bbox":[895,348,285,48]}
+{"kind":"shape","id":"sh/47y1kre1","slide":16,"bbox":[778,432,96,34]}
+{"kind":"textbox","id":"sh/tsvu9kni","slide":16,"text":"DO NOT","textPreview":"DO NOT","textChars":6,"textLines":1,"bbox":[786,440,80,18]}
+{"kind":"textbox","id":"sh/xkf6dcbu","slide":16,"text":"Enter “0” when the instruction means blank or not recorded.","textPreview":"Enter “0” when the instruction means blank or not recorded.","textChars":59,"textLines":1,"bbox":[895,430,285,48]}
+{"kind":"shape","id":"sh/4zidonyd","slide":16,"bbox":[778,514,96,34]}
+{"kind":"textbox","id":"sh/fepkzupw","slide":16,"text":"ALWAYS","textPreview":"ALWAYS","textChars":6,"textLines":1,"bbox":[786,522,80,18]}
+{"kind":"textbox","id":"sh/mtwra5gb","slide":16,"text":"Review the saved record before moving to the next task.","textPreview":"Review the saved record before moving to the next task.","textChars":55,"textLines":1,"bbox":[895,512,285,48]}
+{"kind":"textbox","id":"sh/xc3ylc7u","slide":16,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/4r65wjud","slide":16,"text":"16","textPreview":"16","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"image","id":"im/61032lsz","slide":16,"name":"","geometry":"roundRect","alt":"Welding import instructions","bbox":[58,150,650,490]}
+{"kind":"notes","id":"nt/rp3nb3","slide":16,"text":"Slow down here; these are the habits that protect data quality.\nKeep literal form semantics. A blank or not-recorded field is not automatically the same as zero.\nFor imports, the preview is the safety checkpoint."}
+{"kind":"slide","id":"sl/owa5bc","slide":17,"title":"PRACTICE 01","textShapes":13}
+{"kind":"textbox","id":"sh/3m94fu18","slide":17,"text":"PRACTICE 01","textPreview":"PRACTICE 01","textChars":11,"textLines":1,"bbox":[62,48,240,24]}
+{"kind":"textbox","id":"sh/s72x4nap","slide":17,"text":"Create a sample Torque record","textPreview":"Create a sample Torque record","textChars":29,"textLines":1,"bbox":[62,82,710,56]}
+{"kind":"shape","id":"sh/adsji5sn","slide":17,"bbox":[660,82,560,510]}
+{"kind":"shape","id":"sh/3ylc7u54","slide":17,"bbox":[1116.8,89,95.2,35.7]}
+{"kind":"textbox","id":"sh/sji5snel","slide":17,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[1124.8,98,85.2,18]}
+{"kind":"shape","id":"sh/h4byhgn2","slide":17,"bbox":[62,176,540,340]}
+{"kind":"textbox","id":"sh/ap4r65wj","slide":17,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[100,214,38,38]}
+{"kind":"textbox","id":"sh/za1gvy90","slide":17,"text":"Open Torque Records → New Record.","textPreview":"Open Torque Records → New Record.","textChars":33,"textLines":1,"bbox":[150,215,390,40]}
+{"kind":"textbox","id":"sh/z61032ls","slide":17,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[100,284,38,38]}
+{"kind":"textbox","id":"sh/al87ed8b","slide":17,"text":"Use the trainer’s sample date and model.","textPreview":"Use the trainer’s sample date and model.","textChars":40,"textLines":1,"bbox":[150,285,390,40]}
+{"kind":"textbox","id":"sh/hcrmhk3q","slide":17,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[100,354,38,38]}
+{"kind":"textbox","id":"sh/orytsvu9","slide":17,"text":"Complete every required field.","textPreview":"Complete every required field.","textChars":30,"textLines":1,"bbox":[150,355,390,40]}
+{"kind":"textbox","id":"sh/zupwb2hw","slide":17,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[100,424,38,38]}
+{"kind":"textbox","id":"sh/a9w3m94f","slide":17,"text":"Review the form before saving.","textPreview":"Review the form before saving.","textChars":30,"textLines":1,"bbox":[150,425,390,40]}
+{"kind":"shape","id":"sh/h0fepkzu","slide":17,"bbox":[62,550,540,72]}
+{"kind":"textbox","id":"sh/sfil0rqd","slide":17,"text":"Expected result: a saved record that opens without validation errors.","textPreview":"Expected result: a saved record that opens without validation errors.","textChars":69,"textLines":1,"bbox":[88,569,488,38]}
+{"kind":"textbox","id":"sh/zqtcj6to","slide":17,"text":"Use a trainer-approved sample only. Do not enter a fake record into production.","textPreview":"Use a trainer-approved sample only. Do not enter a fake record into production.","textChars":79,"textLines":1,"bbox":[96,652,1080,24]}
+{"kind":"image","id":"im/crmhk3q5","slide":17,"name":"","geometry":"roundRect","alt":"Torque record practice form","bbox":[660,82,560,510]}
+{"kind":"notes","id":"nt/owa5bc","slide":17,"text":"Allow three to four minutes.\nIf this is the production environment, demonstrate without clicking the final save button unless the trainer has authorized a controlled sample record.\nAsk participants to point out the required fields and the final review step."}
+{"kind":"slide","id":"sl/ko69yp","slide":18,"title":"PRACTICE 02","textShapes":14}
+{"kind":"textbox","id":"sh/w3m94fu1","slide":18,"text":"PRACTICE 02","textPreview":"PRACTICE 02","textChars":11,"textLines":1,"bbox":[62,48,240,24]}
+{"kind":"textbox","id":"sh/3itgfmlk","slide":18,"text":"Locate and review an existing record","textPreview":"Locate and review an existing record","textChars":36,"textLines":1,"bbox":[62,82,760,56]}
+{"kind":"shape","id":"sh/lwval87e","slide":18,"bbox":[600,150,620,455]}
+{"kind":"shape","id":"sh/wb2hwfyx","slide":18,"bbox":[1106.6,157,105.4,31.85]}
+{"kind":"textbox","id":"sh/3q5o7qpg","slide":18,"text":"Operator / Inspector","textPreview":"Operator / Inspector","textChars":20,"textLines":1,"bbox":[1114.6,166,95.4,18]}
+{"kind":"shape","id":"sh/e9cvixcz","slide":18,"bbox":[600,350,620,255]}
+{"kind":"textbox","id":"sh/l87ed8ba","slide":18,"text":"Training record details hidden","textPreview":"Training record details hidden","textChars":30,"textLines":1,"bbox":[765,458,290,24]}
+{"kind":"shape","id":"sh/sneloj2t","slide":18,"bbox":[62,174,490,360]}
+{"kind":"textbox","id":"sh/qd4vmtwr","slide":18,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[100,212,38,38]}
+{"kind":"textbox","id":"sh/fyxobm58","slide":18,"text":"Open the assigned inspection module.","textPreview":"Open the assigned inspection module.","textChars":36,"textLines":1,"bbox":[150,213,360,40]}
+{"kind":"textbox","id":"sh/8jqh0fep","slide":18,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[100,284,38,38]}
+{"kind":"textbox","id":"sh/x4nap4r6","slide":18,"text":"Search using the trainer’s reference.","textPreview":"Search using the trainer’s reference.","textChars":37,"textLines":1,"bbox":[150,285,360,40]}
+{"kind":"textbox","id":"sh/qpg3ex0n","slide":18,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[100,356,38,38]}
+{"kind":"textbox","id":"sh/fa9w3m94","slide":18,"text":"Open the matching record.","textPreview":"Open the matching record.","textChars":25,"textLines":1,"bbox":[150,357,360,40]}
+{"kind":"textbox","id":"sh/8v6psfil","slide":18,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[100,428,38,38]}
+{"kind":"textbox","id":"sh/xczed8v6","slide":18,"text":"Verify date, code/lot, equipment, values, and responsible person.","textPreview":"Verify date, code/lot, equipment, values, and responsible person.","textChars":65,"textLines":1,"bbox":[150,429,360,40]}
+{"kind":"shape","id":"sh/qtcj6tov","slide":18,"bbox":[62,566,490,68]}
+{"kind":"textbox","id":"sh/je9cvixc","slide":18,"text":"Expected result: the correct record is identified and its key fields are verified.","textPreview":"Expected result: the correct record is identified and its key fields are verified.","textChars":82,"textLines":1,"bbox":[84,582,446,42]}
+{"kind":"textbox","id":"sh/rqd4vmtw","slide":18,"text":"Do not edit the record during this exercise.","textPreview":"Do not edit the record during this exercise.","textChars":44,"textLines":1,"bbox":[664,626,492,26]}
+{"kind":"image","id":"im/rmhk3q5o","slide":18,"name":"","geometry":"roundRect","alt":"Material Monitoring search screen","bbox":[600,150,620,455]}
+{"kind":"notes","id":"nt/ko69yp","slide":18,"text":"Allow two to three minutes.\nProvide a safe reference value that exists in the training environment.\nThe goal is correct identification and review, not editing."}
+{"kind":"slide","id":"sl/bjbjqd","slide":19,"title":"QUICK REFERENCE","textShapes":20}
+{"kind":"textbox","id":"sh/h0fepkzu","slide":19,"text":"QUICK REFERENCE","textPreview":"QUICK REFERENCE","textChars":15,"textLines":1,"bbox":[62,34,420,22]}
+{"kind":"textbox","id":"sh/a9w3m94f","slide":19,"text":"The five habits of reliable ICRS use","textPreview":"The five habits of reliable ICRS use","textChars":36,"textLines":1,"bbox":[62,62,1120,54]}
+{"kind":"shape","id":"sh/zupwb2hw","slide":19,"bbox":[62,124,1156,0]}
+{"kind":"shape","id":"sh/orytsvu9","slide":19,"bbox":[84,160,1110,70]}
+{"kind":"textbox","id":"sh/hcrmhk3q","slide":19,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[108,176,38,38]}
+{"kind":"textbox","id":"sh/al87ed8b","slide":19,"text":"Search first","textPreview":"Search first","textChars":12,"textLines":1,"bbox":[170,174,280,30]}
+{"kind":"textbox","id":"sh/z61032ls","slide":19,"text":"Avoid duplicate records.","textPreview":"Avoid duplicate records.","textChars":24,"textLines":1,"bbox":[480,175,660,28]}
+{"kind":"shape","id":"sh/oza1gvy9","slide":19,"bbox":[84,252,1110,70]}
+{"kind":"textbox","id":"sh/hk3q5o7q","slide":19,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[108,268,38,38]}
+{"kind":"textbox","id":"sh/hgn29gr2","slide":19,"text":"Read the form","textPreview":"Read the form","textChars":13,"textLines":1,"bbox":[170,266,280,30]}
+{"kind":"textbox","id":"sh/svu9knih","slide":19,"text":"Follow required fields and validation.","textPreview":"Follow required fields and validation.","textChars":38,"textLines":1,"bbox":[480,267,660,28]}
+{"kind":"shape","id":"sh/za1gvy90","slide":19,"bbox":[84,344,1110,70]}
+{"kind":"textbox","id":"sh/ap4r65wj","slide":19,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[108,360,38,38]}
+{"kind":"textbox","id":"sh/hoza1gvy","slide":19,"text":"Enter actual data","textPreview":"Enter actual data","textChars":17,"textLines":1,"bbox":[170,358,280,30]}
+{"kind":"textbox","id":"sh/s36hcrmh","slide":19,"text":"Never copy unverified values.","textPreview":"Never copy unverified values.","textChars":29,"textLines":1,"bbox":[480,359,660,28]}
+{"kind":"shape","id":"sh/zidonyd0","slide":19,"bbox":[84,436,1110,70]}
+{"kind":"textbox","id":"sh/a1gvy90j","slide":19,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[108,452,38,38]}
+{"kind":"textbox","id":"sh/lszqtcj6","slide":19,"text":"Preview imports","textPreview":"Preview imports","textChars":15,"textLines":1,"bbox":[170,450,280,30]}
+{"kind":"textbox","id":"sh/s72x4nap","slide":19,"text":"Resolve errors before confirming.","textPreview":"Resolve errors before confirming.","textChars":33,"textLines":1,"bbox":[480,451,660,28]}
+{"kind":"shape","id":"sh/8z25kb6x","slide":19,"bbox":[84,528,1110,70]}
+{"kind":"textbox","id":"sh/1gvy90je","slide":19,"text":"5","textPreview":"5","textChars":1,"textLines":1,"bbox":[108,544,38,38]}
+{"kind":"textbox","id":"sh/qtcj6tov","slide":19,"text":"Review after saving","textPreview":"Review after saving","textChars":19,"textLines":1,"bbox":[170,542,280,30]}
+{"kind":"textbox","id":"sh/je9cvixc","slide":19,"text":"Verify the record while the work is fresh.","textPreview":"Verify the record while the work is fresh.","textChars":42,"textLines":1,"bbox":[480,543,660,28]}
+{"kind":"shape","id":"sh/87ed8bat","slide":19,"bbox":[320,640,640,46]}
+{"kind":"textbox","id":"sh/xs72x4na","slide":19,"text":"When unsure: stop, review, and ask the responsible supervisor or inspector.","textPreview":"When unsure: stop, review, and ask the responsible supervisor or inspector.","textChars":75,"textLines":1,"bbox":[348,651,584,24]}
+{"kind":"textbox","id":"sh/q1orytsv","slide":19,"text":"Inspection Checksheet Recording System","textPreview":"Inspection Checksheet Recording System","textChars":38,"textLines":1,"bbox":[62,684,460,18]}
+{"kind":"textbox","id":"sh/fmlkjm1c","slide":19,"text":"19","textPreview":"19","textChars":2,"textLines":1,"bbox":[1175,682,42,20]}
+{"kind":"notes","id":"nt/bjbjqd","slide":19,"text":"Close by asking participants to repeat the five habits.\nInvite questions and identify the local contact person for access or data-quality concerns."}

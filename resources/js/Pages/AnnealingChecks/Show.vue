@@ -22,15 +22,6 @@ const formatDate = (dateString) => {
     });
 };
 
-const formatTime = (timeString) => {
-    if (!timeString) return 'N/A';
-    const time = new Date(`1970-01-01T${timeString}`);
-    return time.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-    });
-};
 </script>
 
 <template>
@@ -130,13 +121,7 @@ const formatTime = (timeString) => {
                                         </dd>
                                     </div>
                                     <div class="sm:grid sm:grid-cols-3 sm:gap-4">
-                                        <dt class="text-sm font-medium text-gray-500">Machine Setting</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 sm:col-span-2">
-                                            {{ annealingCheck.machine_setting || 'N/A' }}
-                                        </dd>
-                                    </div>
-                                    <div class="sm:grid sm:grid-cols-3 sm:gap-4">
-                                        <dt class="text-sm font-medium text-gray-500">Machine Setting Details</dt>
+                                        <dt class="text-sm font-medium text-gray-500">Process Settings</dt>
                                         <dd class="mt-1 text-sm text-gray-900 sm:col-span-2">
                                             <div class="grid grid-cols-2 gap-4">
                                                 <div>
@@ -198,47 +183,6 @@ const formatTime = (timeString) => {
                                         </dd>
                                     </div>
                                 </dl>
-                            </div>
-                        </div>
-
-                        <!-- Temperature Readings -->
-                        <div class="mt-8">
-                            <h4 class="text-md font-medium text-gray-900 mb-4">Temperature Readings</h4>
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Time
-                                            </th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Temperature
-                                            </th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Recorded By
-                                            </th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Recorded At
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200">
-                                        <tr v-for="(reading, index) in annealingCheck.temperature_readings" :key="index">
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {{ formatTime(reading.reading_time) }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {{ reading.temperature }} °C
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ reading.recorded_by?.name || 'System' }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ formatDate(reading.created_at) }}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
                             </div>
                         </div>
 

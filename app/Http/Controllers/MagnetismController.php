@@ -9,6 +9,7 @@ use App\Http\Requests\MagnetismCheckSheetRequest;
 use App\Http\Requests\MagnetismBatchRequest;
 use App\Imports\MagnetismChecksheetImport;
 use App\Services\ActivityService;
+use App\Services\DuplicateRecordGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -60,9 +61,20 @@ class MagnetismController extends Controller
     /**
      * Store a newly created checksheet.
      */
-    public function store(MagnetismCheckSheetRequest $request)
+    public function store(MagnetismCheckSheetRequest $request, DuplicateRecordGuard $duplicateRecordGuard)
     {
-        $checksheet = MagnetismChecksheet::create($request->validated());
+        $data = $request->validated();
+        $checksheet = $duplicateRecordGuard->create(
+            MagnetismChecksheet::class,
+            [
+                'item_code' => $data['item_code'],
+                'machine_no' => $data['machine_no'],
+                'month' => $data['month'],
+                'year' => $data['year'],
+            ],
+            'magnetism checksheet for this item, machine, month, and year',
+            fn () => MagnetismChecksheet::create($data)
+        );
 
         ActivityService::log(
             'create',
@@ -226,12 +238,26 @@ class MagnetismController extends Controller
     /**
      * Store a new batch.
      */
-    public function storeBatch(MagnetismBatchRequest $request, MagnetismChecksheet $magnetism_checksheet)
+    public function storeBatch(
+        MagnetismBatchRequest $request,
+        MagnetismChecksheet $magnetism_checksheet,
+        DuplicateRecordGuard $duplicateRecordGuard
+    )
     {
         $data = $request->validated();
         $data['checksheet_id'] = $magnetism_checksheet->id;
 
-        $batch = MagnetismBatch::create($data);
+        $batch = $duplicateRecordGuard->create(
+            MagnetismBatch::class,
+            [
+                'checksheet_id' => $magnetism_checksheet->id,
+                'production_date' => $data['production_date'],
+                'material_lot_number' => $data['material_lot_number'],
+                'job_number' => $data['job_number'],
+            ],
+            'magnetism batch for this production date, material lot, and job number',
+            fn () => MagnetismBatch::create($data)
+        );
 
         ActivityService::log(
             'create',

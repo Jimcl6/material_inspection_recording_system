@@ -24,7 +24,6 @@ type AnnealingCheck = {
     quantity: number;
     annealing_date: string;
     machine_number: string;
-    machine_setting?: string;
     temperature_setting?: number;
     annealing_time?: string;
     damper_setting?: string;

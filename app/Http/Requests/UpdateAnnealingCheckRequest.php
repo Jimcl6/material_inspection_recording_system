@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Contracts\Validation\ValidationRule;
 
 class UpdateAnnealingCheckRequest extends FormRequest
 {
@@ -29,7 +28,6 @@ class UpdateAnnealingCheckRequest extends FormRequest
             'quantity' => 'sometimes|required|integer|min:1',
             'annealing_date' => 'sometimes|required|date|after_or_equal:receiving_date',
             'machine_number' => 'sometimes|required|string|max:50',
-            'machine_setting' => 'nullable|string|max:100',
             'temperature_setting' => 'nullable|numeric|between:-50,2000',
             'annealing_time' => 'nullable|date_format:H:i',
             'damper_setting' => 'nullable|string|max:100',
@@ -39,25 +37,6 @@ class UpdateAnnealingCheckRequest extends FormRequest
             'checked_by_id' => 'nullable|string|max:255',
             'verified_by_id' => 'nullable|string|max:255',
             'remarks' => 'nullable|string',
-            'temperature_readings' => 'sometimes|array|min:1',
-            'temperature_readings.*.id' => 'sometimes|exists:temperature_readings,id',
-            'temperature_readings.*.reading_time' => 'required|date_format:H:i',
-            'temperature_readings.*.temperature' => 'required|numeric|between:-50,1000',
-        ];
-    }
-
-    /**
-     * Get custom messages for validator errors.
-     *
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'temperature_readings.required' => 'At least one temperature reading is required.',
-            'temperature_readings.*.reading_time.required' => 'Reading time is required.',
-            'temperature_readings.*.temperature.required' => 'Temperature is required.',
-            'temperature_readings.*.temperature.between' => 'Temperature must be between -50 and 1000 degrees.',
         ];
     }
 }
