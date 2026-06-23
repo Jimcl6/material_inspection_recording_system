@@ -612,6 +612,14 @@ const mainMargin = computed(() => {
             <main class="flex-1">
                 <div class="py-6">
                     <div class=" mx-auto px-4 sm:px-6 lg:px-8">
+                        <div
+                            v-if="$page.props.errors?.duplicate"
+                            class="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 shadow-sm"
+                            role="alert"
+                        >
+                            <p class="font-semibold">Duplicate record detected</p>
+                            <p class="mt-1 text-sm">{{ $page.props.errors.duplicate }}</p>
+                        </div>
                         <slot />
                     </div>
                 </div>

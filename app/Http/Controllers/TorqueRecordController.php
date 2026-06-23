@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\TorqueRecord;
 use App\Imports\TorqueChecksheetImport;
 use App\Services\ActivityService;
+use App\Services\DuplicateRecordGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -88,7 +89,7 @@ class TorqueRecordController extends Controller
         return Inertia::render('TorqueRecords/Create');
     }
 
-    public function store(Request $request)
+    public function store(Request $request, DuplicateRecordGuard $duplicateRecordGuard)
     {
         $data = $request->validate([
             'date' => ['nullable','date'],
@@ -108,7 +109,17 @@ class TorqueRecordController extends Controller
             'checked_by' => ['nullable','string','max:100'],
         ]);
 
-        $rec = TorqueRecord::create($data);
+        $rec = $duplicateRecordGuard->create(
+            TorqueRecord::class,
+            [
+                'date' => $data['date'] ?? null,
+                'screw_type' => $data['screw_type'] ?? null,
+                'process_assigned' => $data['process_assigned'] ?? null,
+                'line_assigned' => $data['line_assigned'] ?? null,
+            ],
+            'torque record for this date, screw type, process, and line',
+            fn () => TorqueRecord::create($data)
+        );
 
         ActivityService::log(
             'create',

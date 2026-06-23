@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\TemperatureReading;
 use App\Models\User;
 use App\Models\ApprovalNotification;
 
@@ -23,7 +22,6 @@ class AnnealingCheck extends Model
         'quantity',
         'annealing_date',
         'machine_number',
-        'machine_setting',
         'temperature_setting',
         'annealing_time',
         'damper_setting',
@@ -52,14 +50,6 @@ class AnnealingCheck extends Model
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',
     ];
-
-    /**
-     * Get all temperature readings for this check
-     */
-    public function temperatureReadings(): HasMany
-    {
-        return $this->hasMany(TemperatureReading::class);
-    }
 
     /**
      * Person In Charge

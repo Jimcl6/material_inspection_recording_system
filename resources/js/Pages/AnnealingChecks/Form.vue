@@ -18,17 +18,10 @@ const props = defineProps({
             quantity: 1,
             annealing_date: new Date().toISOString().split('T')[0],
             machine_number: '',
-            machine_setting: '',
             pic_id: '',
             checked_by_id: '',
             verified_by_id: '',
-            remarks: '',
-            temperature_readings: [
-                { id: null, reading_time: '08:00', temperature: '' },
-                { id: null, reading_time: '12:00', temperature: '' },
-                { id: null, reading_time: '16:00', temperature: '' },
-                { id: null, reading_time: '20:00', temperature: '' },
-            ]
+            remarks: ''
         })
     },
     users: {
@@ -49,43 +42,13 @@ const form = useForm({
     quantity: props.annealingCheck.quantity || 1,
     annealing_date: props.annealingCheck.annealing_date || new Date().toISOString().split('T')[0],
     machine_number: props.annealingCheck.machine_number || '',
-    machine_setting: props.annealingCheck.machine_setting || '',
     pic_id: props.annealingCheck.pic_id || '',
     checked_by_id: props.annealingCheck.checked_by_id || '',
     verified_by_id: props.annealingCheck.verified_by_id || '',
-    remarks: props.annealingCheck.remarks || '',
-    temperature_readings: [...(props.annealingCheck.temperature_readings || [
-        { id: null, reading_time: '08:00', temperature: '' },
-        { id: null, reading_time: '12:00', temperature: '' },
-        { id: null, reading_time: '16:00', temperature: '' },
-        { id: null, reading_time: '20:00', temperature: '' },
-    ])]
+    remarks: props.annealingCheck.remarks || ''
 });
 
-const addTemperatureReading = () => {
-    form.temperature_readings.push({ 
-        id: null, 
-        reading_time: '00:00', 
-        temperature: '' 
-    });
-};
-
-const removeTemperatureReading = (index) => {
-    if (form.temperature_readings.length > 1) {
-        form.temperature_readings.splice(index, 1);
-    }
-};
-
 const submit = () => {
-    // Ensure temperature readings are properly formatted
-    const formattedReadings = form.temperature_readings.map(reading => ({
-        ...reading,
-        temperature: parseFloat(reading.temperature) || 0,
-        reading_time: reading.reading_time || '00:00'
-    }));
-    
-    form.temperature_readings = formattedReadings;
-
     if (props.isEdit) {
         form.put(route('annealing-checks.update', props.annealingCheck.id), {
             onSuccess: () => {
@@ -225,16 +188,6 @@ const submit = () => {
                                         <InputError :message="form.errors.machine_number" class="mt-2" />
                                     </div>
 
-                                    <div class="mb-4">
-                                        <InputLabel for="machine_setting" value="Machine Setting" />
-                                        <TextInput
-                                            id="machine_setting"
-                                            v-model="form.machine_setting"
-                                            type="text"
-                                            class="mt-1 block w-full"
-                                        />
-                                        <InputError :message="form.errors.machine_setting" class="mt-2" />
-                                    </div>
                                 </div>
                             </div>
 
@@ -288,74 +241,6 @@ const submit = () => {
                                         <InputError :message="form.errors.verified_by_id" class="mt-2" />
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Temperature Readings -->
-                            <div class="border-t border-gray-200 pt-6 mb-6">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-lg font-medium text-gray-900">Temperature Readings</h3>
-                                    <button
-                                        type="button"
-                                        @click="addTemperatureReading"
-                                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                    >
-                                        Add Reading
-                                    </button>
-                                </div>
-
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-gray-200">
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Time
-                                                </th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Temperature (°C)
-                                                </th>
-                                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Actions
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="bg-white divide-y divide-gray-200">
-                                            <tr v-for="(reading, index) in form.temperature_readings" :key="index">
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <TextInput
-                                                        v-model="reading.reading_time"
-                                                        type="time"
-                                                        class="block w-full"
-                                                        required
-                                                    />
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="flex items-center">
-                                                        <TextInput
-                                                            v-model="reading.temperature"
-                                                            type="number"
-                                                            step="0.01"
-                                                            class="block w-full"
-                                                            placeholder="0.00"
-                                                            required
-                                                        />
-                                                        <span class="ml-2 text-gray-500">°C</span>
-                                                    </div>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <button
-                                                        type="button"
-                                                        @click="removeTemperatureReading(index)"
-                                                        :disabled="form.temperature_readings.length <= 1"
-                                                        class="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <InputError :message="form.errors['temperature_readings']" class="mt-2" />
                             </div>
 
                             <!-- Remarks -->

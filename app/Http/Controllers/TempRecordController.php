@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\TempRecord;
 use App\Imports\TempRecordImport;
 use App\Services\ActivityService;
+use App\Services\DuplicateRecordGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -90,7 +91,7 @@ class TempRecordController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, DuplicateRecordGuard $duplicateRecordGuard)
     {
         $date = $this->parseDateInput($request->input('date'));
         if ($date !== null) { $request->merge(['date' => $date]); }
@@ -111,7 +112,16 @@ class TempRecordController extends Controller
             'checked_by' => ['nullable','string','max:100'],
         ]);
 
-        $rec = TempRecord::create($data);
+        $rec = $duplicateRecordGuard->create(
+            TempRecord::class,
+            [
+                'date' => $data['date'] ?? null,
+                'equipment_type' => $data['equipment_type'],
+                'control_no' => $data['control_no'] ?? null,
+            ],
+            'temperature record for this date, equipment type, and control number',
+            fn () => TempRecord::create($data)
+        );
 
         ActivityService::log(
             'create',

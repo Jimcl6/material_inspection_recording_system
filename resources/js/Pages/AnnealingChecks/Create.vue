@@ -1,17 +1,12 @@
 <script setup lang="ts">
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 interface User {
     id: number;
     name: string;
-}
-
-interface TemperatureReading {
-    reading_time: string;
-    temperature: string | number;
 }
 
 interface FormData {
@@ -21,7 +16,6 @@ interface FormData {
     quantity: number;
     annealing_date: string;
     machine_number: string;
-    machine_setting: string;
     temperature_setting: number | null;
     annealing_time: string;
     damper_setting: string;
@@ -31,7 +25,6 @@ interface FormData {
     checked_by_id: string | number;
     verified_by_id: string | number;
     remarks: string;
-    temperature_readings: TemperatureReading[];
 }
 
 const page = usePage();
@@ -47,16 +40,7 @@ const validateForm = () => {
     if (!form.receiving_date) errors.receiving_date = 'Receiving date is required';
     if (!form.annealing_date) errors.annealing_date = 'Annealing date is required';
     if (!form.pic_id) errors.pic_id = 'Person in charge is required';
-    
-    // Validate temperature readings
-    form.temperature_readings.forEach((reading, index) => {
-        if (!reading.temperature) {
-            errors[`temperature_readings.${index}.temperature`] = 'Temperature is required';
-        } else if (isNaN(Number(reading.temperature))) {
-            errors[`temperature_readings.${index}.temperature`] = 'Temperature must be a number';
-        }
-    });
-    
+
     return errors;
 };
 
@@ -67,7 +51,6 @@ const form = useForm({
     quantity: 1,
     annealing_date: '',
     machine_number: '',
-    machine_setting: '',
     temperature_setting: null,
     annealing_time: '',
     damper_setting: '',
@@ -76,23 +59,8 @@ const form = useForm({
     pic_id: '',
     checked_by_id: '',
     verified_by_id: '',
-    remarks: '',
-    temperature_readings: [
-        { reading_time: '08:00', temperature: '' },
-        { reading_time: '12:00', temperature: '' },
-        { reading_time: '16:00', temperature: '' },
-    ]
+    remarks: ''
 });
-
-const addTemperatureReading = (): void => {
-    form.temperature_readings.push({ reading_time: '08:00', temperature: '' });
-};
-
-const removeTemperatureReading = (index: number): void => {
-    if (form.temperature_readings.length > 1) {
-        form.temperature_readings.splice(index, 1);
-    }
-};
 
 const submit = async (): Promise<void> => {
     const validationErrors = validateForm();
@@ -265,28 +233,7 @@ const onBlur = (field: string) => {
                                     </p>
                                 </div>
 
-                                <!-- Machine Setting -->
-                                <div>
-                                    <label for="machine_setting" class="block text-sm font-medium text-gray-700">
-                                        Machine Setting
-                                    </label>
-                                    <input
-                                        id="machine_setting"
-                                        v-model="form.machine_setting"
-                                        type="text"
-                                        :class="{
-                                            'border-red-500': form.errors.machine_setting,
-                                            'border-gray-300': !form.errors.machine_setting
-                                        }"
-                                        class="mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        @blur="onBlur('machine_setting')"
-                                    />
-                                    <p v-if="form.errors.machine_setting" class="mt-1 text-sm text-red-600">
-                                        {{ form.errors.machine_setting }}
-                                    </p>
-                                </div>
-
-                                <!-- Machine Setting Sub-fields -->
+                                <!-- Process Settings -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
                                     <!-- Temperature Setting -->
                                     <div>
@@ -422,70 +369,6 @@ const onBlur = (field: string) => {
                                     <p v-if="form.errors.verified_by_id" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.verified_by_id }}
                                     </p>
-                                </div>
-                            </div>
-
-                            <!-- Temperature Readings -->
-                            <div class="mt-8">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-lg font-medium text-gray-900">Temperature Readings</h3>
-                                    <button
-                                        type="button"
-                                        @click="addTemperatureReading"
-                                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                    >
-                                        Add Reading
-                                    </button>
-                                </div>
-
-                                <div v-if="form.temperature_readings.length === 0" class="text-sm text-gray-500">
-                                    No temperature readings added yet.
-                                </div>
-
-                                <div v-else class="space-y-4">
-                                    <div v-for="(reading, index) in form.temperature_readings" :key="index" class="flex items-center space-x-4">
-                                        <div class="flex-1">
-                                            <label :for="`reading_time_${index}`" class="block text-sm font-medium text-gray-700">
-                                                Time
-                                            </label>
-                                            <input
-                                                :id="`reading_time_${index}`"
-                                                v-model="reading.reading_time"
-                                                type="time"
-                                                required
-                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                            />
-                                            <p v-if="form.errors[`temperature_readings.${index}.reading_time`]" class="mt-1 text-sm text-red-600">
-                                                {{ form.errors[`temperature_readings.${index}.reading_time`] }}
-                                            </p>
-                                        </div>
-                                        <div class="flex-1">
-                                            <label :for="`temperature_${index}`" class="block text-sm font-medium text-gray-700">
-                                                Temperature (°C)
-                                            </label>
-                                            <input
-                                                :id="`temperature_${index}`"
-                                                v-model.number="reading.temperature"
-                                                type="number"
-                                                step="0.01"
-                                                required
-                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                            />
-                                            <p v-if="form.errors[`temperature_readings.${index}.temperature`]" class="mt-1 text-sm text-red-600">
-                                                {{ form.errors[`temperature_readings.${index}.temperature`] }}
-                                            </p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            @click="removeTemperatureReading(index)"
-                                            class="mt-6 p-2 text-red-600 hover:text-red-800"
-                                            title="Remove reading"
-                                        >
-                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
 

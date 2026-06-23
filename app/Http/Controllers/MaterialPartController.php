@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MaterialPart;
 use App\Models\MaterialSubLotTitle;
 use App\Services\ActivityService;
+use App\Services\DuplicateRecordGuard;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -65,7 +66,7 @@ class MaterialPartController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, DuplicateRecordGuard $duplicateRecordGuard)
     {
         $validated = $request->validate([
             'material_type' => 'required|string|max:50',
@@ -80,15 +81,26 @@ class MaterialPartController extends Controller
             'job_number' => 'nullable|string|max:100',
         ]);
 
-        // Auto-generate letter code if not provided
-        if (empty($validated['letter_code'])) {
-            $validated['letter_code'] = MaterialPart::getNextLetterCode(
-                $validated['item_block_code'], 
-                $validated['date']
-            );
-        }
+        $materialPart = $duplicateRecordGuard->create(
+            MaterialPart::class,
+            [
+                'material_type' => $validated['material_type'],
+                'date' => $validated['date'],
+                'item_block_code' => $validated['item_block_code'],
+                'main_lot_number' => $validated['main_lot_number'] ?? null,
+            ],
+            'material monitoring record for this material, date, item block, and main lot',
+            function () use ($validated) {
+                if (empty($validated['letter_code'])) {
+                    $validated['letter_code'] = MaterialPart::getNextLetterCode(
+                        $validated['item_block_code'],
+                        $validated['date']
+                    );
+                }
 
-        $materialPart = MaterialPart::create($validated);
+                return MaterialPart::create($validated);
+            }
+        );
 
         ActivityService::log(
             'create',

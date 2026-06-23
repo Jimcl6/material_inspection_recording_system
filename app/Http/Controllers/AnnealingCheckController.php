@@ -15,6 +15,7 @@ use App\Exports\AnnealingChecksExport;
 use App\Imports\AnnealingChecksWithHeadersImport;
 use App\Services\ActivityService;
 use App\Services\ApprovalWorkflowService;
+use App\Services\DuplicateRecordGuard;
 
 class AnnealingCheckController extends Controller
 {
@@ -61,7 +62,8 @@ class AnnealingCheckController extends Controller
      */
     public function store(
         StoreAnnealingCheckRequest $request,
-        ApprovalWorkflowService $approvalWorkflowService
+        ApprovalWorkflowService $approvalWorkflowService,
+        DuplicateRecordGuard $duplicateRecordGuard
     ): \Illuminate\Http\RedirectResponse
     {
         $data = $request->validated();
@@ -76,16 +78,15 @@ class AnnealingCheckController extends Controller
         $data['checked_by_id'] = $this->convertNameToId($data['checked_by_id'] ?? null);
         $data['verified_by_id'] = $this->convertNameToId($data['verified_by_id'] ?? null);
 
-        $temperatureReadings = $data['temperature_readings'];
-        unset($data['temperature_readings']);
-
-        $annealingCheck = AnnealingCheck::create($data);
-
-        // Add temperature readings
-        foreach ($temperatureReadings as $reading) {
-            $reading['recorded_by'] = Auth::id();
-            $annealingCheck->temperatureReadings()->create($reading);
-        }
+        $annealingCheck = $duplicateRecordGuard->create(
+            AnnealingCheck::class,
+            [
+                'item_code' => $data['item_code'],
+                'annealing_date' => $data['annealing_date'],
+            ],
+            'annealing check for this item code and annealing date',
+            fn () => AnnealingCheck::create($data)
+        );
 
         // Notify administrators and inspectors
         if (class_exists('\App\Services\ApprovalNotificationService')) {
@@ -119,7 +120,7 @@ class AnnealingCheckController extends Controller
      */
     public function show(AnnealingCheck $annealingCheck): \Inertia\Response
     {
-        $annealingCheck->load(['pic', 'checkedBy', 'verifiedBy', 'temperatureReadings']);
+        $annealingCheck->load(['pic', 'checkedBy', 'verifiedBy']);
         
         return Inertia::render('AnnealingChecks/Show', [
             'annealingCheck' => $annealingCheck
@@ -167,11 +168,8 @@ class AnnealingCheckController extends Controller
      */
     public function edit(AnnealingCheck $annealingCheck): \Inertia\Response
     {
-        $annealingCheck->load('temperatureReadings');
-        
         return Inertia::render('AnnealingChecks/Edit', [
             'annealingCheck' => $annealingCheck,
-            'temperatureReadings' => $annealingCheck->temperatureReadings,
             'users' => \App\Models\User::select('id', 'name')->orderBy('name')->get()
         ]);
     }
@@ -198,42 +196,7 @@ class AnnealingCheckController extends Controller
         $data['checked_by_id'] = $this->convertNameToId($data['checked_by_id'] ?? null);
         $data['verified_by_id'] = $this->convertNameToId($data['verified_by_id'] ?? null);
 
-        $temperatureReadings = $data['temperature_readings'] ?? [];
-        unset($data['temperature_readings']);
-
         $annealingCheck->update($data);
-
-        // Update temperature readings
-        $existingIds = $annealingCheck->temperatureReadings->pluck('id')->toArray();
-        $newIds = [];
-
-        foreach ($temperatureReadings as $reading) {
-            if (isset($reading['id']) && in_array($reading['id'], $existingIds)) {
-                // Update existing reading
-                $annealingCheck->temperatureReadings()
-                    ->where('id', $reading['id'])
-                    ->update([
-                        'reading_time' => $reading['reading_time'],
-                        'temperature' => $reading['temperature'],
-                        'updated_at' => now(),
-                    ]);
-                $newIds[] = $reading['id'];
-            } else {
-                // Create new reading
-                $newReading = $annealingCheck->temperatureReadings()->create([
-                    'reading_time' => $reading['reading_time'],
-                    'temperature' => $reading['temperature'],
-                    'recorded_by' => Auth::id(),
-                ]);
-                $newIds[] = $newReading->id;
-            }
-        }
-
-        // Delete readings that were removed
-        $toDelete = array_diff($existingIds, $newIds);
-        if (!empty($toDelete)) {
-            $annealingCheck->temperatureReadings()->whereIn('id', $toDelete)->delete();
-        }
 
         // Notify administrators and inspectors if status changed
         if (isset($data['status']) && $annealingCheck->wasChanged('status')) {

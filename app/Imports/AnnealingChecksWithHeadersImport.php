@@ -96,7 +96,6 @@ class AnnealingChecksWithHeadersImport
             elseif (str_contains($val, 'QUANTITY') && !isset($map['quantity'])) $map['quantity'] = $col;
             elseif (str_contains($val, 'ANNEALING') && str_contains($val, 'DATE')) $map['annealing_date'] = $col;
             elseif (str_contains($val, 'MACHINE') && str_contains($val, '#')) $map['machine_number'] = $col;
-            elseif (str_contains($val, 'MACHINE') && str_contains($val, 'SETTING')) $map['machine_setting_start'] = $col;
             elseif (str_contains($val, 'TIME') && !isset($map['time_start'])) $map['time_start'] = $col;
             elseif (str_contains($val, 'PIC')) $map['pic'] = $col;
             elseif (str_contains($val, 'CHECKED')) $map['checked_by'] = $col;
@@ -214,7 +213,6 @@ class AnnealingChecksWithHeadersImport
             'quantity' => $this->parseInteger($quantity),
             'annealing_date' => $this->parseDate($get('annealing_date')) ?? now()->toDateString(),
             'machine_number' => $get('machine_number') ? (string) $get('machine_number') : null,
-            'machine_setting' => null,
             'temperature_setting' => $this->parseTemperature($get('temperature')),
             'annealing_time' => $this->parseAnnealingTime($get('annealing_time')),
             'damper_setting' => $get('damper_setting') !== null ? (string) $get('damper_setting') : null,

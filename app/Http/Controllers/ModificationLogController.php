@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ModificationLog;
 use App\Services\ActivityService;
+use App\Services\DuplicateRecordGuard;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -87,7 +88,7 @@ class ModificationLogController extends Controller
     /**
      * Store a newly created modification log in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, DuplicateRecordGuard $duplicateRecordGuard)
     {
         $date = $this->parseDateInput($request->input('prod_date'));
         if ($date !== null) { 
@@ -113,7 +114,18 @@ class ModificationLogController extends Controller
             'col_remarks' => ['nullable','string'],
         ]);
 
-        $log = ModificationLog::create($data);
+        $log = $duplicateRecordGuard->create(
+            ModificationLog::class,
+            [
+                'prod_date' => $data['prod_date'],
+                'model_code' => $data['model_code'],
+                'item_for_modification' => $data['item_for_modification'],
+                'material_lot_no' => $data['material_lot_no'] ?? null,
+                'job_no_transfer_order' => $data['job_no_transfer_order'] ?? null,
+            ],
+            'modification log with the same production and material identifiers',
+            fn () => ModificationLog::create($data)
+        );
 
         ActivityService::log(
             'create',

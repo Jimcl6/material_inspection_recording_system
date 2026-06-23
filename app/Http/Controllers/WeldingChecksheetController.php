@@ -13,6 +13,7 @@ use App\Models\WeldingChecksheetType;
 use App\Models\WeldingItemConfig;
 use App\Services\ActivityService;
 use App\Services\ApprovalWorkflowService;
+use App\Services\DuplicateRecordGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -77,7 +78,8 @@ class WeldingChecksheetController extends Controller
 
     public function store(
         StoreWeldingChecksheetRequest $request,
-        ApprovalWorkflowService $approvalWorkflowService
+        ApprovalWorkflowService $approvalWorkflowService,
+        DuplicateRecordGuard $duplicateRecordGuard
     )
     {
         $data = $this->prepareChecksheetData($request->validated());
@@ -88,8 +90,24 @@ class WeldingChecksheetController extends Controller
         $samples = $data['samples'] ?? [];
         unset($data['samples']);
 
-        $checksheet = WeldingChecksheet::create($data);
-        $this->replaceSamples($checksheet, $samples);
+        $checksheet = $duplicateRecordGuard->create(
+            WeldingChecksheet::class,
+            [
+                'checksheet_type_id' => $data['checksheet_type_id'],
+                'item_code' => $data['item_code'] ?? null,
+                'production_date' => $data['production_date'],
+                'machine_no' => $data['machine_no'] ?? null,
+                'letter_code' => $data['letter_code'] ?? null,
+                'job_number' => $data['job_number'] ?? null,
+            ],
+            'welding checksheet with the same production identifiers',
+            function () use ($data, $samples) {
+                $checksheet = WeldingChecksheet::create($data);
+                $this->replaceSamples($checksheet, $samples);
+
+                return $checksheet;
+            }
+        );
 
         ActivityService::log(
             'create',
