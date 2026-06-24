@@ -3,6 +3,8 @@
 namespace App\Imports;
 
 use App\Models\TempRecord;
+use App\Services\ApprovalNotificationService;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -266,7 +268,13 @@ class TempRecordImport
                             $this->executeResults['skipped']++;
                         }
                     } else {
-                        TempRecord::create($record);
+                        $record = array_merge($record, app(ApprovalWorkflowService::class)->initialState());
+                        $created = TempRecord::create($record);
+
+                        if ($created->status === 'pending') {
+                            app(ApprovalNotificationService::class)->notifyApprovers($created, 'new_submission', 'temperature');
+                        }
+
                         $this->executeResults['imported']++;
                     }
                 } catch (\Exception $e) {

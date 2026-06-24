@@ -65,6 +65,9 @@
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       PM Temp
                     </th>
+                    <th v-if="approvalsEnabled" scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
@@ -102,6 +105,13 @@
                         <span class="ml-2 text-xs text-gray-500">{{ record.time_pm }}</span>
                       </div>
                     </td>
+                    <td v-if="approvalsEnabled" class="px-6 py-4 whitespace-nowrap">
+                      <ApprovalStatus
+                        :status="record.status"
+                        :submitted-at="record.submitted_at"
+                        :approved-at="record.approved_at"
+                      />
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div class="flex items-center justify-end space-x-2">
                         <Link 
@@ -138,7 +148,7 @@
                     </td>
                   </tr>
                   <tr v-if="!records.data.length">
-                    <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
+                    <td :colspan="approvalsEnabled ? 8 : 7" class="px-6 py-4 text-center text-sm text-gray-500">
                       No temperature records found.
                     </td>
                   </tr>
@@ -214,9 +224,10 @@ import DataTableFilters from '@/Components/DataTableFilters.vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
+import ApprovalStatus from '@/Components/ApprovalStatus.vue';
 import { usePermissions } from '@/Composables/usePermissions';
 
-const { canCreate, canUpdate, canDelete, canImport } = usePermissions();
+const { canCreate, canUpdate, canDelete, canImport, approvalsEnabled } = usePermissions();
 
 const props = defineProps({
   records: {
@@ -237,38 +248,56 @@ const props = defineProps({
   }
 });
 
-const filterConfig = computed(() => [
-  {
+const filterConfig = computed(() => {
+  const filters = [
+    {
     type: 'text',
     key: 'search',
     label: 'Search',
     placeholder: 'Search by model, equipment, person...',
-  },
-  {
+    },
+    {
     type: 'date',
     key: 'date_from',
     label: 'Date From',
-  },
-  {
+    },
+    {
     type: 'date',
     key: 'date_to',
     label: 'Date To',
-  },
-  {
+    },
+    {
     type: 'select',
     key: 'equipment_type',
     label: 'Equipment Type',
     placeholder: 'All Equipment',
     options: props.equipmentTypes.map((t) => ({ value: t, label: t })),
-  },
-  {
+    },
+    {
     type: 'select',
     key: 'line_assigned',
     label: 'Line',
     placeholder: 'All Lines',
     options: props.lineOptions.map((l) => ({ value: l, label: l })),
-  },
-]);
+    },
+  ];
+
+  if (approvalsEnabled.value) {
+    filters.push({
+      type: 'select',
+      key: 'status',
+      label: 'Status',
+      placeholder: 'All Statuses',
+      options: [
+        { value: 'pending', label: 'Pending' },
+        { value: 'approved', label: 'Approved' },
+        { value: 'rejected', label: 'Rejected' },
+      ],
+    });
+  }
+
+  return filters;
+});
 
 const showDeleteModal = ref(false);
 const recordToDelete = ref(null);

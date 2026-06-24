@@ -3,6 +3,8 @@
 namespace App\Imports;
 
 use App\Models\TorqueRecord;
+use App\Services\ApprovalNotificationService;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
@@ -190,7 +192,13 @@ class TorqueChecksheetImport
                                 $this->executeResults['skipped']++;
                             }
                         } else {
-                            TorqueRecord::create($record);
+                            $record = array_merge($record, app(ApprovalWorkflowService::class)->initialState());
+                            $created = TorqueRecord::create($record);
+
+                            if ($created->status === 'pending') {
+                                app(ApprovalNotificationService::class)->notifyApprovers($created, 'new_submission', 'torque');
+                            }
+
                             $this->executeResults['imported']++;
                         }
                     } catch (\Exception $e) {

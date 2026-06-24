@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\AnnealingCheck;
+use App\Models\TempRecord;
+use App\Models\TorqueRecord;
 use App\Models\User;
 use App\Models\WeldingChecksheet;
 use Illuminate\Support\Collection;
@@ -56,7 +58,7 @@ class ApprovalWorkflowService
 
         if ($includeRecords) {
             $summary['records'] = (clone $query)
-                ->latest()
+                ->orderByDesc('id')
                 ->limit($recordLimit)
                 ->get()
                 ->map($workflow['normalize'])
@@ -85,6 +87,46 @@ class ApprovalWorkflowService
                     'submittedBy' => $check->createdBy?->name ?? 'System',
                     'showRouteName' => 'annealing-checks.show',
                     'showRouteParams' => [$check->id],
+                ],
+            ],
+            [
+                'module' => 'temperature',
+                'label' => 'Temperature Records',
+                'routeName' => 'temp-records.approval',
+                'query' => fn () => TempRecord::query()
+                    ->where('status', 'pending'),
+                'normalize' => fn (TempRecord $record) => [
+                    'id' => $record->id,
+                    'title' => $record->model_series ?: 'Temperature Record #' . $record->id,
+                    'subtitle' => collect([
+                        $record->equipment_type,
+                        $record->control_no ? 'Control: ' . $record->control_no : null,
+                        $record->line_assigned ? 'Line: ' . $record->line_assigned : null,
+                    ])->filter()->implode(' | '),
+                    'date' => optional($record->date)->toDateString(),
+                    'submittedBy' => $record->person_in_charge ?: 'System',
+                    'showRouteName' => 'temp-records.show',
+                    'showRouteParams' => [$record->id],
+                ],
+            ],
+            [
+                'module' => 'torque',
+                'label' => 'Torque Records',
+                'routeName' => 'torque-records.approval',
+                'query' => fn () => TorqueRecord::query()
+                    ->where('status', 'pending'),
+                'normalize' => fn (TorqueRecord $record) => [
+                    'id' => $record->id,
+                    'title' => $record->model_series ?: 'Torque Record #' . $record->id,
+                    'subtitle' => collect([
+                        $record->driver_model,
+                        $record->screw_type ? 'Screw: ' . $record->screw_type : null,
+                        $record->line_assigned ? 'Line: ' . $record->line_assigned : null,
+                    ])->filter()->implode(' | '),
+                    'date' => optional($record->date)->toDateString(),
+                    'submittedBy' => $record->person_in_charge ?: 'System',
+                    'showRouteName' => 'torque-records.show',
+                    'showRouteParams' => [$record->id],
                 ],
             ],
             [

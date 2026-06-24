@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\TorqueRecord;
+use App\Models\ApprovalNotification;
 use App\Imports\TorqueChecksheetImport;
 use App\Services\ActivityService;
+use App\Services\ApprovalNotificationService;
+use App\Services\ApprovalWorkflowService;
 use App\Services\DuplicateRecordGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -47,6 +50,10 @@ class TorqueRecordController extends Controller
             $query->where('line_assigned', $request->line_assigned);
         }
 
+        if (config('features.approvals', false) && $request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
         $records = $query->orderByDesc('id')->paginate(10)->withQueryString()->through(function ($r) {
             return [
                 'id' => $r->id,
@@ -65,12 +72,15 @@ class TorqueRecordController extends Controller
                 'torque_pm' => $r->torque_pm,
                 'col_remarks' => $r->col_remarks,
                 'checked_by' => $r->checked_by,
+                'status' => $r->status,
+                'submitted_at' => $r->submitted_at,
+                'approved_at' => $r->approved_at,
             ];
         });
 
         return Inertia::render('TorqueRecords/Index', [
             'records' => $records,
-            'filters' => $request->only(['search', 'date_from', 'date_to', 'driver_model', 'line_assigned']),
+            'filters' => $request->only(['search', 'date_from', 'date_to', 'driver_model', 'line_assigned', 'status']),
             'driverModels' => TorqueRecord::whereNotNull('driver_model')
                 ->where('driver_model', '!=', '')
                 ->distinct()
@@ -89,7 +99,12 @@ class TorqueRecordController extends Controller
         return Inertia::render('TorqueRecords/Create');
     }
 
-    public function store(Request $request, DuplicateRecordGuard $duplicateRecordGuard)
+    public function store(
+        Request $request,
+        DuplicateRecordGuard $duplicateRecordGuard,
+        ApprovalWorkflowService $approvalWorkflowService,
+        ApprovalNotificationService $approvalNotificationService
+    )
     {
         $data = $request->validate([
             'date' => ['nullable','date'],
@@ -109,6 +124,8 @@ class TorqueRecordController extends Controller
             'checked_by' => ['nullable','string','max:100'],
         ]);
 
+        $data = array_merge($data, $approvalWorkflowService->initialState());
+
         $rec = $duplicateRecordGuard->create(
             TorqueRecord::class,
             [
@@ -121,6 +138,10 @@ class TorqueRecordController extends Controller
             fn () => TorqueRecord::create($data)
         );
 
+        if ($rec->status === 'pending') {
+            $approvalNotificationService->notifyApprovers($rec, 'new_submission', 'torque');
+        }
+
         ActivityService::log(
             'create',
             "Created torque record for {$rec->model_series}",
@@ -129,7 +150,11 @@ class TorqueRecordController extends Controller
             'torque'
         );
 
-        return redirect()->route('torque-records.show', $rec->id)->with('success', 'Record created.');
+        $message = $rec->status === 'pending'
+            ? 'Record created and submitted for approval.'
+            : 'Record created.';
+
+        return redirect()->route('torque-records.show', $rec->id)->with('success', $message);
     }
 
     public function show(TorqueRecord $torque_record)
@@ -195,6 +220,82 @@ class TorqueRecordController extends Controller
         );
 
         return redirect()->route('torque-records.index')->with('success', 'Record deleted.');
+    }
+
+    public function approval(): \Inertia\Response
+    {
+        $pendingRecords = TorqueRecord::where('status', 'pending')
+            ->orderByDesc('id')
+            ->get();
+
+        return Inertia::render('TorqueRecords/Approval', [
+            'pendingRecords' => $pendingRecords,
+        ]);
+    }
+
+    public function bulkApprove(Request $request)
+    {
+        $data = $request->validate([
+            'record_ids' => ['required', 'array', 'min:1'],
+            'record_ids.*' => ['integer', 'exists:torque_records,id'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $records = TorqueRecord::whereIn('id', $data['record_ids'])
+            ->where('status', 'pending')
+            ->get();
+
+        foreach ($records as $record) {
+            $record->update([
+                'status' => 'approved',
+                'approved_at' => now(),
+                'approval_notes' => $data['notes'] ?? null,
+            ]);
+        }
+
+        $this->markApprovalNotificationsActed($records->pluck('id')->all());
+
+        return redirect()->route('torque-records.approval')
+            ->with('success', $records->count() . ' torque record(s) approved successfully.');
+    }
+
+    public function bulkReject(Request $request)
+    {
+        $data = $request->validate([
+            'record_ids' => ['required', 'array', 'min:1'],
+            'record_ids.*' => ['integer', 'exists:torque_records,id'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $records = TorqueRecord::whereIn('id', $data['record_ids'])
+            ->where('status', 'pending')
+            ->get();
+
+        foreach ($records as $record) {
+            $record->update([
+                'status' => 'rejected',
+                'approved_at' => now(),
+                'approval_notes' => $data['notes'] ?? null,
+            ]);
+        }
+
+        $this->markApprovalNotificationsActed($records->pluck('id')->all());
+
+        return redirect()->route('torque-records.approval')
+            ->with('success', $records->count() . ' torque record(s) rejected successfully.');
+    }
+
+    private function markApprovalNotificationsActed(array $recordIds): void
+    {
+        if ($recordIds === []) {
+            return;
+        }
+
+        ApprovalNotification::where('module', 'torque')
+            ->where('approvable_type', TorqueRecord::class)
+            ->whereIn('approvable_id', $recordIds)
+            ->where('status', 'pending')
+            ->update(['status' => 'acted']);
     }
 
     /**

@@ -200,6 +200,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('temp-records', [TempRecordController::class, 'store'])
         ->middleware('module.permission:temperature,create')
         ->name('temp-records.store');
+    Route::middleware(['auth', 'feature:approvals', 'module.permission:temperature,approve'])->group(function () {
+        Route::get('temp-records/approval', [TempRecordController::class, 'approval'])
+            ->name('temp-records.approval');
+        Route::post('temp-records/bulk-approve', [TempRecordController::class, 'bulkApprove'])
+            ->name('temp-records.bulk-approve');
+        Route::post('temp-records/bulk-reject', [TempRecordController::class, 'bulkReject'])
+            ->name('temp-records.bulk-reject');
+    });
     Route::get('temp-records/{temp_record}', [TempRecordController::class, 'show'])
         ->middleware('module.permission:temperature,view')
         ->name('temp-records.show');
@@ -234,6 +242,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('torque-records', [TorqueRecordController::class, 'store'])
         ->middleware('module.permission:torque,create')
         ->name('torque-records.store');
+    Route::middleware(['auth', 'feature:approvals', 'module.permission:torque,approve'])->group(function () {
+        Route::get('torque-records/approval', [TorqueRecordController::class, 'approval'])
+            ->name('torque-records.approval');
+        Route::post('torque-records/bulk-approve', [TorqueRecordController::class, 'bulkApprove'])
+            ->name('torque-records.bulk-approve');
+        Route::post('torque-records/bulk-reject', [TorqueRecordController::class, 'bulkReject'])
+            ->name('torque-records.bulk-reject');
+    });
     Route::get('torque-records/{torque_record}', [TorqueRecordController::class, 'show'])
         ->middleware('module.permission:torque,view')
         ->name('torque-records.show');
