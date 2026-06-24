@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\TempRecord;
+use App\Models\ApprovalNotification;
 use App\Imports\TempRecordImport;
 use App\Services\ActivityService;
+use App\Services\ApprovalNotificationService;
+use App\Services\ApprovalWorkflowService;
 use App\Services\DuplicateRecordGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -43,9 +46,12 @@ class TempRecordController extends Controller
             $query->where('equipment_type', $request->equipment_type);
         }
 
-        // Line assigned filter
         if ($request->filled('line_assigned')) {
             $query->where('line_assigned', $request->line_assigned);
+        }
+
+        if (config('features.approvals', false) && $request->filled('status')) {
+            $query->where('status', $request->input('status'));
         }
 
         $records = $query->orderByDesc('id')->paginate(10)->withQueryString()->through(function ($r) {
@@ -64,12 +70,15 @@ class TempRecordController extends Controller
                 'time_pm' => $r->time_pm,
                 'temp_pm' => $r->temp_pm,
                 'checked_by' => $r->checked_by,
+                'status' => $r->status,
+                'submitted_at' => $r->submitted_at,
+                'approved_at' => $r->approved_at,
             ];
         });
 
         return Inertia::render('TempRecords/Index', [
             'records' => $records,
-            'filters' => $request->only(['search', 'date_from', 'date_to', 'equipment_type', 'line_assigned']),
+            'filters' => $request->only(['search', 'date_from', 'date_to', 'equipment_type', 'line_assigned', 'status']),
             'equipmentTypes' => TempRecord::whereNotNull('equipment_type')
                 ->where('equipment_type', '!=', '')
                 ->distinct()
@@ -91,7 +100,12 @@ class TempRecordController extends Controller
         ]);
     }
 
-    public function store(Request $request, DuplicateRecordGuard $duplicateRecordGuard)
+    public function store(
+        Request $request,
+        DuplicateRecordGuard $duplicateRecordGuard,
+        ApprovalWorkflowService $approvalWorkflowService,
+        ApprovalNotificationService $approvalNotificationService
+    )
     {
         $date = $this->parseDateInput($request->input('date'));
         if ($date !== null) { $request->merge(['date' => $date]); }
@@ -112,6 +126,8 @@ class TempRecordController extends Controller
             'checked_by' => ['nullable','string','max:100'],
         ]);
 
+        $data = array_merge($data, $approvalWorkflowService->initialState());
+
         $rec = $duplicateRecordGuard->create(
             TempRecord::class,
             [
@@ -123,6 +139,10 @@ class TempRecordController extends Controller
             fn () => TempRecord::create($data)
         );
 
+        if ($rec->status === 'pending') {
+            $approvalNotificationService->notifyApprovers($rec, 'new_submission', 'temperature');
+        }
+
         ActivityService::log(
             'create',
             "Created temperature record for {$rec->model_series}",
@@ -131,7 +151,11 @@ class TempRecordController extends Controller
             'temperature'
         );
 
-        return redirect()->route('temp-records.show', $rec->id)->with('success', 'Record created.');
+        $message = $rec->status === 'pending'
+            ? 'Record created and submitted for approval.'
+            : 'Record created.';
+
+        return redirect()->route('temp-records.show', $rec->id)->with('success', $message);
     }
 
     public function show(TempRecord $temp_record)
@@ -200,6 +224,82 @@ class TempRecordController extends Controller
         );
 
         return redirect()->route('temp-records.index')->with('success', 'Record deleted.');
+    }
+
+    public function approval(): \Inertia\Response
+    {
+        $pendingRecords = TempRecord::where('status', 'pending')
+            ->orderByDesc('id')
+            ->get();
+
+        return Inertia::render('TempRecords/Approval', [
+            'pendingRecords' => $pendingRecords,
+        ]);
+    }
+
+    public function bulkApprove(Request $request)
+    {
+        $data = $request->validate([
+            'record_ids' => ['required', 'array', 'min:1'],
+            'record_ids.*' => ['integer', 'exists:temp_records,id'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $records = TempRecord::whereIn('id', $data['record_ids'])
+            ->where('status', 'pending')
+            ->get();
+
+        foreach ($records as $record) {
+            $record->update([
+                'status' => 'approved',
+                'approved_at' => now(),
+                'approval_notes' => $data['notes'] ?? null,
+            ]);
+        }
+
+        $this->markApprovalNotificationsActed($records->pluck('id')->all());
+
+        return redirect()->route('temp-records.approval')
+            ->with('success', $records->count() . ' temperature record(s) approved successfully.');
+    }
+
+    public function bulkReject(Request $request)
+    {
+        $data = $request->validate([
+            'record_ids' => ['required', 'array', 'min:1'],
+            'record_ids.*' => ['integer', 'exists:temp_records,id'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $records = TempRecord::whereIn('id', $data['record_ids'])
+            ->where('status', 'pending')
+            ->get();
+
+        foreach ($records as $record) {
+            $record->update([
+                'status' => 'rejected',
+                'approved_at' => now(),
+                'approval_notes' => $data['notes'] ?? null,
+            ]);
+        }
+
+        $this->markApprovalNotificationsActed($records->pluck('id')->all());
+
+        return redirect()->route('temp-records.approval')
+            ->with('success', $records->count() . ' temperature record(s) rejected successfully.');
+    }
+
+    private function markApprovalNotificationsActed(array $recordIds): void
+    {
+        if ($recordIds === []) {
+            return;
+        }
+
+        ApprovalNotification::where('module', 'temperature')
+            ->where('approvable_type', TempRecord::class)
+            ->whereIn('approvable_id', $recordIds)
+            ->where('status', 'pending')
+            ->update(['status' => 'acted']);
     }
 
     protected function parseDateInput(?string $value): ?string

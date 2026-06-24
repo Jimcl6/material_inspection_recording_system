@@ -4,39 +4,56 @@ namespace App\Services;
 
 use App\Models\AnnealingCheck;
 use App\Models\ApprovalNotification;
+use App\Models\TempRecord;
+use App\Models\TorqueRecord;
 use App\Models\User;
-use Illuminate\Support\Facades\Mail;
 use App\Mail\AnnealingCheckNotification;
+use App\Models\WeldingChecksheet;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Mail;
 
 class ApprovalNotificationService
 {
     /**
-     * Create notifications for all administrators, inspectors, and super admins.
+     * Create notifications for users who can approve this module.
      */
-    public function notifyApprovers(AnnealingCheck $annealingCheck, string $type = 'new_submission')
+    public function notifyApprovers(Model $record, string $type = 'new_submission', ?string $module = null): void
     {
         if (!config('features.approvals', false)) {
             return;
         }
 
-        // Get all users with approval-oriented roles.
-        $approvers = User::whereHas('role', function ($query) {
-            $query->whereIn('slug', ['admin', 'inspector', 'super_admin']);
+        $module ??= $this->moduleForRecord($record);
+
+        if ($module === null) {
+            return;
+        }
+
+        $approvers = User::where(function ($query) use ($module) {
+            $query->whereHas('role', fn ($roleQuery) => $roleQuery->where('slug', 'super_admin'))
+                ->orWhereHas('role.permissions', function ($permissionQuery) use ($module) {
+                    $permissionQuery->where('module', $module)->where('action', 'approve');
+                })
+                ->orWhereHas('position.permissions', function ($permissionQuery) use ($module) {
+                    $permissionQuery->where('module', $module)->where('action', 'approve');
+                });
         })->get();
 
         foreach ($approvers as $approver) {
             ApprovalNotification::create([
-                'annealing_check_id' => $annealingCheck->id,
+                'annealing_check_id' => $record instanceof AnnealingCheck ? $record->id : null,
+                'module' => $module,
+                'approvable_type' => $record::class,
+                'approvable_id' => $record->getKey(),
                 'user_id' => $approver->id,
                 'type' => $type,
                 'status' => 'pending',
-                'message' => $this->generateMessage($annealingCheck, $type),
+                'message' => $this->generateMessage($record, $module, $type),
             ]);
 
-            // Send email notification
-            if ($approver->email) {
+            if ($record instanceof AnnealingCheck && $approver->email) {
                 try {
-                    Mail::to($approver->email)->send(new AnnealingCheckNotification($annealingCheck, $approver, $type));
+                    Mail::to($approver->email)->send(new AnnealingCheckNotification($record, $approver, $type));
                 } catch (\Exception $e) {
                     \Log::warning("Failed to send email notification to {$approver->email}: " . $e->getMessage());
                 }
@@ -47,15 +64,25 @@ class ApprovalNotificationService
     /**
      * Generate notification message
      */
-    private function generateMessage(AnnealingCheck $annealingCheck, string $type): string
+    private function generateMessage(Model $record, string $module, string $type): string
     {
+        $label = match ($module) {
+            'annealing' => 'annealing check',
+            'temperature' => 'temperature record',
+            'torque' => 'torque record',
+            'welding' => 'welding checksheet',
+            default => 'approval record',
+        };
+
+        $title = $this->recordTitle($record);
+
         switch ($type) {
             case 'new_submission':
-                return "New annealing check submitted for item {$annealingCheck->item_code}";
+                return "New {$label} submitted for {$title}";
             case 'update':
-                return "Annealing check updated for item {$annealingCheck->item_code}";
+                return ucfirst($label) . " updated for {$title}";
             default:
-                return "Annealing check activity for item {$annealingCheck->item_code}";
+                return ucfirst($label) . " activity for {$title}";
         }
     }
 
@@ -86,8 +113,40 @@ class ApprovalNotificationService
 
         return ApprovalNotification::where('user_id', $user->id)
             ->where('status', 'pending')
-            ->with('annealingCheck')
+            ->with(['annealingCheck', 'approvable'])
             ->latest()
             ->get();
+    }
+
+    private function moduleForRecord(Model $record): ?string
+    {
+        return match (true) {
+            $record instanceof AnnealingCheck => 'annealing',
+            $record instanceof TempRecord => 'temperature',
+            $record instanceof TorqueRecord => 'torque',
+            $record instanceof WeldingChecksheet => 'welding',
+            default => null,
+        };
+    }
+
+    private function recordTitle(Model $record): string
+    {
+        if ($record instanceof AnnealingCheck) {
+            return $record->item_code ?: 'Annealing Check #' . $record->id;
+        }
+
+        if ($record instanceof TempRecord) {
+            return $record->model_series ?: 'Temperature Record #' . $record->id;
+        }
+
+        if ($record instanceof TorqueRecord) {
+            return $record->model_series ?: 'Torque Record #' . $record->id;
+        }
+
+        if ($record instanceof WeldingChecksheet) {
+            return $record->item_code ?: 'Welding Checksheet #' . $record->id;
+        }
+
+        return 'Record #' . $record->getKey();
     }
 }

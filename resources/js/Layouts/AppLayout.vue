@@ -157,19 +157,35 @@ const mainMargin = computed(() => {
                         <SidebarNavLink
                             v-if="canView('temperature')"
                             :href="route('temp-records.index')"
-                            :active="route().current('temp-records.*')"
+                            :active="route().current('temp-records.*') && !route().current('temp-records.approval')"
                             :icon="FireIcon"
                         >
                             Temperature Records
+                        </SidebarNavLink>
+                        <SidebarNavLink
+                            v-if="canApprove('temperature')"
+                            :href="route('temp-records.approval')"
+                            :active="route().current('temp-records.approval')"
+                            :icon="FireIcon"
+                        >
+                            Temperature Approvals
                         </SidebarNavLink>
 
                         <SidebarNavLink
                             v-if="canView('torque')"
                             :href="route('torque-records.index')"
-                            :active="route().current('torque-records.*')"
+                            :active="route().current('torque-records.*') && !route().current('torque-records.approval')"
                             :icon="WrenchScrewdriverIcon"
                         >
                             Torque Records
+                        </SidebarNavLink>
+                        <SidebarNavLink
+                            v-if="canApprove('torque')"
+                            :href="route('torque-records.approval')"
+                            :active="route().current('torque-records.approval')"
+                            :icon="WrenchScrewdriverIcon"
+                        >
+                            Torque Approvals
                         </SidebarNavLink>
 
                         <SidebarNavLink
@@ -394,21 +410,39 @@ const mainMargin = computed(() => {
                     <SidebarNavLink
                         v-if="canView('temperature')"
                         :href="route('temp-records.index')"
-                        :active="route().current('temp-records.*')"
+                        :active="route().current('temp-records.*') && !route().current('temp-records.approval')"
                         :icon="FireIcon"
                         :collapsed="sidebarCollapsed"
                     >
                         Temperature Records
                     </SidebarNavLink>
+                    <SidebarNavLink
+                        v-if="canApprove('temperature')"
+                        :href="route('temp-records.approval')"
+                        :active="route().current('temp-records.approval')"
+                        :icon="FireIcon"
+                        :collapsed="sidebarCollapsed"
+                    >
+                        Temperature Approvals
+                    </SidebarNavLink>
 
                     <SidebarNavLink
                         v-if="canView('torque')"
                         :href="route('torque-records.index')"
-                        :active="route().current('torque-records.*')"
+                        :active="route().current('torque-records.*') && !route().current('torque-records.approval')"
                         :icon="WrenchScrewdriverIcon"
                         :collapsed="sidebarCollapsed"
                     >
                         Torque Records
+                    </SidebarNavLink>
+                    <SidebarNavLink
+                        v-if="canApprove('torque')"
+                        :href="route('torque-records.approval')"
+                        :active="route().current('torque-records.approval')"
+                        :icon="WrenchScrewdriverIcon"
+                        :collapsed="sidebarCollapsed"
+                    >
+                        Torque Approvals
                     </SidebarNavLink>
 
                     <SidebarNavLink

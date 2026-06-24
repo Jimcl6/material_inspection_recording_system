@@ -16,8 +16,8 @@ class UserPermissionSeeder extends Seeder
     {
         $modules = [
             'annealing' => ['view', 'create', 'update', 'delete', 'approve', 'reject', 'import', 'export'],
-            'temperature' => ['view', 'create', 'update', 'delete', 'import', 'export'],
-            'torque' => ['view', 'create', 'update', 'delete', 'import', 'export'],
+            'temperature' => ['view', 'create', 'update', 'delete', 'approve', 'reject', 'import', 'export'],
+            'torque' => ['view', 'create', 'update', 'delete', 'approve', 'reject', 'import', 'export'],
             'magnetism' => ['view', 'create', 'update', 'delete', 'import', 'export'],
             'diaphragm' => ['view', 'create', 'update', 'delete', 'approve', 'reject', 'import', 'export'],
             'welding' => ['view', 'create', 'update', 'delete', 'approve', 'reject', 'import', 'export'],

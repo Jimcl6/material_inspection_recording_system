@@ -1,9 +1,10 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import ApprovalStatus from '@/Components/ApprovalStatus.vue';
 import { usePermissions } from '@/Composables/usePermissions';
 
-const { canUpdate } = usePermissions();
+const { canUpdate, approvalsEnabled } = usePermissions();
 
 const props = defineProps({
     record: {
@@ -79,7 +80,13 @@ const formatTime = (timeString) => {
                                     Recorded on {{ formatDate(record.date) }}
                                 </p>
                             </div>
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            <ApprovalStatus
+                                v-if="approvalsEnabled"
+                                :status="record.status"
+                                :submitted-at="record.submitted_at"
+                                :approved-at="record.approved_at"
+                            />
+                            <span v-else class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                                 Completed
                             </span>
                         </div>
@@ -120,6 +127,19 @@ const formatTime = (timeString) => {
                                         <dt class="text-sm font-medium text-gray-500">Screw Type</dt>
                                         <dd class="mt-1 text-sm text-gray-900 sm:col-span-2">
                                             {{ record.screw_type || 'N/A' }}
+                                        </dd>
+                                    </div>
+                                    <div v-if="approvalsEnabled" class="sm:grid sm:grid-cols-3 sm:gap-4">
+                                        <dt class="text-sm font-medium text-gray-500">Status</dt>
+                                        <dd class="mt-1 text-sm text-gray-900 sm:col-span-2">
+                                            <ApprovalStatus
+                                                :status="record.status"
+                                                :submitted-at="record.submitted_at"
+                                                :approved-at="record.approved_at"
+                                            />
+                                            <p v-if="record.approval_notes" class="mt-2 text-sm text-gray-600">
+                                                {{ record.approval_notes }}
+                                            </p>
                                         </dd>
                                     </div>
                                 </dl>

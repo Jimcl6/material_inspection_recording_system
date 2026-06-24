@@ -26,5 +26,15 @@ class TempRecord extends Model
         'temp_pm',
         'col_remarks',
         'checked_by',
+        'status',
+        'submitted_at',
+        'approved_at',
+        'approval_notes',
+    ];
+
+    protected $casts = [
+        'date' => 'date',
+        'submitted_at' => 'datetime',
+        'approved_at' => 'datetime',
     ];
 }

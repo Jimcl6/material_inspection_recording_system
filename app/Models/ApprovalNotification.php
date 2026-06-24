@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class ApprovalNotification extends Model
 {
@@ -12,6 +13,9 @@ class ApprovalNotification extends Model
 
     protected $fillable = [
         'annealing_check_id',
+        'module',
+        'approvable_type',
+        'approvable_id',
         'user_id',
         'type',
         'status',
@@ -29,6 +33,11 @@ class ApprovalNotification extends Model
     public function annealingCheck(): BelongsTo
     {
         return $this->belongsTo(AnnealingCheck::class);
+    }
+
+    public function approvable(): MorphTo
+    {
+        return $this->morphTo();
     }
 
     /**
