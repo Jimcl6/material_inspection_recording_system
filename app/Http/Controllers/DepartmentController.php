@@ -100,14 +100,15 @@ class DepartmentController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $oldData = $department->toArray();
+        $oldData = ActivityService::snapshot($department);
         $department->update($validated);
 
-        ActivityService::log(
-            'update',
-            "Updated department: {$department->name}",
+        ActivityService::logSnapshotUpdate(
             $department,
-            ['old_data' => $oldData, 'new_data' => $validated]
+            $oldData,
+            ActivityService::snapshot($department),
+            "Updated department: {$department->name}",
+            'departments'
         );
 
         return redirect()->route('admin.departments.index')
@@ -145,14 +146,17 @@ class DepartmentController extends Controller
      */
     public function toggleStatus(Department $department)
     {
+        $before = ActivityService::snapshot($department);
         $department->update(['is_active' => !$department->is_active]);
 
         $status = $department->is_active ? 'activated' : 'deactivated';
         
-        ActivityService::log(
-            'update',
-            "Department {$status}: {$department->name}",
+        ActivityService::logSnapshotUpdate(
             $department,
+            $before,
+            ActivityService::snapshot($department),
+            "Department {$status}: {$department->name}",
+            'departments',
             ['status_change' => $status]
         );
 

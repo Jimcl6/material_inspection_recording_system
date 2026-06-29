@@ -180,13 +180,14 @@ class MaterialPartController extends Controller
             'job_number' => 'nullable|string|max:100',
         ]);
 
+        $before = ActivityService::snapshot($materialPart);
         $materialPart->update($validated);
 
-        ActivityService::log(
-            'update',
-            "Updated material part: {$materialPart->item_block_code}",
+        ActivityService::logSnapshotUpdate(
             $materialPart,
-            $materialPart->toArray(),
+            $before,
+            ActivityService::snapshot($materialPart),
+            "Updated material part: {$materialPart->item_block_code}",
             'material_monitoring'
         );
 

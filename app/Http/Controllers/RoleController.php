@@ -140,7 +140,7 @@ class RoleController extends Controller
 
         $validated = $request->validate($rules);
 
-        $oldData = $role->toArray();
+        $oldData = ActivityService::snapshot($role);
         $oldPermissions = $role->permissions->pluck('id')->toArray();
 
         // Update role properties only if not a system role
@@ -156,16 +156,16 @@ class RoleController extends Controller
         // Sync permissions (allowed for all roles including system roles)
         $role->syncPermissions($validated['permissions'] ?? []);
 
-        ActivityService::log(
-            'update',
-            "Updated role: {$role->name}",
+        $newData = ActivityService::snapshot($role);
+        $oldData['permissions'] = $oldPermissions;
+        $newData['permissions'] = $validated['permissions'] ?? [];
+
+        ActivityService::logSnapshotUpdate(
             $role,
-            [
-                'old_data' => $oldData,
-                'new_data' => $validated,
-                'old_permissions' => $oldPermissions,
-                'new_permissions' => $validated['permissions'] ?? [],
-            ]
+            $oldData,
+            $newData,
+            "Updated role: {$role->name}",
+            'roles'
         );
 
         return redirect()->route('admin.roles.index')
@@ -216,14 +216,17 @@ class RoleController extends Controller
             return back()->with('error', 'Cannot deactivate the Super Admin role.');
         }
 
+        $before = ActivityService::snapshot($role);
         $role->update(['is_active' => !$role->is_active]);
 
         $status = $role->is_active ? 'activated' : 'deactivated';
         
-        ActivityService::log(
-            'update',
-            "Role {$status}: {$role->name}",
+        ActivityService::logSnapshotUpdate(
             $role,
+            $before,
+            ActivityService::snapshot($role),
+            "Role {$status}: {$role->name}",
+            'roles',
             ['status_change' => $status]
         );
 
@@ -243,14 +246,12 @@ class RoleController extends Controller
         $oldPermissions = $role->permissions->pluck('id')->toArray();
         $role->syncPermissions($validated['permissions'] ?? []);
 
-        ActivityService::log(
-            'update',
-            "Updated permissions for role: {$role->name}",
+        ActivityService::logSnapshotUpdate(
             $role,
-            [
-                'old_permissions' => $oldPermissions,
-                'new_permissions' => $validated['permissions'] ?? [],
-            ]
+            ['permissions' => $oldPermissions],
+            ['permissions' => $validated['permissions'] ?? []],
+            "Updated permissions for role: {$role->name}",
+            'roles'
         );
 
         return back()->with('success', 'Role permissions updated successfully.');

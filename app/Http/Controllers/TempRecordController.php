@@ -195,13 +195,14 @@ class TempRecordController extends Controller
             'checked_by' => ['nullable','string','max:100'],
         ]);
 
+        $before = ActivityService::snapshot($temp_record);
         $temp_record->update($data);
 
-        ActivityService::log(
-            'update',
-            "Updated temperature record for {$temp_record->model_series}",
+        ActivityService::logSnapshotUpdate(
             $temp_record,
-            $temp_record->toArray(),
+            $before,
+            ActivityService::snapshot($temp_record),
+            "Updated temperature record for {$temp_record->model_series}",
             'temperature'
         );
 
@@ -250,10 +251,19 @@ class TempRecordController extends Controller
             ->get();
 
         foreach ($records as $record) {
+            $previousStatus = $record->status;
+
             $record->update([
                 'status' => 'approved',
                 'approved_at' => now(),
                 'approval_notes' => $data['notes'] ?? null,
+            ]);
+
+            ActivityService::logApprove($record, [
+                'previous_status' => $previousStatus,
+                'new_status' => 'approved',
+                'notes' => $data['notes'] ?? null,
+                'source' => 'bulk_approval',
             ]);
         }
 
@@ -276,10 +286,19 @@ class TempRecordController extends Controller
             ->get();
 
         foreach ($records as $record) {
+            $previousStatus = $record->status;
+
             $record->update([
                 'status' => 'rejected',
                 'approved_at' => now(),
                 'approval_notes' => $data['notes'] ?? null,
+            ]);
+
+            ActivityService::logReject($record, $data['notes'] ?? '', [
+                'previous_status' => $previousStatus,
+                'new_status' => 'rejected',
+                'notes' => $data['notes'] ?? null,
+                'source' => 'bulk_approval',
             ]);
         }
 

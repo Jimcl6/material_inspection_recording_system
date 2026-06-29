@@ -151,15 +151,17 @@ class WeldingChecksheetController extends Controller
         $samples = $data['samples'] ?? [];
         unset($data['samples']);
 
+        $before = ActivityService::snapshot($welding_checksheet);
         $welding_checksheet->update($data);
         $this->replaceSamples($welding_checksheet, $samples);
 
-        ActivityService::log(
-            'update',
-            "Updated welding checksheet for {$welding_checksheet->item_code}",
+        ActivityService::logSnapshotUpdate(
             $welding_checksheet,
-            ['item_code' => $welding_checksheet->item_code],
-            'welding'
+            $before,
+            ActivityService::snapshot($welding_checksheet),
+            "Updated welding checksheet for {$welding_checksheet->item_code}",
+            'welding',
+            ['item_code' => $welding_checksheet->item_code]
         );
 
         return redirect()->route('welding-checksheets.index')
@@ -314,11 +316,20 @@ class WeldingChecksheetController extends Controller
 
         $checksheets = WeldingChecksheet::whereIn('id', $request->input('checksheet_ids'))->get();
         foreach ($checksheets as $checksheet) {
+            $previousStatus = $checksheet->status;
+
             $checksheet->update([
                 'status' => 'approved',
                 'approved_at' => now(),
                 'approval_notes' => $request->input('notes'),
                 'updated_by' => Auth::id(),
+            ]);
+
+            ActivityService::logApprove($checksheet, [
+                'previous_status' => $previousStatus,
+                'new_status' => 'approved',
+                'notes' => $request->input('notes'),
+                'source' => 'bulk_approval',
             ]);
         }
 
@@ -336,11 +347,20 @@ class WeldingChecksheetController extends Controller
 
         $checksheets = WeldingChecksheet::whereIn('id', $request->input('checksheet_ids'))->get();
         foreach ($checksheets as $checksheet) {
+            $previousStatus = $checksheet->status;
+
             $checksheet->update([
                 'status' => 'rejected',
                 'approved_at' => now(),
                 'approval_notes' => $request->input('notes'),
                 'updated_by' => Auth::id(),
+            ]);
+
+            ActivityService::logReject($checksheet, $request->input('notes', ''), [
+                'previous_status' => $previousStatus,
+                'new_status' => 'rejected',
+                'notes' => $request->input('notes'),
+                'source' => 'bulk_approval',
             ]);
         }
 

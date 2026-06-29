@@ -241,6 +241,7 @@ class UserManagementController extends Controller
                 $updateData['password'] = Hash::make($validated['password']);
             }
 
+            $before = ActivityService::snapshot($user);
             $user->update($updateData);
 
             // Update or regenerate QR code
@@ -257,12 +258,13 @@ class UserManagementController extends Controller
             DB::commit();
 
             // Log activity
-            ActivityService::log(
-                'update',
-                "Updated user account: {$user->name}",
+            ActivityService::logSnapshotUpdate(
                 $user,
-                ['employee_id' => $user->employee_id],
-                'users'
+                $before,
+                ActivityService::snapshot($user),
+                "Updated user account: {$user->name}",
+                'users',
+                ['employee_id' => $user->employee_id]
             );
 
             return redirect()->route('users.index')

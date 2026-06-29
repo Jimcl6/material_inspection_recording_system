@@ -476,13 +476,14 @@ class ProductionBatchController extends Controller
             'ItemCode' => ['nullable','string','max:50'],
         ]);
 
+        $before = ActivityService::snapshot($batch);
         $batch->update($data);
 
-        ActivityService::log(
-            'update',
-            "Updated production batch: {$batch->QRCode}",
+        ActivityService::logSnapshotUpdate(
             $batch,
-            $batch->toArray(),
+            $before,
+            ActivityService::snapshot($batch),
+            "Updated production batch: {$batch->QRCode}",
             'production_batches'
         );
 

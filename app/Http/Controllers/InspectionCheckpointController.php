@@ -107,13 +107,14 @@ class InspectionCheckpointController extends Controller
             'Judgement_Last' => ['nullable','string','max:20'],
         ]);
 
+        $before = ActivityService::snapshot($checkpoint);
         $checkpoint->update($data);
 
-        ActivityService::log(
-            'update',
-            "Updated inspection checkpoint #{$checkpoint->CheckpointNumber}",
+        ActivityService::logSnapshotUpdate(
             $checkpoint,
-            $checkpoint->toArray(),
+            $before,
+            ActivityService::snapshot($checkpoint),
+            "Updated inspection checkpoint #{$checkpoint->CheckpointNumber}",
             'inspection_checkpoints'
         );
 
