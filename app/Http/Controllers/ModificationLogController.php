@@ -178,13 +178,14 @@ class ModificationLogController extends Controller
             'col_remarks' => ['nullable','string'],
         ]);
 
+        $before = ActivityService::snapshot($modification_log);
         $modification_log->update($data);
 
-        ActivityService::log(
-            'update',
-            "Updated modification log for {$modification_log->model_code}",
+        ActivityService::logSnapshotUpdate(
             $modification_log,
-            $modification_log->toArray(),
+            $before,
+            ActivityService::snapshot($modification_log),
+            "Updated modification log for {$modification_log->model_code}",
             'modification_logs'
         );
         

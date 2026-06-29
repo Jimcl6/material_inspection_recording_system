@@ -196,6 +196,7 @@ class AnnealingCheckController extends Controller
         $data['checked_by_id'] = $this->convertNameToId($data['checked_by_id'] ?? null);
         $data['verified_by_id'] = $this->convertNameToId($data['verified_by_id'] ?? null);
 
+        $before = ActivityService::snapshot($annealingCheck);
         $annealingCheck->update($data);
 
         // Notify administrators and inspectors if status changed
@@ -207,12 +208,13 @@ class AnnealingCheckController extends Controller
         }
 
         // Log activity
-        ActivityService::log(
-            'update',
-            "Updated annealing check for {$annealingCheck->item_name}",
+        ActivityService::logSnapshotUpdate(
             $annealingCheck,
-            ['item_code' => $annealingCheck->item_code],
-            'annealing'
+            $before,
+            ActivityService::snapshot($annealingCheck),
+            "Updated annealing check for {$annealingCheck->item_name}",
+            'annealing',
+            ['item_code' => $annealingCheck->item_code]
         );
 
         return redirect()->route('annealing-checks.index')
@@ -499,11 +501,20 @@ class AnnealingCheckController extends Controller
         $checks = AnnealingCheck::whereIn('id', $request->check_ids)->get();
         
         foreach ($checks as $check) {
+            $previousStatus = $check->status;
+
             $check->update([
                 'status' => 'approved',
                 'approved_at' => now(),
                 'approval_notes' => $request->notes,
                 'updated_by' => Auth::id(),
+            ]);
+
+            ActivityService::logApprove($check, [
+                'previous_status' => $previousStatus,
+                'new_status' => 'approved',
+                'notes' => $request->notes,
+                'source' => 'bulk_approval',
             ]);
 
             // Mark notifications as acted
@@ -530,11 +541,20 @@ class AnnealingCheckController extends Controller
         $checks = AnnealingCheck::whereIn('id', $request->check_ids)->get();
         
         foreach ($checks as $check) {
+            $previousStatus = $check->status;
+
             $check->update([
                 'status' => 'rejected',
                 'approved_at' => now(),
                 'approval_notes' => $request->notes,
                 'updated_by' => Auth::id(),
+            ]);
+
+            ActivityService::logReject($check, $request->notes ?? '', [
+                'previous_status' => $previousStatus,
+                'new_status' => 'rejected',
+                'notes' => $request->notes,
+                'source' => 'bulk_approval',
             ]);
 
             // Mark notifications as acted

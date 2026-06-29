@@ -121,11 +121,6 @@ const getTypeColor = (type) => {
     };
     return colors[type] || 'bg-gray-100 text-gray-800';
 };
-
-const formatProperties = (properties) => {
-    if (!properties) return null;
-    return JSON.stringify(properties, null, 2);
-};
 </script>
 
 <template>
@@ -300,23 +295,72 @@ const formatProperties = (properties) => {
                                 <!-- Expanded Row -->
                                 <tr v-if="isExpanded(activity.id)" class="bg-gray-50">
                                     <td colspan="7" class="px-4 py-4">
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                            <div>
-                                                <h4 class="font-medium text-gray-900 mb-2">Details</h4>
-                                                <dl class="space-y-1">
-                                                    <div class="flex">
-                                                        <dt class="w-24 text-gray-500">IP Address:</dt>
-                                                        <dd class="text-gray-900">{{ activity.ip_address || 'N/A' }}</dd>
-                                                    </div>
-                                                    <div class="flex">
-                                                        <dt class="w-24 text-gray-500">Created:</dt>
-                                                        <dd class="text-gray-900">{{ activity.created_at }}</dd>
+                                        <div class="space-y-4 text-sm">
+                                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                                <div class="lg:col-span-2">
+                                                    <h4 class="font-medium text-gray-900">What happened</h4>
+                                                    <p class="mt-1 text-gray-700 leading-6">
+                                                        {{ activity.display?.summary || activity.description }}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-medium text-gray-900">Audit details</h4>
+                                                    <dl class="mt-2 space-y-2">
+                                                        <div class="flex gap-3">
+                                                            <dt class="w-28 shrink-0 text-gray-500">Logged At</dt>
+                                                            <dd class="text-gray-900">{{ activity.created_at }}</dd>
+                                                        </div>
+                                                        <div
+                                                            v-for="detail in activity.display?.details || []"
+                                                            :key="`${activity.id}-${detail.label}-${detail.value}`"
+                                                            class="flex gap-3"
+                                                        >
+                                                            <dt class="w-28 shrink-0 text-gray-500">{{ detail.label }}</dt>
+                                                            <dd class="text-gray-900 break-words">{{ detail.value }}</dd>
+                                                        </div>
+                                                    </dl>
+                                                </div>
+                                            </div>
+
+                                            <div v-if="activity.display?.changes?.length">
+                                                <h4 class="font-medium text-gray-900 mb-2">Changes made</h4>
+                                                <div class="overflow-x-auto border border-gray-200 rounded-md bg-white">
+                                                    <table class="min-w-full divide-y divide-gray-200">
+                                                        <thead class="bg-gray-50">
+                                                            <tr>
+                                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Field</th>
+                                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Before</th>
+                                                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">After</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="divide-y divide-gray-100 bg-white">
+                                                            <tr
+                                                                v-for="change in activity.display.changes"
+                                                                :key="`${activity.id}-${change.field || change.label}`"
+                                                            >
+                                                                <td class="px-3 py-2 font-medium text-gray-900 whitespace-nowrap">{{ change.label }}</td>
+                                                                <td class="px-3 py-2 text-gray-600 break-words max-w-xs">{{ change.before }}</td>
+                                                                <td class="px-3 py-2 text-gray-900 break-words max-w-xs">{{ change.after }}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+
+                                            <div v-if="activity.display?.recorded_details?.length">
+                                                <h4 class="font-medium text-gray-900 mb-2">
+                                                    {{ activity.display.recorded_details_title || 'Recorded Details' }}
+                                                </h4>
+                                                <dl class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-2">
+                                                    <div
+                                                        v-for="detail in activity.display.recorded_details"
+                                                        :key="`${activity.id}-recorded-${detail.label}`"
+                                                        class="flex gap-3 border-b border-gray-200 pb-2"
+                                                    >
+                                                        <dt class="w-36 shrink-0 text-gray-500">{{ detail.label }}</dt>
+                                                        <dd class="text-gray-900 break-words">{{ detail.value }}</dd>
                                                     </div>
                                                 </dl>
-                                            </div>
-                                            <div v-if="activity.properties">
-                                                <h4 class="font-medium text-gray-900 mb-2">Properties</h4>
-                                                <pre class="bg-gray-100 p-2 rounded text-xs overflow-x-auto max-h-40">{{ formatProperties(activity.properties) }}</pre>
                                             </div>
                                         </div>
                                     </td>

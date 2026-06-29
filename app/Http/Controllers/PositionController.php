@@ -133,7 +133,7 @@ class PositionController extends Controller
             'permissions.*' => 'exists:user_permissions,id',
         ]);
 
-        $oldData = $position->toArray();
+        $oldData = ActivityService::snapshot($position);
         $oldPermissions = $position->permissions->pluck('id')->toArray();
 
         $position->update([
@@ -147,16 +147,16 @@ class PositionController extends Controller
         // Sync permissions
         $position->syncPermissions($validated['permissions'] ?? []);
 
-        ActivityService::log(
-            'update',
-            "Updated position: {$position->name}",
+        $newData = ActivityService::snapshot($position);
+        $oldData['permissions'] = $oldPermissions;
+        $newData['permissions'] = $validated['permissions'] ?? [];
+
+        ActivityService::logSnapshotUpdate(
             $position,
-            [
-                'old_data' => $oldData,
-                'new_data' => $validated,
-                'old_permissions' => $oldPermissions,
-                'new_permissions' => $validated['permissions'] ?? [],
-            ]
+            $oldData,
+            $newData,
+            "Updated position: {$position->name}",
+            'positions'
         );
 
         return redirect()->route('admin.positions.index')
@@ -197,14 +197,17 @@ class PositionController extends Controller
      */
     public function toggleStatus(Position $position)
     {
+        $before = ActivityService::snapshot($position);
         $position->update(['is_active' => !$position->is_active]);
 
         $status = $position->is_active ? 'activated' : 'deactivated';
         
-        ActivityService::log(
-            'update',
-            "Position {$status}: {$position->name}",
+        ActivityService::logSnapshotUpdate(
             $position,
+            $before,
+            ActivityService::snapshot($position),
+            "Position {$status}: {$position->name}",
+            'positions',
             ['status_change' => $status]
         );
 
@@ -224,14 +227,12 @@ class PositionController extends Controller
         $oldPermissions = $position->permissions->pluck('id')->toArray();
         $position->syncPermissions($validated['permissions'] ?? []);
 
-        ActivityService::log(
-            'update',
-            "Updated permissions for position: {$position->name}",
+        ActivityService::logSnapshotUpdate(
             $position,
-            [
-                'old_permissions' => $oldPermissions,
-                'new_permissions' => $validated['permissions'] ?? [],
-            ]
+            ['permissions' => $oldPermissions],
+            ['permissions' => $validated['permissions'] ?? []],
+            "Updated permissions for position: {$position->name}",
+            'positions'
         );
 
         return back()->with('success', 'Position permissions updated successfully.');

@@ -167,6 +167,7 @@ class DiaphragmWeldingController extends Controller
         $samples = $data['samples'] ?? [];
         unset($data['samples']);
 
+        $before = ActivityService::snapshot($diaphragmWelding);
         $diaphragmWelding->update($data);
 
         // Update samples - delete existing and create new
@@ -177,12 +178,13 @@ class DiaphragmWeldingController extends Controller
 
         // Log activity
         if (class_exists(ActivityService::class)) {
-            ActivityService::log(
-                'update',
-                "Updated diaphragm welding checksheet for {$diaphragmWelding->item_code}",
+            ActivityService::logSnapshotUpdate(
                 $diaphragmWelding,
-                ['item_code' => $diaphragmWelding->item_code],
-                'diaphragm_welding'
+                $before,
+                ActivityService::snapshot($diaphragmWelding),
+                "Updated diaphragm welding checksheet for {$diaphragmWelding->item_code}",
+                'diaphragm_welding',
+                ['item_code' => $diaphragmWelding->item_code]
             );
         }
 

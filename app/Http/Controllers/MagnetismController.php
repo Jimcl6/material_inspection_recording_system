@@ -199,13 +199,14 @@ class MagnetismController extends Controller
      */
     public function update(MagnetismCheckSheetRequest $request, MagnetismChecksheet $magnetism_checksheet)
     {
+        $before = ActivityService::snapshot($magnetism_checksheet);
         $magnetism_checksheet->update($request->validated());
 
-        ActivityService::log(
-            'update',
-            "Updated magnetism checksheet for {$magnetism_checksheet->item_code}",
+        ActivityService::logSnapshotUpdate(
             $magnetism_checksheet,
-            $magnetism_checksheet->toArray(),
+            $before,
+            ActivityService::snapshot($magnetism_checksheet),
+            "Updated magnetism checksheet for {$magnetism_checksheet->item_code}",
             'magnetism'
         );
 
@@ -278,13 +279,14 @@ class MagnetismController extends Controller
      */
     public function updateBatch(MagnetismBatchRequest $request, MagnetismChecksheet $magnetism_checksheet, MagnetismBatch $batch)
     {
+        $before = ActivityService::snapshot($batch);
         $batch->update($request->validated());
 
-        ActivityService::log(
-            'update',
-            "Updated batch {$batch->letter_code} in checksheet {$magnetism_checksheet->item_code}",
+        ActivityService::logSnapshotUpdate(
             $batch,
-            $batch->toArray(),
+            $before,
+            ActivityService::snapshot($batch),
+            "Updated batch {$batch->letter_code} in checksheet {$magnetism_checksheet->item_code}",
             'magnetism'
         );
 

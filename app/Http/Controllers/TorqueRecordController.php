@@ -191,13 +191,14 @@ class TorqueRecordController extends Controller
             'checked_by' => ['nullable','string','max:100'],
         ]);
 
+        $before = ActivityService::snapshot($torque_record);
         $torque_record->update($data);
 
-        ActivityService::log(
-            'update',
-            "Updated torque record for {$torque_record->model_series}",
+        ActivityService::logSnapshotUpdate(
             $torque_record,
-            $torque_record->toArray(),
+            $before,
+            ActivityService::snapshot($torque_record),
+            "Updated torque record for {$torque_record->model_series}",
             'torque'
         );
 
@@ -246,10 +247,19 @@ class TorqueRecordController extends Controller
             ->get();
 
         foreach ($records as $record) {
+            $previousStatus = $record->status;
+
             $record->update([
                 'status' => 'approved',
                 'approved_at' => now(),
                 'approval_notes' => $data['notes'] ?? null,
+            ]);
+
+            ActivityService::logApprove($record, [
+                'previous_status' => $previousStatus,
+                'new_status' => 'approved',
+                'notes' => $data['notes'] ?? null,
+                'source' => 'bulk_approval',
             ]);
         }
 
@@ -272,10 +282,19 @@ class TorqueRecordController extends Controller
             ->get();
 
         foreach ($records as $record) {
+            $previousStatus = $record->status;
+
             $record->update([
                 'status' => 'rejected',
                 'approved_at' => now(),
                 'approval_notes' => $data['notes'] ?? null,
+            ]);
+
+            ActivityService::logReject($record, $data['notes'] ?? '', [
+                'previous_status' => $previousStatus,
+                'new_status' => 'rejected',
+                'notes' => $data['notes'] ?? null,
+                'source' => 'bulk_approval',
             ]);
         }
 
