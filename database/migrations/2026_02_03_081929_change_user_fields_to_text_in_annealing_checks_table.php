@@ -13,9 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('annealing_checks~', function (Blueprint $table) {
-            //
-        });
+        //
     }
 
     /**
@@ -25,8 +23,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('annealing_checks~', function (Blueprint $table) {
-            //
-        });
+        //
     }
 };

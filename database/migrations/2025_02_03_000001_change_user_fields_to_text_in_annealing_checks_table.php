@@ -13,6 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
+        if (!Schema::hasTable('annealing_checks')
+            || !Schema::hasColumn('annealing_checks', 'pic_id')
+            || !Schema::hasColumn('annealing_checks', 'checked_by_id')
+            || !Schema::hasColumn('annealing_checks', 'verified_by_id')) {
+            return;
+        }
+
         Schema::table('annealing_checks', function (Blueprint $table) {
             // Change user ID columns to text columns to store names instead of IDs
             $table->string('pic_id', 255)->change();
@@ -28,6 +35,13 @@ return new class extends Migration
      */
     public function down()
     {
+        if (!Schema::hasTable('annealing_checks')
+            || !Schema::hasColumn('annealing_checks', 'pic_id')
+            || !Schema::hasColumn('annealing_checks', 'checked_by_id')
+            || !Schema::hasColumn('annealing_checks', 'verified_by_id')) {
+            return;
+        }
+
         Schema::table('annealing_checks', function (Blueprint $table) {
             // Revert back to integer columns (user IDs)
             $table->unsignedBigInteger('pic_id')->change();
