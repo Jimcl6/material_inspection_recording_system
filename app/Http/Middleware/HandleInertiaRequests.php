@@ -44,7 +44,11 @@ class HandleInertiaRequests extends Middleware
                 'approvals' => (bool) config('features.approvals', false),
             ],
             'ziggy' => function () use ($request) {
-                return array_merge((new Ziggy)->toArray(), [
+                $ziggy = (new Ziggy)->toArray();
+
+                return array_merge($ziggy, [
+                    'url' => $request->getSchemeAndHttpHost(),
+                    'port' => $request->getPort(),
                     'location' => $request->url(),
                 ]);
             },
