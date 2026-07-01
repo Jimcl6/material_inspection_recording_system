@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: .
+    container_name: mirs-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    env_file:
+      - .env
+    volumes:
+      - mirs_storage:/var/www/html/storage
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  mirs_storage:
