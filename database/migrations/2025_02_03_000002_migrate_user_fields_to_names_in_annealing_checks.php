@@ -13,6 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
+        if (!Schema::hasTable('annealing_checks')
+            || !Schema::hasColumn('annealing_checks', 'pic_id')
+            || !Schema::hasColumn('annealing_checks', 'checked_by_id')
+            || !Schema::hasColumn('annealing_checks', 'verified_by_id')) {
+            return;
+        }
+
         Schema::table('annealing_checks', function (Blueprint $table) {
             // Add new text columns for user names
             $table->string('pic_name', 255)->after('pic_id');
@@ -51,6 +58,10 @@ return new class extends Migration
      */
     public function down()
     {
+        if (!Schema::hasTable('annealing_checks')) {
+            return;
+        }
+
         Schema::table('annealing_checks', function (Blueprint $table) {
             // Add back the original ID columns
             $table->unsignedBigInteger('pic_id')->nullable()->after('machine_setting');

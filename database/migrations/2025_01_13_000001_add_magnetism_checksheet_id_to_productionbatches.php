@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('productionbatches')) {
+            return;
+        }
+
         Schema::table('productionbatches', function (Blueprint $table) {
             // Add magnetism_checksheet_id column if it doesn't exist
             if (!Schema::hasColumn('productionbatches', 'magnetism_checksheet_id')) {
@@ -24,6 +28,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('productionbatches') || !Schema::hasColumn('productionbatches', 'magnetism_checksheet_id')) {
+            return;
+        }
+
         Schema::table('productionbatches', function (Blueprint $table) {
             $table->dropColumn('magnetism_checksheet_id');
         });
