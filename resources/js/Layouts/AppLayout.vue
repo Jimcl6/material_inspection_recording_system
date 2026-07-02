@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
@@ -25,15 +25,25 @@ import {
     ShieldCheckIcon,
     ListBulletIcon,
     Bars3Icon,
+    BellIcon,
     XMarkIcon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
 } from '@heroicons/vue/24/outline';
 
 const { canView, canCreate, canImport, canApprove, isAdmin, isSuperAdmin } = usePermissions();
+const page = usePage();
 
 const sidebarOpen = ref(false);
 const sidebarCollapsed = ref(false);
+const notificationLoading = ref(false);
+const notificationSummary = ref({
+    pendingCount: 0,
+    notifications: [],
+    modules: [],
+    hasApprovalAccess: false,
+});
+let approvalChannelName = null;
 
 const closeSidebar = () => {
     sidebarOpen.value = false;
@@ -49,12 +59,92 @@ const handleResize = () => {
     }
 };
 
+const hasApprovalAccess = computed(() => {
+    return notificationSummary.value.hasApprovalAccess
+        || canApprove('annealing')
+        || canApprove('temperature')
+        || canApprove('torque')
+        || canApprove('welding');
+});
+
+const notificationCount = computed(() => Number(notificationSummary.value.pendingCount || 0));
+
+const notificationCountLabel = computed(() => {
+    return notificationCount.value > 99 ? '99+' : notificationCount.value.toString();
+});
+
+const latestNotifications = computed(() => notificationSummary.value.notifications || []);
+
+const approvalModuleCounts = computed(() => {
+    return (notificationSummary.value.modules || []).filter((module) => module.pendingCount > 0);
+});
+
+const updateNotificationSummary = (summary) => {
+    notificationSummary.value = {
+        pendingCount: Number(summary?.pendingCount || 0),
+        notifications: Array.isArray(summary?.notifications) ? summary.notifications : [],
+        modules: Array.isArray(summary?.modules) ? summary.modules : [],
+        hasApprovalAccess: Boolean(summary?.hasApprovalAccess),
+    };
+};
+
+const fetchApprovalNotifications = async () => {
+    if (!hasApprovalAccess.value) {
+        return;
+    }
+
+    notificationLoading.value = true;
+
+    try {
+        const response = await window.axios.get(route('approval-notifications.summary'));
+        updateNotificationSummary(response.data);
+    } catch (error) {
+        console.error('Unable to load approval notifications', error);
+    } finally {
+        notificationLoading.value = false;
+    }
+};
+
+const formatNotificationTime = (value) => {
+    if (!value) {
+        return '';
+    }
+
+    return new Date(value).toLocaleString();
+};
+
+const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+        fetchApprovalNotifications();
+    }
+};
+
 onMounted(() => {
     window.addEventListener('resize', handleResize);
+
+    if (hasApprovalAccess.value) {
+        fetchApprovalNotifications();
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+
+    const userId = page.props.auth?.user?.id;
+
+    if (hasApprovalAccess.value && window.Echo && userId) {
+        approvalChannelName = `approval-notifications.${userId}`;
+        window.Echo.private(approvalChannelName)
+            .listen('.approval.notifications.changed', (event) => {
+                updateNotificationSummary(event.summary);
+            });
+    }
 });
 
 onUnmounted(() => {
     window.removeEventListener('resize', handleResize);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+
+    if (approvalChannelName && window.Echo) {
+        window.Echo.leave(approvalChannelName);
+    }
 });
 
 const sidebarWidth = computed(() => {
@@ -602,7 +692,7 @@ const mainMargin = computed(() => {
 
                     <!-- User dropdown -->
                     <div class="flex items-center">
-                        <Dropdown align="right" width="48">
+                        <Dropdown align="right" width="notification">
                             <template #trigger>
                                 <button
                                     type="button"
@@ -610,9 +700,15 @@ const mainMargin = computed(() => {
                                 >
                                     <span class="sr-only">Open user menu</span>
                                     <div class="flex items-center">
-                                        <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                                        <div class="relative h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
                                             <span class="text-sm font-medium text-indigo-600">
                                                 {{ $page.props.auth.user.name.charAt(0).toUpperCase() }}
+                                            </span>
+                                            <span
+                                                v-if="hasApprovalAccess && notificationCount > 0"
+                                                class="absolute -right-1.5 -top-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white ring-2 ring-white"
+                                            >
+                                                {{ notificationCountLabel }}
                                             </span>
                                         </div>
                                         <span class="hidden sm:block ml-3 text-sm font-medium text-gray-700">
@@ -626,6 +722,72 @@ const mainMargin = computed(() => {
                             </template>
 
                             <template #content>
+                                <div v-if="hasApprovalAccess" class="border-b border-gray-100">
+                                    <div class="flex items-center justify-between px-4 py-3">
+                                        <div>
+                                            <p class="text-sm font-semibold text-gray-900">Approval notifications</p>
+                                            <p class="text-xs text-gray-500">{{ notificationCount }} pending item(s)</p>
+                                        </div>
+                                        <BellIcon class="h-5 w-5 text-gray-400" />
+                                    </div>
+
+                                    <div v-if="notificationLoading" class="px-4 py-6 text-center text-sm text-gray-500">
+                                        Loading approvals...
+                                    </div>
+
+                                    <div v-else-if="latestNotifications.length" class="max-h-72 overflow-y-auto">
+                                        <Link
+                                            v-for="notification in latestNotifications"
+                                            :key="notification.id"
+                                            :href="route(notification.routeName)"
+                                            class="block px-4 py-3 text-left hover:bg-gray-50"
+                                        >
+                                            <div class="flex items-start gap-3">
+                                                <div class="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-indigo-50">
+                                                    <BellIcon class="h-4 w-4 text-indigo-600" />
+                                                </div>
+                                                <div class="min-w-0 flex-1">
+                                                    <p class="truncate text-xs font-medium uppercase text-indigo-600">
+                                                        {{ notification.moduleLabel }}
+                                                    </p>
+                                                    <p class="mt-0.5 text-sm text-gray-900">
+                                                        {{ notification.message }}
+                                                    </p>
+                                                    <p class="mt-1 text-xs text-gray-500">
+                                                        {{ formatNotificationTime(notification.createdAt) }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    </div>
+
+                                    <div v-else class="px-4 py-6 text-center">
+                                        <p class="text-sm font-medium text-gray-900">No pending approval notifications</p>
+                                        <p class="mt-1 text-xs text-gray-500">New records that need your approval will appear here.</p>
+                                    </div>
+
+                                    <div v-if="approvalModuleCounts.length" class="border-t border-gray-100 px-4 py-3">
+                                        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                            <Link
+                                                v-for="approvalModule in approvalModuleCounts"
+                                                :key="approvalModule.module"
+                                                :href="route(approvalModule.routeName)"
+                                                class="rounded-md border border-gray-200 px-3 py-2 hover:border-indigo-300 hover:bg-indigo-50"
+                                            >
+                                                <p class="truncate text-xs font-medium text-gray-700">{{ approvalModule.label }}</p>
+                                                <p class="mt-0.5 text-sm font-semibold text-gray-900">{{ approvalModule.pendingCount }} pending</p>
+                                            </Link>
+                                        </div>
+                                    </div>
+
+                                    <Link
+                                        :href="route('approvals.index')"
+                                        class="block border-t border-gray-100 px-4 py-3 text-sm font-medium text-indigo-600 hover:bg-indigo-50"
+                                    >
+                                        View all pending approvals
+                                    </Link>
+                                </div>
+
                                 <div class="px-4 py-3 border-b border-gray-100">
                                     <p class="text-sm font-medium text-gray-900">{{ $page.props.auth.user.name }}</p>
                                     <p class="text-xs text-gray-500 truncate">{{ $page.props.auth.user.email }}</p>

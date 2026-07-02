@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\TorqueRecord;
-use App\Models\ApprovalNotification;
 use App\Imports\TorqueChecksheetImport;
 use App\Services\ActivityService;
 use App\Services\ApprovalNotificationService;
@@ -234,7 +233,7 @@ class TorqueRecordController extends Controller
         ]);
     }
 
-    public function bulkApprove(Request $request)
+    public function bulkApprove(Request $request, ApprovalNotificationService $approvalNotificationService)
     {
         $data = $request->validate([
             'record_ids' => ['required', 'array', 'min:1'],
@@ -263,13 +262,13 @@ class TorqueRecordController extends Controller
             ]);
         }
 
-        $this->markApprovalNotificationsActed($records->pluck('id')->all());
+        $approvalNotificationService->markRecordsActed($records, 'torque');
 
         return redirect()->route('torque-records.approval')
             ->with('success', $records->count() . ' torque record(s) approved successfully.');
     }
 
-    public function bulkReject(Request $request)
+    public function bulkReject(Request $request, ApprovalNotificationService $approvalNotificationService)
     {
         $data = $request->validate([
             'record_ids' => ['required', 'array', 'min:1'],
@@ -298,23 +297,10 @@ class TorqueRecordController extends Controller
             ]);
         }
 
-        $this->markApprovalNotificationsActed($records->pluck('id')->all());
+        $approvalNotificationService->markRecordsActed($records, 'torque');
 
         return redirect()->route('torque-records.approval')
             ->with('success', $records->count() . ' torque record(s) rejected successfully.');
-    }
-
-    private function markApprovalNotificationsActed(array $recordIds): void
-    {
-        if ($recordIds === []) {
-            return;
-        }
-
-        ApprovalNotification::where('module', 'torque')
-            ->where('approvable_type', TorqueRecord::class)
-            ->whereIn('approvable_id', $recordIds)
-            ->where('status', 'pending')
-            ->update(['status' => 'acted']);
     }
 
     /**

@@ -36,6 +36,8 @@
         "@vueuse/head": "^2.0.0",
         "bootstrap": "^5.2.3",
         "date-fns": "^4.1.0",
+        "laravel-echo": "^2.3.7",
+        "pusher-js": "^8.5.0",
         "qrcode": "^1.5.4"
     }
 }
