@@ -12,6 +12,7 @@ use App\Models\WeldingChecksheet;
 use App\Models\WeldingChecksheetType;
 use App\Models\WeldingItemConfig;
 use App\Services\ActivityService;
+use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use App\Services\DuplicateRecordGuard;
 use Illuminate\Http\Request;
@@ -79,6 +80,7 @@ class WeldingChecksheetController extends Controller
     public function store(
         StoreWeldingChecksheetRequest $request,
         ApprovalWorkflowService $approvalWorkflowService,
+        ApprovalNotificationService $approvalNotificationService,
         DuplicateRecordGuard $duplicateRecordGuard
     )
     {
@@ -117,8 +119,15 @@ class WeldingChecksheetController extends Controller
             'welding'
         );
 
+        $approvalNotificationService->notifyApprovers($checksheet, 'new_submission', 'welding');
+
         return redirect()->route('welding-checksheets.index')
-            ->with('success', 'Welding checksheet created successfully.');
+            ->with(
+                'success',
+                $checksheet->status === 'pending'
+                    ? 'Welding checksheet created successfully and submitted for approval.'
+                    : 'Welding checksheet created successfully.'
+            );
     }
 
     public function show(WeldingChecksheet $welding_checksheet)
@@ -306,7 +315,7 @@ class WeldingChecksheetController extends Controller
         ]);
     }
 
-    public function bulkApprove(Request $request)
+    public function bulkApprove(Request $request, ApprovalNotificationService $approvalNotificationService)
     {
         $request->validate([
             'checksheet_ids' => ['required', 'array'],
@@ -333,11 +342,13 @@ class WeldingChecksheetController extends Controller
             ]);
         }
 
+        $approvalNotificationService->markRecordsActed($checksheets, 'welding');
+
         return redirect()->route('welding-checksheets.approval')
             ->with('success', count($checksheets) . ' checksheet(s) approved successfully.');
     }
 
-    public function bulkReject(Request $request)
+    public function bulkReject(Request $request, ApprovalNotificationService $approvalNotificationService)
     {
         $request->validate([
             'checksheet_ids' => ['required', 'array'],
@@ -363,6 +374,8 @@ class WeldingChecksheetController extends Controller
                 'source' => 'bulk_approval',
             ]);
         }
+
+        $approvalNotificationService->markRecordsActed($checksheets, 'welding');
 
         return redirect()->route('welding-checksheets.approval')
             ->with('success', count($checksheets) . ' checksheet(s) rejected successfully.');

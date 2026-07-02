@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ApprovalNotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PendingApprovalController;
@@ -36,6 +37,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/approvals', [PendingApprovalController::class, 'index'])
         ->middleware('feature:approvals')
         ->name('approvals.index');
+    Route::get('/approval-notifications/summary', [ApprovalNotificationController::class, 'summary'])
+        ->middleware('feature:approvals')
+        ->name('approval-notifications.summary');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])

@@ -14,6 +14,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AnnealingChecksExport;
 use App\Imports\AnnealingChecksWithHeadersImport;
 use App\Services\ActivityService;
+use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use App\Services\DuplicateRecordGuard;
 
@@ -63,6 +64,7 @@ class AnnealingCheckController extends Controller
     public function store(
         StoreAnnealingCheckRequest $request,
         ApprovalWorkflowService $approvalWorkflowService,
+        ApprovalNotificationService $approvalNotificationService,
         DuplicateRecordGuard $duplicateRecordGuard
     ): \Illuminate\Http\RedirectResponse
     {
@@ -88,11 +90,7 @@ class AnnealingCheckController extends Controller
             fn () => AnnealingCheck::create($data)
         );
 
-        // Notify administrators and inspectors
-        if (class_exists('\App\Services\ApprovalNotificationService')) {
-            $notificationService = new \App\Services\ApprovalNotificationService();
-            $notificationService->notifyApprovers($annealingCheck, 'new_submission');
-        }
+        $approvalNotificationService->notifyApprovers($annealingCheck, 'new_submission', 'annealing');
 
         // Log activity
         ActivityService::log(
@@ -202,8 +200,8 @@ class AnnealingCheckController extends Controller
         // Notify administrators and inspectors if status changed
         if (isset($data['status']) && $annealingCheck->wasChanged('status')) {
             if (class_exists('\App\Services\ApprovalNotificationService')) {
-                $notificationService = new \App\Services\ApprovalNotificationService();
-                $notificationService->notifyApprovers($annealingCheck, 'update');
+                $notificationService = app(ApprovalNotificationService::class);
+                $notificationService->notifyApprovers($annealingCheck, 'update', 'annealing');
             }
         }
 
@@ -490,7 +488,10 @@ class AnnealingCheckController extends Controller
     /**
      * Bulk approve annealing checks
      */
-    public function bulkApprove(\Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
+    public function bulkApprove(
+        \Illuminate\Http\Request $request,
+        ApprovalNotificationService $approvalNotificationService
+    ): \Illuminate\Http\RedirectResponse
     {
         $request->validate([
             'check_ids' => 'required|array',
@@ -517,11 +518,9 @@ class AnnealingCheckController extends Controller
                 'source' => 'bulk_approval',
             ]);
 
-            // Mark notifications as acted
-            $check->approvalNotifications()
-                ->where('user_id', Auth::id())
-                ->update(['status' => 'acted']);
         }
+
+        $approvalNotificationService->markRecordsActed($checks, 'annealing');
 
         return redirect()->route('annealing-checks.approval')
             ->with('success', count($checks) . ' annealing check(s) approved successfully.');
@@ -530,7 +529,10 @@ class AnnealingCheckController extends Controller
     /**
      * Bulk reject annealing checks
      */
-    public function bulkReject(\Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
+    public function bulkReject(
+        \Illuminate\Http\Request $request,
+        ApprovalNotificationService $approvalNotificationService
+    ): \Illuminate\Http\RedirectResponse
     {
         $request->validate([
             'check_ids' => 'required|array',
@@ -557,11 +559,9 @@ class AnnealingCheckController extends Controller
                 'source' => 'bulk_approval',
             ]);
 
-            // Mark notifications as acted
-            $check->approvalNotifications()
-                ->where('user_id', Auth::id())
-                ->update(['status' => 'acted']);
         }
+
+        $approvalNotificationService->markRecordsActed($checks, 'annealing');
 
         return redirect()->route('annealing-checks.approval')
             ->with('success', count($checks) . ' annealing check(s) rejected successfully.');

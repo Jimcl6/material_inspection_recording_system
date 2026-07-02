@@ -6,6 +6,7 @@ use App\Models\WeldingChecksheet;
 use App\Models\WeldingChecksheetType;
 use App\Models\WeldingItemConfig;
 use App\Models\User;
+use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -268,6 +269,7 @@ class WeldingChecksheetImport
             $checksheet->samples()->delete();
         } else {
             $checksheet = WeldingChecksheet::create($record);
+            app(ApprovalNotificationService::class)->notifyApprovers($checksheet, 'new_submission', 'welding');
         }
 
         foreach ($samples as $sample) {
