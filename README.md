@@ -1,66 +1,272 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Material Inspection Recording System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Material Inspection Recording System (MIRS) is an internal Laravel application for recording, importing, approving, and auditing manufacturing inspection records. It is built for company LAN or VPN use and combines Laravel, Inertia, Vue, MySQL-compatible storage, role-based access control, module permissions, and spreadsheet import/export workflows.
 
-## About Laravel
+## Core Modules
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Dashboard and authenticated profile management
+- Annealing Checks
+- Magnetism Checksheet
+- Temperature Records
+- Torque Records
+- Material Monitoring Checksheets
+- Welding Checksheets, including legacy Diaphragm Welding redirects
+- Modification Logs
+- Pending Approvals and approval notifications
+- User Management with employee QR code generation and scanning
+- Departments, Positions, Roles, and permission management
+- Activity Logs for administrative audit review
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Most operational modules are protected by module permissions such as `view`, `create`, `update`, `delete`, `import`, `export`, `approve`, and `reject`.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Tech Stack
 
-## Learning Laravel
+- PHP 8.0.2+
+- Laravel 9
+- MySQL or MariaDB
+- Inertia.js
+- Vue 3
+- Vite
+- Tailwind CSS and Bootstrap
+- Ziggy route helpers
+- Laravel Sanctum
+- Maatwebsite Excel
+- Docker, Nginx, and PHP-FPM support for internal deployment
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Local Development
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Install PHP dependencies:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+composer install
+```
 
-## Laravel Sponsors
+Install frontend dependencies:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+```bash
+npm install
+```
 
-### Premium Partners
+Create and configure the environment file:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## Contributing
+Update `.env` for the local database:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```env
+APP_NAME="Material Inspection Recording System"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost
 
-## Code of Conduct
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=mirs
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Run migrations:
 
-## Security Vulnerabilities
+```bash
+php artisan migrate
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Start the Laravel and Vite development servers:
 
-## License
+```bash
+php artisan serve
+npm run dev
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+If PowerShell blocks `npm` through `npm.ps1`, use `npm.cmd` instead:
+
+```bash
+npm.cmd run dev
+```
+
+## Frontend Build
+
+Build production frontend assets with:
+
+```bash
+npm run build
+```
+
+After adding, renaming, or removing Laravel routes used by Vue through `route(...)`, regenerate Ziggy routes:
+
+```bash
+php artisan ziggy:generate
+```
+
+## Database Seeders
+
+The project includes seeders for roles, permissions, users, activity data, material titles, and welding item-code configuration.
+
+Common seeders:
+
+```bash
+php artisan db:seed --class=RoleSeeder
+php artisan db:seed --class=UserPermissionSeeder
+php artisan db:seed --class=PositionPermissionSeeder
+php artisan db:seed --class=AdminUserSeeder
+php artisan db:seed --class=UserManagementSeeder
+php artisan db:seed --class=MaterialSubLotTitleSeeder
+php artisan db:seed --class=DiaphragmItemCodeSeeder
+```
+
+Do not run destructive commands such as `migrate:fresh` or broad reseeding against a live database unless a full data reset is intentional and approved. For production or shared databases, run only the specific seeder needed for the change.
+
+## Approval Workflow
+
+Approvals are controlled by the `APPROVALS_ENABLED` feature flag.
+
+```env
+APPROVALS_ENABLED=false
+```
+
+When enabled, approval routes and notifications are available only to users with the required module approval permissions. Current approval-capable areas include Annealing Checks, Temperature Records, Torque Records, and Welding Checksheets.
+
+## Import and Export Workflows
+
+Several modules support spreadsheet import, preview, execute, and export flows. Import workflows should use the preview step first so users can review parsed rows, duplicates, validation errors, and record changes before writing to the database.
+
+Import/export support exists across modules such as Annealing, Magnetism, Temperature, Torque, and Welding. Keep import validation close to each module controller/request so business rules remain module-specific and auditable.
+
+## Internal Deployment Notes
+
+MIRS contains operational records, user accounts, approval data, and audit logs. It should normally be deployed as an internal application behind LAN, VPN, firewall, or a controlled access layer.
+
+Production environment basics:
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://your-internal-mirs-domain
+SESSION_SECURE_COOKIE=true
+```
+
+The web server must point to Laravel's `public/` directory only. Do not expose the project root, `.env`, `storage/`, `vendor/`, or source files directly through the web server.
+
+Recommended internal deployment controls:
+
+- Keep the database private and reachable only from the app server.
+- Expose only HTTP/HTTPS to approved internal users.
+- Use HTTPS for browser access whenever possible.
+- Keep `APP_DEBUG=false` in production.
+- Review admin and super-admin accounts regularly.
+- Maintain database and `storage/` backups.
+- Test restore procedures, not just backup creation.
+
+## Docker Deployment
+
+The repository includes Docker deployment files for an internal Laravel runtime:
+
+- `Dockerfile`
+- `docker-compose.yml`
+- `.env.docker.example`
+- `docker/nginx/default.conf`
+- `docker/php/php.ini`
+- `docker/supervisord.conf`
+- `docker/entrypoint.sh`
+
+Create an environment file from the Docker example:
+
+```bash
+cp .env.docker.example .env
+```
+
+Set the correct values for the deployment host, port, application key, and database:
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=http://your-linux-server-ip:8080
+APP_PORT=8080
+
+DB_CONNECTION=mysql
+DB_HOST=your-database-host
+DB_PORT=3306
+DB_DATABASE=your-database-name
+DB_USERNAME=your-database-user
+DB_PASSWORD=
+```
+
+Build and start the container:
+
+```bash
+docker compose up -d --build
+```
+
+Run Laravel commands inside the container:
+
+```bash
+docker compose exec app php artisan migrate --force
+docker compose exec app php artisan optimize:clear
+docker compose exec app php artisan ziggy:generate
+```
+
+Use targeted seeders only when needed:
+
+```bash
+docker compose exec app php artisan db:seed --class=UserPermissionSeeder --force
+docker compose exec app php artisan db:seed --class=AdminUserSeeder --force
+```
+
+## Common Maintenance Commands
+
+Clear Laravel caches:
+
+```bash
+php artisan optimize:clear
+```
+
+List routes:
+
+```bash
+php artisan route:list
+```
+
+Build frontend assets:
+
+```bash
+npm run build
+```
+
+Run tests:
+
+```bash
+php artisan test
+```
+
+Check PHP syntax for a changed file:
+
+```bash
+php -l app/Http/Controllers/ExampleController.php
+```
+
+## Verification Checklist
+
+After deployment or major changes, verify:
+
+- Login works for an authorized administrator.
+- Dashboard loads with compiled assets.
+- Main modules list records without errors.
+- Create, edit, import, export, and delete actions work for permitted users.
+- Approval pages work when `APPROVALS_ENABLED=true`.
+- Activity Logs record sensitive actions.
+- User Management and QR scanning work on intended devices.
+- The app does not emit stale Vite dev-server URLs in production.
+
+## Related Documentation
+
+- [User Management Module](USER_MANAGEMENT_README.md)
+- [Local Hosting Technical Specifications](docs/mirs-local-hosting-technical-specs-proposal.md)
+
+## Security Reporting
+
+Report security issues, exposed credentials, incorrect permissions, or production access concerns to the project maintainer or internal IT owner. Do not commit real production `.env` values, database dumps, user exports, or private credentials to the repository.
