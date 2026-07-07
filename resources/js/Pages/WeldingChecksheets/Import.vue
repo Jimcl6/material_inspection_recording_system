@@ -521,7 +521,7 @@ const resetForm = () => {
                             <button
                                 type="button"
                                 @click="previewImport"
-                                :disabled="isPreviewLoading || !selectedFile || !hasTypes"
+                                :disabled="isPreviewLoading"
                                 class="px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 disabled:opacity-50"
                             >
                                 {{ isPreviewLoading ? 'Analyzing...' : 'Preview Import' }}
