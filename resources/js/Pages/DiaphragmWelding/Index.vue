@@ -4,8 +4,11 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, computed } from 'vue';
 import { route } from 'ziggy-js';
 import { usePermissions } from '@/Composables/usePermissions';
+import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
+import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
 
 const { canCreate, canUpdate, canDelete, canImport, canExport } = usePermissions();
+const { toggleExpanded, isExpanded } = useSingleExpandedRow();
 
 interface Checksheet {
     id: number;
@@ -118,6 +121,36 @@ const statusClass = (status: string) => {
             return 'bg-yellow-100 text-yellow-800';
     }
 };
+
+const checksheetDetailSections = (checksheet: Checksheet) => [
+    {
+        title: 'Record Details',
+        items: [
+            { label: 'Date', value: formatDate(checksheet.production_date) },
+            { label: 'Item Code', value: checksheet.item_code },
+            { label: 'Item Name', value: checksheet.item_name },
+            { label: 'Lasermark Lot #', value: checksheet.lasermark_lot_number },
+        ],
+    },
+    {
+        title: 'Process Details',
+        items: [
+            { label: 'Machine', value: checksheet.machine_no },
+            { label: 'Letter Code', value: checksheet.letter_code },
+            { label: 'JO Number', value: checksheet.jo_number },
+            { label: 'Quantity', value: checksheet.prod_qty },
+        ],
+    },
+    {
+        title: 'Approval Details',
+        items: [
+            { label: 'Status', value: checksheet.status },
+            { label: 'Operator', value: checksheet.operator?.name },
+            { label: 'Technician', value: checksheet.technician?.name },
+            { label: 'Checked By', value: checksheet.checked_by?.name },
+        ],
+    },
+];
 </script>
 
 <template>
@@ -227,18 +260,33 @@ const statusClass = (status: string) => {
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
+                                        <th class="w-10 px-3 py-3">
+                                            <span class="sr-only">Details</span>
+                                        </th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Code</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lasermark Lot #</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Machine</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">JO Number</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <!-- <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th> -->
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="checksheet in checksheets.data" :key="checksheet.id" class="hover:bg-gray-50">
+                                    <template v-for="checksheet in checksheets.data" :key="checksheet.id">
+                                    <tr class="hover:bg-gray-50" :class="{ 'bg-indigo-50/40': isExpanded(checksheet.id) }">
+                                        <td class="px-3 py-4 whitespace-nowrap">
+                                            <button
+                                                type="button"
+                                                @click="toggleExpanded(checksheet.id)"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                :aria-expanded="isExpanded(checksheet.id)"
+                                                :title="isExpanded(checksheet.id) ? 'Hide details' : 'Show details'"
+                                            >
+                                                <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-90': isExpanded(checksheet.id) }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </button>
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             {{ formatDate(checksheet.production_date) }}
                                         </td>
@@ -247,12 +295,6 @@ const statusClass = (status: string) => {
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ checksheet.lasermark_lot_number || 'N/A' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ checksheet.machine_no || 'N/A' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ checksheet.jo_number || 'N/A' }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ checksheet.prod_qty || 'N/A' }}
@@ -300,8 +342,14 @@ const statusClass = (status: string) => {
                                             </div>
                                         </td>
                                     </tr>
+                                    <tr v-if="isExpanded(checksheet.id)" class="bg-gray-50">
+                                        <td colspan="7" class="px-4 py-4">
+                                            <RecordDetailPanel :sections="checksheetDetailSections(checksheet)" />
+                                        </td>
+                                    </tr>
+                                    </template>
                                     <tr v-if="!checksheets.data.length">
-                                        <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">
+                                        <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
                                             No checksheets found.
                                         </td>
                                     </tr>

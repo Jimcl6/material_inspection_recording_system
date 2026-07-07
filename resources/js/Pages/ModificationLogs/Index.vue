@@ -4,11 +4,14 @@ import { ref, computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTableFilters from '@/Components/DataTableFilters.vue';
 import { usePermissions } from '@/Composables/usePermissions';
+import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
+import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
 
 // Import route helper
 declare function route(name: string, params?: any): string;
 
 const { canCreate, canUpdate, canDelete } = usePermissions();
+const { toggleExpanded, isExpanded } = useSingleExpandedRow();
 
 interface ModificationLog {
     id: number;
@@ -134,6 +137,41 @@ const confirmDelete = (log: ModificationLog) => {
         });
     }
 };
+
+const modificationDetailSections = (log: ModificationLog) => [
+    {
+        title: 'Record Details',
+        items: [
+            { label: 'ID', value: log.id },
+            { label: 'Date', value: formatDate(log.prod_date) },
+            { label: '4M Category', value: log.col_4m },
+            { label: 'Line', value: log.col_line },
+            { label: 'Model Code', value: log.model_code },
+        ],
+    },
+    {
+        title: 'Change Details',
+        items: [
+            { label: 'Item', value: log.item_for_modification },
+            { label: 'Nature of Change', value: log.nature_of_change },
+            { label: 'From', value: log.col_from },
+            { label: 'To', value: log.col_to },
+            { label: 'Remarks', value: log.col_remarks },
+        ],
+    },
+    {
+        title: 'Traceability',
+        items: [
+            { label: 'Material Lot #', value: log.material_lot_no },
+            { label: 'Start Serial', value: log.start_serial },
+            { label: 'End Serial', value: log.end_serial },
+            { label: 'Recorded By', value: log.recorded_by },
+            { label: 'Source of Info', value: log.source_of_info },
+            { label: 'Approved By', value: log.approved_by },
+            { label: 'Job / Transfer Order', value: log.job_no_transfer_order },
+        ],
+    },
+];
 </script>
 
 <template>
@@ -173,6 +211,9 @@ const confirmDelete = (log: ModificationLog) => {
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
+                                        <th class="w-10 px-3 py-3">
+                                            <span class="sr-only">Details</span>
+                                        </th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             ID
                                         </th>
@@ -185,16 +226,27 @@ const confirmDelete = (log: ModificationLog) => {
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Item for Modification
                                         </th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                                            Recorded By
-                                        </th>
                                         <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Actions
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="log in logs.data" :key="log.id" class="hover:bg-gray-50">
+                                    <template v-for="log in logs.data" :key="log.id">
+                                    <tr class="hover:bg-gray-50" :class="{ 'bg-indigo-50/40': isExpanded(log.id) }">
+                                        <td class="px-3 py-4 whitespace-nowrap">
+                                            <button
+                                                type="button"
+                                                @click="toggleExpanded(log.id)"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                :aria-expanded="isExpanded(log.id)"
+                                                :title="isExpanded(log.id) ? 'Hide details' : 'Show details'"
+                                            >
+                                                <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-90': isExpanded(log.id) }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </button>
+                                        </td>
                                         <td class="px-4 py-4 whitespace-nowrap">
                                             <div class="text-sm font-medium text-gray-900">
                                                 {{ log.id }}
@@ -213,11 +265,6 @@ const confirmDelete = (log: ModificationLog) => {
                                         <td class="px-4 py-4">
                                             <div class="text-sm text-gray-900 max-w-xs truncate" :title="log.item_for_modification">
                                                 {{ log.item_for_modification || 'N/A' }}
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
-                                            <div class="text-sm text-gray-900">
-                                                {{ log.recorded_by || 'N/A' }}
                                             </div>
                                         </td>
                                         <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -255,6 +302,12 @@ const confirmDelete = (log: ModificationLog) => {
                                             </div>
                                         </td>
                                     </tr>
+                                    <tr v-if="isExpanded(log.id)" class="bg-gray-50">
+                                        <td colspan="6" class="px-4 py-4">
+                                            <RecordDetailPanel :sections="modificationDetailSections(log)" />
+                                        </td>
+                                    </tr>
+                                    </template>
                                     <tr v-if="!logs.data.length">
                                         <td colspan="6" class="px-4 py-4 text-center text-sm text-gray-500">
                                             No modification logs found.

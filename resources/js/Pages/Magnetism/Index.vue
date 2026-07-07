@@ -105,6 +105,9 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
+                                        <th class="w-10 px-3 py-3">
+                                            <span class="sr-only">Details</span>
+                                        </th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Code</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Name</th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Machine No.</th>
@@ -113,7 +116,21 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="cs in checksheets.data" :key="cs.id" class="hover:bg-gray-50">
+                                    <template v-for="cs in checksheets.data" :key="cs.id">
+                                    <tr class="hover:bg-gray-50" :class="{ 'bg-indigo-50/40': isExpanded(cs.id) }">
+                                        <td class="px-3 py-4 whitespace-nowrap">
+                                            <button
+                                                type="button"
+                                                @click="toggleExpanded(cs.id)"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                :aria-expanded="isExpanded(cs.id)"
+                                                :title="isExpanded(cs.id) ? 'Hide details' : 'Show details'"
+                                            >
+                                                <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-90': isExpanded(cs.id) }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </button>
+                                        </td>
                                         <td class="px-4 py-4 whitespace-nowrap">
                                             <div class="text-sm font-medium text-gray-900">{{ cs.item_code }}</div>
                                         </td>
@@ -161,8 +178,14 @@
                                             </div>
                                         </td>
                                     </tr>
+                                    <tr v-if="isExpanded(cs.id)" class="bg-gray-50">
+                                        <td colspan="6" class="px-4 py-4">
+                                            <RecordDetailPanel :sections="checksheetDetailSections(cs)" />
+                                        </td>
+                                    </tr>
+                                    </template>
                                     <tr v-if="!checksheets.data.length">
-                                        <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
                                             No checksheets found.
                                         </td>
                                     </tr>
@@ -247,10 +270,13 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive } from 'vue';
 import { usePermissions } from '@/Composables/usePermissions';
+import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
+import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
 
 declare function route(name: string, params?: any): string;
 
 const { canCreate, canUpdate, canDelete, canImport } = usePermissions();
+const { toggleExpanded, isExpanded } = useSingleExpandedRow();
 
 interface Checksheet {
     id: number;
@@ -310,6 +336,24 @@ const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 const getMonthName = (month: number): string => {
     return months.find(m => m.value === month)?.label || '';
 };
+
+const checksheetDetailSections = (cs: Checksheet) => [
+    {
+        title: 'Record Details',
+        items: [
+            { label: 'Item Code', value: cs.item_code },
+            { label: 'Item Name', value: cs.item_name },
+        ],
+    },
+    {
+        title: 'Schedule Details',
+        items: [
+            { label: 'Machine No.', value: cs.machine_no },
+            { label: 'Month', value: getMonthName(cs.month) },
+            { label: 'Year', value: cs.year },
+        ],
+    },
+];
 
 const applyFilters = () => {
     const query = Object.fromEntries(

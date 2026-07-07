@@ -47,6 +47,9 @@
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
+                    <th scope="col" class="w-10 px-3 py-3">
+                      <span class="sr-only">Details</span>
+                    </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date
                     </th>
@@ -55,9 +58,6 @@
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Driver Details
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      In Charge
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       AM Reading
@@ -74,7 +74,21 @@
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                  <tr v-for="record in records.data" :key="record.id" class="hover:bg-gray-50">
+                  <template v-for="record in records.data" :key="record.id">
+                  <tr class="hover:bg-gray-50" :class="{ 'bg-indigo-50/40': isExpanded(record.id) }">
+                    <td class="px-3 py-4 whitespace-nowrap">
+                      <button
+                        type="button"
+                        @click="toggleExpanded(record.id)"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        :aria-expanded="isExpanded(record.id)"
+                        :title="isExpanded(record.id) ? 'Hide details' : 'Show details'"
+                      >
+                        <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-90': isExpanded(record.id) }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {{ formatDate(record.date) }}
                     </td>
@@ -86,9 +100,6 @@
                       <div class="text-sm text-gray-900">{{ record.driver_model }}</div>
                       <div class="text-sm text-gray-500">Type: {{ record.driver_type }}</div>
                       <div class="text-sm text-gray-500">Line {{ record.line_assigned }}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {{ record.person_in_charge }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="flex items-center">
@@ -148,6 +159,12 @@
                       </div>
                     </td>
                   </tr>
+                  <tr v-if="isExpanded(record.id)" class="bg-gray-50">
+                    <td :colspan="approvalsEnabled ? 8 : 7" class="px-4 py-4">
+                      <RecordDetailPanel :sections="torqueDetailSections(record)" />
+                    </td>
+                  </tr>
+                  </template>
                   <tr v-if="!records.data.length">
                     <td :colspan="approvalsEnabled ? 8 : 7" class="px-6 py-4 text-center text-sm text-gray-500">
                       No torque records found.
@@ -226,9 +243,12 @@ import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import ApprovalStatus from '@/Components/ApprovalStatus.vue';
+import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
+import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
 import { usePermissions } from '@/Composables/usePermissions';
 
 const { canCreate, canUpdate, canDelete, canImport, approvalsEnabled } = usePermissions();
+const { toggleExpanded, isExpanded } = useSingleExpandedRow();
 
 const props = defineProps({
   records: {
@@ -345,4 +365,34 @@ const getTorqueClass = (torque) => {
   if (torqueValue > 15) return 'bg-red-100 text-red-800';
   return 'bg-green-100 text-green-800';
 };
+
+const torqueDetailSections = (record) => [
+  {
+    title: 'Record Details',
+    items: [
+      { label: 'Date', value: formatDate(record.date) },
+      { label: 'Model Series', value: record.model_series },
+      { label: 'Control No.', value: record.control_no },
+      { label: 'In Charge', value: record.person_in_charge },
+    ],
+  },
+  {
+    title: 'Driver Details',
+    items: [
+      { label: 'Driver Model', value: record.driver_model },
+      { label: 'Driver Type', value: record.driver_type },
+      { label: 'Line', value: record.line_assigned },
+    ],
+  },
+  {
+    title: 'Readings',
+    items: [
+      { label: 'AM Torque', value: record.torque_am ? `${record.torque_am} N m` : null },
+      { label: 'AM Time', value: record.time_am },
+      { label: 'PM Torque', value: record.torque_pm ? `${record.torque_pm} N m` : null },
+      { label: 'PM Time', value: record.time_pm },
+      { label: 'Status', value: record.status },
+    ],
+  },
+];
 </script>

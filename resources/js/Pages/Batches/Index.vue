@@ -107,14 +107,14 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
+                                        <th class="w-10 px-3 py-3">
+                                            <span class="sr-only">Details</span>
+                                        </th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Date
                                         </th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Item Name
-                                        </th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                                            Letter Code
                                         </th>
                                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                                             Item Code
@@ -128,7 +128,21 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="batch in batches.data" :key="batch.BatchID" class="hover:bg-gray-50">
+                                    <template v-for="batch in batches.data" :key="batch.BatchID">
+                                    <tr class="hover:bg-gray-50" :class="{ 'bg-indigo-50/40': isExpanded(batch.BatchID) }">
+                                        <td class="px-3 py-4 whitespace-nowrap">
+                                            <button
+                                                type="button"
+                                                @click="toggleExpanded(batch.BatchID)"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                :aria-expanded="isExpanded(batch.BatchID)"
+                                                :title="isExpanded(batch.BatchID) ? 'Hide details' : 'Show details'"
+                                            >
+                                                <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-90': isExpanded(batch.BatchID) }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </button>
+                                        </td>
                                         <td class="px-4 py-4 whitespace-nowrap">
                                             <div class="text-sm font-medium text-gray-900">
                                                 {{ formatDate(batch.ProductionDate) }}
@@ -137,11 +151,6 @@
                                         <td class="px-4 py-4 whitespace-nowrap">
                                             <div class="text-sm text-gray-900">
                                                 {{ batch.ItemName || 'N/A' }}
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
-                                            <div class="text-sm text-gray-900">
-                                                {{ batch.LetterCode || 'N/A' }}
                                             </div>
                                         </td>
                                         <td class="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
@@ -199,8 +208,14 @@
                                             </div>
                                         </td>
                                     </tr>
+                                    <tr v-if="isExpanded(batch.BatchID)" class="bg-gray-50">
+                                        <td colspan="6" class="px-4 py-4">
+                                            <RecordDetailPanel :sections="batchDetailSections(batch)" />
+                                        </td>
+                                    </tr>
+                                    </template>
                                     <tr v-if="!batches.data.length">
-                                        <td colspan="9" class="px-6 py-4 text-center text-sm text-gray-500">
+                                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
                                             No production batches found.
                                         </td>
                                     </tr>
@@ -295,11 +310,14 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, reactive } from 'vue';
 import { usePermissions } from '@/Composables/usePermissions';
+import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
+import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
 
 // Import route helper
 declare function route(name: string, params?: any): string;
 
 const { canCreate, canUpdate, canDelete, canImport } = usePermissions();
+const { toggleExpanded, isExpanded } = useSingleExpandedRow();
 
 type Filters = {
     q?: string;
@@ -506,6 +524,35 @@ const formatDate = (dateString: string): string => {
         return 'Invalid date';
     }
 };
+
+const batchDetailSections = (batch: ProductionBatch) => [
+    {
+        title: 'Record Details',
+        items: [
+            { label: 'Batch ID', value: batch.BatchID },
+            { label: 'Production Date', value: formatDate(batch.ProductionDate) },
+            { label: 'Item Name', value: batch.ItemName },
+            { label: 'Item Code', value: batch.ItemCode },
+            { label: 'Letter Code', value: batch.LetterCode },
+        ],
+    },
+    {
+        title: 'Lot Details',
+        items: [
+            { label: 'QR Code', value: batch.QRCode },
+            { label: 'Material Lot #', value: batch.MaterialLotNumber },
+            { label: 'Job Number', value: batch.JobNumber },
+        ],
+    },
+    {
+        title: 'Quantity Details',
+        items: [
+            { label: 'Produce Qty', value: batch.ProduceQty },
+            { label: 'Total Qty', value: batch.TotalQty },
+            { label: 'Remarks', value: batch.Remarks },
+        ],
+    },
+];
 
 // Import moduls
 import NewBatchModal from './NewBatchModal.vue';

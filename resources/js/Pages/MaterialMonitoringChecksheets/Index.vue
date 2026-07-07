@@ -5,8 +5,11 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTableFilters from '@/Components/DataTableFilters.vue';
 import DeleteButton from '@/Components/DeleteButton.vue';
 import { usePermissions } from '@/Composables/usePermissions';
+import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
+import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
 
 const { canCreate, canUpdate, canDelete } = usePermissions();
+const { toggleExpanded, isExpanded } = useSingleExpandedRow();
 
 const props = defineProps({
     materialParts: {
@@ -78,6 +81,45 @@ const getSubLotCount = (materialPart) => {
         key => materialPart.sub_lot_numbers[key] && materialPart.sub_lot_numbers[key].trim()
     ).length;
 };
+
+const subLotSummary = (materialPart) => {
+    if (!materialPart.sub_lot_numbers) return 'N/A';
+    if (materialPart.sub_lot_numbers.sub_lots) {
+        return materialPart.sub_lot_numbers.sub_lots.join(', ');
+    }
+    return Object.entries(materialPart.sub_lot_numbers)
+        .filter(([, value]) => value && String(value).trim())
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(', ') || 'N/A';
+};
+
+const materialDetailSections = (materialPart) => [
+    {
+        title: 'Record Details',
+        items: [
+            { label: 'Date', value: formatDate(materialPart.date) },
+            { label: 'Material Type', value: props.materialTypes[materialPart.material_type] || materialPart.material_type },
+            { label: 'Item Block Code', value: materialPart.item_block_code },
+            { label: 'Letter Code', value: materialPart.letter_code },
+        ],
+    },
+    {
+        title: 'Lot Details',
+        items: [
+            { label: 'Main Lot Number', value: materialPart.main_lot_number },
+            { label: 'Sub Lots', value: subLotSummary(materialPart) },
+            { label: 'Sub Lot Count', value: getSubLotCount(materialPart) },
+        ],
+    },
+    {
+        title: 'Production Details',
+        items: [
+            { label: 'Quantity', value: materialPart.produced_qty?.toLocaleString() || 0 },
+            { label: 'Operator', value: materialPart.operator },
+            { label: 'Job Number', value: materialPart.job_number },
+        ],
+    },
+];
 </script>
 
 <template>
@@ -126,6 +168,9 @@ const getSubLotCount = (materialPart) => {
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
+                                        <th class="w-10 px-3 py-3">
+                                            <span class="sr-only">Details</span>
+                                        </th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Date
                                         </th>
@@ -136,19 +181,10 @@ const getSubLotCount = (materialPart) => {
                                             Item Block Code
                                         </th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Letter Code
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Main Lot Number
                                         </th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Sub Lots
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Quantity
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Operator
                                         </th>
                                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Actions
@@ -156,7 +192,21 @@ const getSubLotCount = (materialPart) => {
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="materialPart in materialParts.data" :key="materialPart.id" class="hover:bg-gray-50">
+                                    <template v-for="materialPart in materialParts.data" :key="materialPart.id">
+                                    <tr class="hover:bg-gray-50" :class="{ 'bg-indigo-50/40': isExpanded(materialPart.id) }">
+                                        <td class="px-3 py-4 whitespace-nowrap">
+                                            <button
+                                                type="button"
+                                                @click="toggleExpanded(materialPart.id)"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                :aria-expanded="isExpanded(materialPart.id)"
+                                                :title="isExpanded(materialPart.id) ? 'Hide details' : 'Show details'"
+                                            >
+                                                <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-90': isExpanded(materialPart.id) }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </button>
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             {{ formatDate(materialPart.date) }}
                                         </td>
@@ -167,23 +217,10 @@ const getSubLotCount = (materialPart) => {
                                             {{ materialPart.item_block_code }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                                                {{ materialPart.letter_code }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             {{ materialPart.main_lot_number }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                {{ getSubLotCount(materialPart) }} sub-lots
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             {{ materialPart.produced_qty?.toLocaleString() || 0 }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ materialPart.operator || 'N/A' }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex items-center justify-end space-x-2">
@@ -211,8 +248,14 @@ const getSubLotCount = (materialPart) => {
                                             </div>
                                         </td>
                                     </tr>
+                                    <tr v-if="isExpanded(materialPart.id)" class="bg-gray-50">
+                                        <td colspan="7" class="px-4 py-4">
+                                            <RecordDetailPanel :sections="materialDetailSections(materialPart)" />
+                                        </td>
+                                    </tr>
+                                    </template>
                                     <tr v-if="!materialParts.data || materialParts.data.length === 0">
-                                        <td colspan="9" class="px-6 py-4 text-center text-sm text-gray-500">
+                                        <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
                                             No material parts found. Click "Create New" to add your first material part.
                                         </td>
                                     </tr>
