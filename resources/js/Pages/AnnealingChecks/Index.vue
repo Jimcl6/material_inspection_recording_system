@@ -2,11 +2,14 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTableFilters from '@/Components/DataTableFilters.vue';
+import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
 import { ref, computed } from 'vue';
 import { route } from 'ziggy-js';
 import { usePermissions } from '@/Composables/usePermissions';
+import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
 
 const { canCreate, canUpdate, canDelete, canImport, approvalsEnabled } = usePermissions();
+const { toggleExpanded, isExpanded } = useSingleExpandedRow();
 
 type Filters = {
     search?: string;
@@ -174,6 +177,39 @@ const formatDate = (dateString: string): string => {
         return 'Invalid date';
     }
 };
+
+const annealingDetailSections = (check: AnnealingCheck) => [
+    {
+        title: 'Record Details',
+        items: [
+            { label: 'Item Code', value: check.item_code },
+            { label: 'Supplier Lot #', value: check.supplier_lot_number },
+            { label: 'Receiving Date', value: formatDate(check.receiving_date) },
+            { label: 'Quantity', value: check.quantity },
+        ],
+    },
+    {
+        title: 'Process Details',
+        items: [
+            { label: 'Annealing Date', value: formatDate(check.annealing_date) },
+            { label: 'Machine #', value: check.machine_number },
+            { label: 'Temperature', value: check.temperature_setting },
+            { label: 'Annealing Time', value: check.annealing_time },
+            { label: 'Damper Setting', value: check.damper_setting },
+            { label: 'Time In', value: check.time_in },
+            { label: 'Time Out', value: check.time_out },
+        ],
+    },
+    {
+        title: 'Approval Details',
+        items: [
+            { label: 'Status', value: check.status },
+            { label: 'PIC', value: check.pic?.name },
+            { label: 'Checked By', value: check.checkedBy?.name },
+            { label: 'Verified By', value: check.verifiedBy?.name },
+        ],
+    },
+];
 </script>
 
 <template>
@@ -224,6 +260,9 @@ const formatDate = (dateString: string): string => {
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
+                                        <th class="w-10 px-3 py-3">
+                                            <span class="sr-only">Details</span>
+                                        </th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Item Code
                                         </th>
@@ -236,12 +275,6 @@ const formatDate = (dateString: string): string => {
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Machine #
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Temperature
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Annealing Time
-                                        </th>
                                         <th v-if="approvalsEnabled" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status
                                         </th>
@@ -251,8 +284,22 @@ const formatDate = (dateString: string): string => {
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="check in annealingChecks.data" :key="check.id" class="hover:bg-gray-50">
-                                        <td v-if="approvalsEnabled" class="px-6 py-4 whitespace-nowrap">
+                                    <template v-for="check in annealingChecks.data" :key="check.id">
+                                    <tr class="hover:bg-gray-50" :class="{ 'bg-indigo-50/40': isExpanded(check.id) }">
+                                        <td class="px-3 py-4 whitespace-nowrap">
+                                            <button
+                                                type="button"
+                                                @click="toggleExpanded(check.id)"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                :aria-expanded="isExpanded(check.id)"
+                                                :title="isExpanded(check.id) ? 'Hide details' : 'Show details'"
+                                            >
+                                                <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-90': isExpanded(check.id) }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </button>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm font-medium text-gray-900">
                                                 {{ check.item_code }}
                                             </div>
@@ -272,17 +319,7 @@ const formatDate = (dateString: string): string => {
                                                 {{ check.machine_number || 'N/A' }}
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">
-                                                {{ check.temperature_setting || 'N/A' }}
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">
-                                                {{ check.annealing_time || 'N/A' }}
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td v-if="approvalsEnabled" class="px-6 py-4 whitespace-nowrap">
                                             <span :class="{
                                                 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full': true,
                                                 'bg-green-100 text-green-800': check.status === 'approved',
@@ -327,8 +364,14 @@ const formatDate = (dateString: string): string => {
                                             </div>
                                         </td>
                                     </tr>
+                                    <tr v-if="isExpanded(check.id)" class="bg-gray-50">
+                                        <td :colspan="approvalsEnabled ? 7 : 6" class="px-4 py-4">
+                                            <RecordDetailPanel :sections="annealingDetailSections(check)" />
+                                        </td>
+                                    </tr>
+                                    </template>
                                     <tr v-if="!annealingChecks.data.length">
-                                        <td :colspan="approvalsEnabled ? 8 : 7" class="px-6 py-4 text-center text-sm text-gray-500">
+                                        <td :colspan="approvalsEnabled ? 7 : 6" class="px-6 py-4 text-center text-sm text-gray-500">
                                             No annealing checks found.
                                         </td>
                                     </tr>
