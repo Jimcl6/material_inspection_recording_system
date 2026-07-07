@@ -7,7 +7,6 @@ use App\Http\Requests\ImportWeldingChecksheetRequest;
 use App\Http\Requests\StoreWeldingChecksheetRequest;
 use App\Http\Requests\UpdateWeldingChecksheetRequest;
 use App\Imports\WeldingChecksheetImport;
-use App\Models\User;
 use App\Models\WeldingChecksheet;
 use App\Models\WeldingChecksheetType;
 use App\Models\WeldingItemConfig;
@@ -15,6 +14,7 @@ use App\Services\ActivityService;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use App\Services\DuplicateRecordGuard;
+use App\Services\WeldingChecksheetOptions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -68,7 +68,7 @@ class WeldingChecksheetController extends Controller
             'checksheets' => $query->orderByDesc('production_date')->orderByDesc('id')->paginate(15)->withQueryString(),
             'filters' => $request->only(['search', 'checksheet_type_id', 'item_code', 'machine_no', 'date_from', 'date_to', 'status']),
             'types' => $this->typesForForms(),
-            'itemCodes' => WeldingItemConfig::query()->active()->orderBy('item_code')->pluck('item_code')->unique()->values(),
+            'itemCodes' => $this->weldingOptions()->itemCodes(),
         ]);
     }
 
@@ -205,10 +205,8 @@ class WeldingChecksheetController extends Controller
             $file = $request->file('file');
             $tempPath = $file->store('temp');
             $fullPath = storage_path('app/' . $tempPath);
-            $type = WeldingChecksheetType::findOrFail($request->integer('checksheet_type_id'));
-            $itemConfig = $request->filled('item_config_id')
-                ? WeldingItemConfig::find($request->integer('item_config_id'))
-                : null;
+            $type = $this->findActiveTypeOrFail($request->integer('checksheet_type_id'));
+            $itemConfig = $this->findActiveItemConfigForType($request->integer('item_config_id'), $type);
 
             $import = new WeldingChecksheetImport($file->getClientOriginalName());
 
@@ -255,8 +253,8 @@ class WeldingChecksheetController extends Controller
         }
 
         try {
-            $type = WeldingChecksheetType::findOrFail($payload['checksheet_type_id']);
-            $itemConfig = !empty($payload['item_config_id']) ? WeldingItemConfig::find($payload['item_config_id']) : null;
+            $type = $this->findActiveTypeOrFail($payload['checksheet_type_id']);
+            $itemConfig = $this->findActiveItemConfigForType($payload['item_config_id'] ?? null, $type);
             $import = new WeldingChecksheetImport($payload['source_file'] ?? null);
 
             $results = $import->execute(
@@ -399,18 +397,34 @@ class WeldingChecksheetController extends Controller
 
     protected function typesForForms()
     {
-        return WeldingChecksheetType::with(['itemConfigs' => fn ($query) => $query->active()->orderBy('item_code')])
-            ->active()
-            ->orderBy('name')
-            ->get();
+        return $this->weldingOptions()->types();
     }
 
     protected function formOptions(): array
     {
-        return [
-            'users' => User::select('id', 'name')->orderBy('name')->get(),
-            'types' => $this->typesForForms(),
-        ];
+        return $this->weldingOptions()->formOptions();
+    }
+
+    protected function weldingOptions(): WeldingChecksheetOptions
+    {
+        return app(WeldingChecksheetOptions::class);
+    }
+
+    protected function findActiveTypeOrFail(int $id): WeldingChecksheetType
+    {
+        return WeldingChecksheetType::query()->active()->findOrFail($id);
+    }
+
+    protected function findActiveItemConfigForType(?int $id, WeldingChecksheetType $type): ?WeldingItemConfig
+    {
+        if (!$id) {
+            return null;
+        }
+
+        return WeldingItemConfig::query()
+            ->active()
+            ->where('checksheet_type_id', $type->id)
+            ->findOrFail($id);
     }
 
     protected function prepareChecksheetData(array $data): array
