@@ -2,9 +2,10 @@ import './bootstrap';
 import '../css/app.css';
 
 import { createApp, h } from 'vue';
-import { createInertiaApp } from '@inertiajs/vue3';
+import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue, route as ziggyRoute } from 'ziggy-js';
+import type { Page } from '@inertiajs/core';
 import type { Config, RouteParam, RouteParamsWithQueryOverload, Router as ZiggyRouter } from 'ziggy-js';
 import { createPinia } from 'pinia';
 
@@ -34,6 +35,28 @@ declare function route(
 
 const appName = import.meta.env.VITE_APP_NAME || 'Material Inspection Recording System';
 
+const syncCsrfToken = (page: Page): void => {
+    const token = page.props.csrf_token;
+
+    if (typeof token !== 'string' || token === '') {
+        return;
+    }
+
+    const metas = document.head.querySelectorAll<HTMLMetaElement>('meta[name="csrf-token"]');
+
+    if (metas.length === 0) {
+        const meta = document.createElement('meta');
+        meta.name = 'csrf-token';
+        meta.content = token;
+        document.head.appendChild(meta);
+        return;
+    }
+
+    metas.forEach((meta) => {
+        meta.content = token;
+    });
+};
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => {
@@ -42,6 +65,9 @@ createInertiaApp({
     },
     setup({ el, App, props, plugin }) {
         const pinia = createPinia();
+        syncCsrfToken(props.initialPage);
+        router.on('navigate', (event) => syncCsrfToken(event.detail.page));
+
         const pageZiggy = (props.initialPage.props as any).ziggy;
         const ziggy = {
             ...pageZiggy,
