@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { ChevronDownIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -26,6 +26,12 @@ const props = defineProps({
 });
 
 const isOpen = ref(props.defaultOpen || props.active);
+
+watch(() => props.active, (active) => {
+    if (active) {
+        isOpen.value = true;
+    }
+});
 
 const toggle = () => {
     if (!props.collapsed) {

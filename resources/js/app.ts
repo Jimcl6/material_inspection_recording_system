@@ -47,7 +47,6 @@ createInertiaApp({
             ...pageZiggy,
             url: window.location.origin,
             port: window.location.port ? Number(window.location.port) : null,
-            location: new URL(window.location.href),
         };
 
         window.Ziggy = ziggy;
