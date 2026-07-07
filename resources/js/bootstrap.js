@@ -13,16 +13,22 @@ window.axios = axios;
 // Enable credentials for session cookie support
 window.axios.defaults.withCredentials = true;
 
-// Set CSRF token as a common header
-let token = document.head.querySelector('meta[name="csrf-token"]');
-
-if (token) {
-    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
-} else {
-    console.error('CSRF token not found');
-}
-
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
+const currentCsrfToken = () => document.head.querySelector('meta[name="csrf-token"]')?.content;
+
+window.axios.interceptors.request.use((config) => {
+    const token = currentCsrfToken();
+    config.headers = config.headers || {};
+
+    if (token) {
+        config.headers['X-CSRF-TOKEN'] = token;
+    } else {
+        delete config.headers['X-CSRF-TOKEN'];
+    }
+
+    return config;
+});
 
 // Handle 419 (CSRF token mismatch) errors by refreshing the page
 window.axios.interceptors.response.use(
