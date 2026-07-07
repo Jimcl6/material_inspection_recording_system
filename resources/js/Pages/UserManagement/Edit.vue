@@ -171,11 +171,15 @@ const submit = () => {
 
                         <!-- Password (Optional) -->
                         <div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">Change Password (Optional)</h3>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">Password Reset (Optional)</h3>
+                            <p class="mb-4 text-sm text-gray-500">
+                                Enter a temporary password only when this user needs administrator-assisted recovery.
+                                Leave both fields blank to keep the current password.
+                            </p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
-                                        New Password
+                                        Temporary Password
                                     </label>
                                     <input
                                         v-model="form.password"
@@ -190,7 +194,7 @@ const submit = () => {
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
-                                        Confirm New Password
+                                        Confirm Temporary Password
                                     </label>
                                     <input
                                         v-model="form.password_confirmation"
