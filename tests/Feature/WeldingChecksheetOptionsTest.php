@@ -17,9 +17,13 @@ class WeldingChecksheetOptionsTest extends TestCase
 {
     use DatabaseTransactions;
 
-    public function test_import_page_receives_active_checksheet_type_options(): void
+    public function test_import_page_receives_checksheet_type_options_even_when_inactive(): void
     {
         $this->seed(WeldingChecksheetTypeSeeder::class);
+
+        WeldingChecksheetType::where('key', 'casing_tank')->update(['is_active' => false]);
+        WeldingItemConfig::whereIn('checksheet_type_id', WeldingChecksheetType::where('key', 'casing_tank')->pluck('id'))
+            ->update(['is_active' => false]);
 
         $response = $this
             ->withoutMiddleware(CheckModulePermission::class)
@@ -34,6 +38,32 @@ class WeldingChecksheetOptionsTest extends TestCase
         $this->assertTrue($types->contains('key', 'diaphragm'));
         $this->assertTrue($types->contains('key', 'casing_tank'));
         $this->assertNotEmpty($types->firstWhere('key', 'casing_tank')['item_configs']);
+    }
+
+    public function test_import_preview_accepts_inactive_checksheet_type_options(): void
+    {
+        $this->seed(WeldingChecksheetTypeSeeder::class);
+
+        $type = WeldingChecksheetType::where('key', 'casing_tank')->firstOrFail();
+        $itemConfig = WeldingItemConfig::where('checksheet_type_id', $type->id)
+            ->where('item_code', 'CSB29046P3')
+            ->firstOrFail();
+
+        $type->update(['is_active' => false]);
+        $itemConfig->update(['is_active' => false]);
+
+        $response = $this
+            ->withoutMiddleware(CheckModulePermission::class)
+            ->actingAs(User::factory()->create())
+            ->post(route('welding-checksheets.import.preview'), [
+                'file' => $this->weldingWorkbookUpload(),
+                'checksheet_type_id' => $type->id,
+                'item_config_id' => $itemConfig->id,
+            ]);
+
+        $response
+            ->assertOk()
+            ->assertJson(['success' => true]);
     }
 
     public function test_welding_type_seeder_repairs_missing_active_dropdown_options(): void
