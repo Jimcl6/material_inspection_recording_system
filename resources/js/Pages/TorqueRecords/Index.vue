@@ -60,9 +60,9 @@
                       Driver Details
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      AM Reading
+                      Readings
                     </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" class="hidden">
                       PM Reading
                     </th>
                     <th v-if="approvalsEnabled" scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -102,15 +102,18 @@
                       <div class="text-sm text-gray-500">Line {{ record.line_assigned }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="flex items-center">
+                      <div class="flex flex-wrap items-center gap-2">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getTorqueClass(record.torque_am)">
                           {{ record.torque_am }} N·m
                         </span>
-                        <span class="ml-2 text-xs text-gray-500">{{ record.time_am }}</span>
+                        <span class="text-xs text-gray-500">{{ record.time_am }}</span>
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getTorqueClass(record.torque_pm)">
+                          PM {{ record.torque_pm }} N&middot;m
+                        </span>
                       </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="flex items-center">
+                    <td class="hidden">
+                      <div class="flex flex-wrap items-center gap-2">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getTorqueClass(record.torque_pm)">
                           {{ record.torque_pm }} N·m
                         </span>
@@ -160,13 +163,13 @@
                     </td>
                   </tr>
                   <tr v-if="isExpanded(record.id)" class="bg-gray-50">
-                    <td :colspan="approvalsEnabled ? 8 : 7" class="px-4 py-4">
+                    <td :colspan="approvalsEnabled ? 7 : 6" class="px-4 py-4">
                       <RecordDetailPanel :sections="torqueDetailSections(record)" />
                     </td>
                   </tr>
                   </template>
                   <tr v-if="!records.data.length">
-                    <td :colspan="approvalsEnabled ? 8 : 7" class="px-6 py-4 text-center text-sm text-gray-500">
+                    <td :colspan="approvalsEnabled ? 7 : 6" class="px-6 py-4 text-center text-sm text-gray-500">
                       No torque records found.
                     </td>
                   </tr>
