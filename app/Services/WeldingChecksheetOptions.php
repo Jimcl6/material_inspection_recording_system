@@ -19,6 +19,15 @@ class WeldingChecksheetOptions
             ->get();
     }
 
+    public function importTypes(): Collection
+    {
+        return WeldingChecksheetType::with([
+            'itemConfigs' => fn ($query) => $query->orderBy('item_code'),
+        ])
+            ->orderBy('name')
+            ->get();
+    }
+
     public function itemCodes(): Collection
     {
         return WeldingItemConfig::query()
@@ -39,6 +48,14 @@ class WeldingChecksheetOptions
         return [
             'users' => $this->users(),
             'types' => $this->types(),
+        ];
+    }
+
+    public function importOptions(): array
+    {
+        return [
+            'users' => $this->users(),
+            'types' => $this->importTypes(),
         ];
     }
 }

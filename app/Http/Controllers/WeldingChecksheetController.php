@@ -196,7 +196,7 @@ class WeldingChecksheetController extends Controller
 
     public function importForm()
     {
-        return Inertia::render('WeldingChecksheets/Import', $this->formOptions());
+        return Inertia::render('WeldingChecksheets/Import', $this->weldingOptions()->importOptions());
     }
 
     public function importPreview(ImportWeldingChecksheetRequest $request)
@@ -205,8 +205,8 @@ class WeldingChecksheetController extends Controller
             $file = $request->file('file');
             $tempPath = $file->store('temp');
             $fullPath = storage_path('app/' . $tempPath);
-            $type = $this->findActiveTypeOrFail($request->integer('checksheet_type_id'));
-            $itemConfig = $this->findActiveItemConfigForType($request->integer('item_config_id'), $type);
+            $type = $this->findImportTypeOrFail($request->integer('checksheet_type_id'));
+            $itemConfig = $this->findImportItemConfigForType($request->integer('item_config_id'), $type);
 
             $import = new WeldingChecksheetImport($file->getClientOriginalName());
 
@@ -253,8 +253,8 @@ class WeldingChecksheetController extends Controller
         }
 
         try {
-            $type = $this->findActiveTypeOrFail($payload['checksheet_type_id']);
-            $itemConfig = $this->findActiveItemConfigForType($payload['item_config_id'] ?? null, $type);
+            $type = $this->findImportTypeOrFail($payload['checksheet_type_id']);
+            $itemConfig = $this->findImportItemConfigForType($payload['item_config_id'] ?? null, $type);
             $import = new WeldingChecksheetImport($payload['source_file'] ?? null);
 
             $results = $import->execute(
@@ -423,6 +423,22 @@ class WeldingChecksheetController extends Controller
 
         return WeldingItemConfig::query()
             ->active()
+            ->where('checksheet_type_id', $type->id)
+            ->findOrFail($id);
+    }
+
+    protected function findImportTypeOrFail(int $id): WeldingChecksheetType
+    {
+        return WeldingChecksheetType::query()->findOrFail($id);
+    }
+
+    protected function findImportItemConfigForType(?int $id, WeldingChecksheetType $type): ?WeldingItemConfig
+    {
+        if (!$id) {
+            return null;
+        }
+
+        return WeldingItemConfig::query()
             ->where('checksheet_type_id', $type->id)
             ->findOrFail($id);
     }

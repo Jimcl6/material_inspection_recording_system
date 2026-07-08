@@ -112,7 +112,7 @@ const handleFileChange = (event: Event) => {
 
 const previewImport = async () => {
     if (!hasTypes.value) {
-        errorMessage.value = 'No active welding checksheet types are configured.';
+        errorMessage.value = 'No welding checksheet types are configured.';
         return;
     }
 
@@ -156,7 +156,7 @@ const previewImport = async () => {
 
 const executeImport = async () => {
     if (!hasTypes.value) {
-        errorMessage.value = 'No active welding checksheet types are configured.';
+        errorMessage.value = 'No welding checksheet types are configured.';
         return;
     }
 
@@ -417,7 +417,7 @@ const resetForm = () => {
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Upload Excel File</h3>
 
                         <div v-if="!hasTypes" class="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                            No active welding checksheet types are configured.
+                            No welding checksheet types are configured.
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -431,7 +431,7 @@ const resetForm = () => {
                                     :disabled="!hasTypes"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:bg-gray-100 disabled:text-gray-500"
                                 >
-                                    <option v-if="!hasTypes" :value="null">No active types available</option>
+                                    <option v-if="!hasTypes" :value="null">No types available</option>
                                     <option v-for="type in types" :key="type.id" :value="type.id">{{ type.name }}</option>
                                 </select>
                             </div>
