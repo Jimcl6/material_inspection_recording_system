@@ -259,6 +259,19 @@ const props = defineProps({
 
 const dateEl = ref(null)
 
+const now = new Date()
+const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+const isMorning = now.getHours() < 12
+
+const timeFor = (record, period) => {
+  const savedTime = period === 'AM' ? record?.time_am : record?.time_pm
+
+  if (savedTime) return savedTime
+
+  const isCurrentPeriod = period === 'AM' ? isMorning : !isMorning
+  return isCurrentPeriod ? currentTime : ''
+}
+
 const readingsFor = (record, period) => {
   const readings = (record?.readings || [])
     .filter((reading) => reading.period === period)
@@ -281,8 +294,8 @@ const form = useForm({
   screw_type: props.record?.screw_type || '',
   process_assigned: props.record?.process_assigned || '',
   person_in_charge: props.record?.person_in_charge || '',
-  time_am: props.record?.time_am || '',
-  time_pm: props.record?.time_pm || '',
+  time_am: timeFor(props.record, 'AM'),
+  time_pm: timeFor(props.record, 'PM'),
   readings: {
     am: readingsFor(props.record, 'AM'),
     pm: readingsFor(props.record, 'PM'),
@@ -304,8 +317,8 @@ watch(() => props.record, (newRecord) => {
     form.screw_type = newRecord.screw_type || ''
     form.process_assigned = newRecord.process_assigned || ''
     form.person_in_charge = newRecord.person_in_charge || ''
-    form.time_am = newRecord.time_am || ''
-    form.time_pm = newRecord.time_pm || ''
+    form.time_am = timeFor(newRecord, 'AM')
+    form.time_pm = timeFor(newRecord, 'PM')
     form.readings = {
       am: readingsFor(newRecord, 'AM'),
       pm: readingsFor(newRecord, 'PM'),
