@@ -10,6 +10,10 @@ import Card from '@/Components/Card.vue';
 import SectionTitle from '@/Components/SectionTitle.vue';
 import TorqueReadingGroup from '@/Components/TorqueReadingGroup.vue';
 
+const now = new Date();
+const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+const isMorning = now.getHours() < 12;
+
 const form = useForm({
     date: new Date().toISOString().split('T')[0],
     model_series: '',
@@ -20,8 +24,8 @@ const form = useForm({
     driver_type: '',
     process_assigned: '',
     person_in_charge: '',
-    time_am: '',
-    time_pm: '',
+    time_am: isMorning ? currentTime : '',
+    time_pm: isMorning ? '' : currentTime,
     readings: {
         am: [{ torque_value: '' }],
         pm: [{ torque_value: '' }],
