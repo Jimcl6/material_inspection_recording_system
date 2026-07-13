@@ -36,6 +36,10 @@ const formatTime = (timeString) => {
         return timeString;
     }
 };
+
+const readingsFor = (period) => (props.record.readings || [])
+    .filter((reading) => reading.period === period)
+    .sort((a, b) => a.reading_no - b.reading_no);
 </script>
 
 <template>
@@ -200,14 +204,19 @@ const formatTime = (timeString) => {
                                                 {{ formatTime(record.time_am) }}
                                             </dd>
                                         </div>
-                                        <div class="sm:grid sm:grid-cols-3 sm:gap-4">
-                                            <dt class="text-sm font-medium text-gray-500">Torque</dt>
-                                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2">
-                                                <span class="px-2 py-1 rounded-full text-xs font-medium" 
-                                                      :class="getTorqueClass(record.torque_am)">
-                                                    {{ record.torque_am ? `${record.torque_am} N·m` : 'N/A' }}
+                                        <div>
+                                            <dt class="text-sm font-medium text-gray-500">Readings</dt>
+                                            <dd v-if="readingsFor('AM').length" class="mt-2 flex flex-wrap gap-2">
+                                                <span
+                                                    v-for="reading in readingsFor('AM')"
+                                                    :key="reading.id"
+                                                    class="px-2 py-1 rounded-full text-xs font-medium"
+                                                    :class="getTorqueClass(reading.torque_value)"
+                                                >
+                                                    {{ reading.reading_no }}. {{ reading.torque_value }} N·m
                                                 </span>
                                             </dd>
+                                            <dd v-else class="mt-1 text-sm text-gray-500">N/A</dd>
                                         </div>
                                     </dl>
                                 </div>
@@ -222,14 +231,19 @@ const formatTime = (timeString) => {
                                                 {{ formatTime(record.time_pm) }}
                                             </dd>
                                         </div>
-                                        <div class="sm:grid sm:grid-cols-3 sm:gap-4">
-                                            <dt class="text-sm font-medium text-gray-500">Torque</dt>
-                                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2">
-                                                <span class="px-2 py-1 rounded-full text-xs font-medium" 
-                                                      :class="getTorqueClass(record.torque_pm)">
-                                                    {{ record.torque_pm ? `${record.torque_pm} N·m` : 'N/A' }}
+                                        <div>
+                                            <dt class="text-sm font-medium text-gray-500">Readings</dt>
+                                            <dd v-if="readingsFor('PM').length" class="mt-2 flex flex-wrap gap-2">
+                                                <span
+                                                    v-for="reading in readingsFor('PM')"
+                                                    :key="reading.id"
+                                                    class="px-2 py-1 rounded-full text-xs font-medium"
+                                                    :class="getTorqueClass(reading.torque_value)"
+                                                >
+                                                    {{ reading.reading_no }}. {{ reading.torque_value }} N·m
                                                 </span>
                                             </dd>
+                                            <dd v-else class="mt-1 text-sm text-gray-500">N/A</dd>
                                         </div>
                                     </dl>
                                 </div>
