@@ -62,9 +62,6 @@
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Readings
                     </th>
-                    <th scope="col" class="hidden">
-                      PM Reading
-                    </th>
                     <th v-if="approvalsEnabled" scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
@@ -102,22 +99,17 @@
                       <div class="text-sm text-gray-500">Line {{ record.line_assigned }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="flex flex-wrap items-center gap-2">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getTorqueClass(record.torque_am)">
-                          {{ record.torque_am }} N·m
-                        </span>
-                        <span class="text-xs text-gray-500">{{ record.time_am }}</span>
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getTorqueClass(record.torque_pm)">
-                          PM {{ record.torque_pm }} N&middot;m
-                        </span>
-                      </div>
-                    </td>
-                    <td class="hidden">
-                      <div class="flex flex-wrap items-center gap-2">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getTorqueClass(record.torque_pm)">
-                          {{ record.torque_pm }} N·m
-                        </span>
-                        <span class="ml-2 text-xs text-gray-500">{{ record.time_pm }}</span>
+                      <div class="space-y-1 text-sm">
+                        <div class="flex items-center gap-2">
+                          <span class="font-medium text-gray-900">AM:</span>
+                          <span class="text-gray-600">{{ readingCount(record, 'AM') }} reading(s)</span>
+                          <span v-if="record.time_am" class="text-xs text-gray-400">{{ record.time_am }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <span class="font-medium text-gray-900">PM:</span>
+                          <span class="text-gray-600">{{ readingCount(record, 'PM') }} reading(s)</span>
+                          <span v-if="record.time_pm" class="text-xs text-gray-400">{{ record.time_pm }}</span>
+                        </div>
                       </div>
                     </td>
                     <td v-if="approvalsEnabled" class="px-6 py-4 whitespace-nowrap">
@@ -369,6 +361,19 @@ const getTorqueClass = (torque) => {
   return 'bg-green-100 text-green-800';
 };
 
+const readingsFor = (record, period) => (record.readings || [])
+  .filter((reading) => reading.period === period)
+  .sort((a, b) => a.reading_no - b.reading_no);
+
+const readingCount = (record, period) => readingsFor(record, period).length;
+
+const formattedReadings = (record, period) => {
+  const readings = readingsFor(record, period);
+  return readings.length
+    ? readings.map((reading) => `${reading.reading_no}. ${reading.torque_value} N m`).join(', ')
+    : null;
+};
+
 const torqueDetailSections = (record) => [
   {
     title: 'Record Details',
@@ -390,9 +395,9 @@ const torqueDetailSections = (record) => [
   {
     title: 'Readings',
     items: [
-      { label: 'AM Torque', value: record.torque_am ? `${record.torque_am} N m` : null },
+      { label: 'AM Readings', value: formattedReadings(record, 'AM') },
       { label: 'AM Time', value: record.time_am },
-      { label: 'PM Torque', value: record.torque_pm ? `${record.torque_pm} N m` : null },
+      { label: 'PM Readings', value: formattedReadings(record, 'PM') },
       { label: 'PM Time', value: record.time_pm },
       { label: 'Status', value: record.status },
     ],

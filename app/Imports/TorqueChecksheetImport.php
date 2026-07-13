@@ -5,10 +5,10 @@ namespace App\Imports;
 use App\Models\TorqueRecord;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class TorqueChecksheetImport
 {
@@ -33,26 +33,26 @@ class TorqueChecksheetImport
     {
         try {
             $spreadsheet = IOFactory::load($filePath);
-            
+
             foreach ($spreadsheet->getSheetNames() as $sheetName) {
                 $lowerName = strtolower($sheetName);
                 if (str_contains($lowerName, 'master') || str_contains($lowerName, 'template')) {
                     continue;
                 }
-                
+
                 $sheet = $spreadsheet->getSheetByName($sheetName);
                 $this->processSheetPreview($sheet, $sheetName);
             }
 
             return $this->results;
-
         } catch (\Exception $e) {
             Log::error('Torque Checksheet Import Preview failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
-            $this->results['errors'][] = 'Failed to process file: ' . $e->getMessage();
+
+            $this->results['errors'][] = 'Failed to process file: '.$e->getMessage();
+
             return $this->results;
         }
     }
@@ -64,26 +64,26 @@ class TorqueChecksheetImport
     {
         try {
             $spreadsheet = IOFactory::load($filePath);
-            
+
             foreach ($spreadsheet->getSheetNames() as $sheetName) {
                 $lowerName = strtolower($sheetName);
                 if (str_contains($lowerName, 'master') || str_contains($lowerName, 'template')) {
                     continue;
                 }
-                
+
                 $sheet = $spreadsheet->getSheetByName($sheetName);
                 $this->processSheetExecute($sheet, $sheetName, $updateDuplicates);
             }
 
             return $this->executeResults;
-
         } catch (\Exception $e) {
             Log::error('Torque Checksheet Import Execute failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
-            $this->executeResults['errors'][] = 'Failed to process file: ' . $e->getMessage();
+
+            $this->executeResults['errors'][] = 'Failed to process file: '.$e->getMessage();
+
             return $this->executeResults;
         }
     }
@@ -99,6 +99,7 @@ class TorqueChecksheetImport
 
         if (empty($dateColumns)) {
             $this->results['errors'][] = "Sheet '{$sheetName}': No date columns found";
+
             return;
         }
 
@@ -106,17 +107,19 @@ class TorqueChecksheetImport
         $currentRow = 10;
 
         while ($currentRow <= $highestRow) {
-            $screwType = $this->getCellValue($sheet, 'A' . $currentRow);
-            
+            $screwType = $this->getCellValue($sheet, 'A'.$currentRow);
+
             // Skip empty rows, notes, or footer rows
             if (empty($screwType) || $this->isFooterRow($screwType)) {
                 $currentRow++;
+
                 continue;
             }
 
             // Check if this looks like a valid screw type (e.g., "M4x40", "M4 U-lock Nut")
-            if (!$this->isValidScrewType($screwType)) {
+            if (! $this->isValidScrewType($screwType)) {
                 $currentRow++;
+
                 continue;
             }
 
@@ -126,13 +129,13 @@ class TorqueChecksheetImport
             // For each date column, create a record
             foreach ($dateColumns as $dateInfo) {
                 $record = $this->buildRecordFromBlock($sheet, $currentRow, $blockData, $dateInfo, $timeData, $headerData);
-                
+
                 if ($record && $this->hasValidData($record)) {
                     $this->results['total_parsed']++;
-                    
+
                     // Check for duplicate
                     $existing = $this->findExistingRecord($record);
-                    
+
                     if ($existing) {
                         $this->results['duplicate_records'][] = [
                             'existing_id' => $existing->id,
@@ -161,6 +164,7 @@ class TorqueChecksheetImport
 
         if (empty($dateColumns)) {
             $this->executeResults['errors'][] = "Sheet '{$sheetName}': No date columns found";
+
             return;
         }
 
@@ -168,10 +172,11 @@ class TorqueChecksheetImport
         $currentRow = 10;
 
         while ($currentRow <= $highestRow) {
-            $screwType = $this->getCellValue($sheet, 'A' . $currentRow);
-            
-            if (empty($screwType) || $this->isFooterRow($screwType) || !$this->isValidScrewType($screwType)) {
+            $screwType = $this->getCellValue($sheet, 'A'.$currentRow);
+
+            if (empty($screwType) || $this->isFooterRow($screwType) || ! $this->isValidScrewType($screwType)) {
                 $currentRow++;
+
                 continue;
             }
 
@@ -179,21 +184,29 @@ class TorqueChecksheetImport
 
             foreach ($dateColumns as $dateInfo) {
                 $record = $this->buildRecordFromBlock($sheet, $currentRow, $blockData, $dateInfo, $timeData, $headerData);
-                
+
                 if ($record && $this->hasValidData($record)) {
                     try {
                         $existing = $this->findExistingRecord($record);
-                        
+
                         if ($existing) {
                             if ($updateDuplicates) {
-                                $existing->update($record);
+                                DB::transaction(function () use ($existing, $record) {
+                                    $existing->update($record);
+                                    $this->syncImportedReadings($existing, $record);
+                                });
                                 $this->executeResults['updated']++;
                             } else {
                                 $this->executeResults['skipped']++;
                             }
                         } else {
                             $record = array_merge($record, app(ApprovalWorkflowService::class)->initialState());
-                            $created = TorqueRecord::create($record);
+                            $created = DB::transaction(function () use ($record) {
+                                $created = TorqueRecord::create($record);
+                                $this->syncImportedReadings($created, $record);
+
+                                return $created;
+                            });
 
                             if ($created->status === 'pending') {
                                 app(ApprovalNotificationService::class)->notifyApprovers($created, 'new_submission', 'torque');
@@ -202,7 +215,7 @@ class TorqueChecksheetImport
                             $this->executeResults['imported']++;
                         }
                     } catch (\Exception $e) {
-                        $this->executeResults['errors'][] = "Row {$currentRow}: " . $e->getMessage();
+                        $this->executeResults['errors'][] = "Row {$currentRow}: ".$e->getMessage();
                     }
                 }
             }
@@ -249,17 +262,17 @@ class TorqueChecksheetImport
         // Check columns D onwards (column index 4+)
         for ($colIndex = 4; $colIndex <= $highestColIndex; $colIndex++) {
             $col = Coordinate::stringFromColumnIndex($colIndex);
-            $value = $this->getCellValue($sheet, $col . '6');
+            $value = $this->getCellValue($sheet, $col.'6');
 
             if ($value && preg_match('/Date\s*:\s*(\d{1,2}\/\d{1,2}\/\d{4})/i', $value, $matches)) {
                 $dateStr = $matches[1];
                 $date = $this->parseDate($dateStr);
-                
+
                 if ($date) {
                     // AM column is current, PM column is +2
                     $pmColIndex = $colIndex + 2;
                     $pmCol = Coordinate::stringFromColumnIndex($pmColIndex);
-                    
+
                     $dateColumns[] = [
                         'date' => $date,
                         'am_col' => $col,
@@ -280,8 +293,8 @@ class TorqueChecksheetImport
         $timeData = [];
 
         foreach ($dateColumns as $dateInfo) {
-            $amTime = $this->getCellValue($sheet, $dateInfo['am_col'] . '9');
-            $pmTime = $this->getCellValue($sheet, $dateInfo['pm_col'] . '9');
+            $amTime = $this->getCellValue($sheet, $dateInfo['am_col'].'9');
+            $pmTime = $this->getCellValue($sheet, $dateInfo['pm_col'].'9');
 
             $timeData[$dateInfo['am_col']] = [
                 'time_am' => $this->parseTime($amTime),
@@ -297,10 +310,10 @@ class TorqueChecksheetImport
      */
     protected function extractBlockData($sheet, int $startRow, array $headerData): array
     {
-        $screwType = $this->getCellValue($sheet, 'A' . $startRow);
-        $driverModel = $this->getCellValue($sheet, 'B' . ($startRow + 1));
-        $driverType = $this->getCellValue($sheet, 'B' . ($startRow + 2));
-        $processAssigned = $this->getCellValue($sheet, 'A' . ($startRow + 3));
+        $screwType = $this->getCellValue($sheet, 'A'.$startRow);
+        $driverModel = $this->getCellValue($sheet, 'B'.($startRow + 1));
+        $driverType = $this->getCellValue($sheet, 'B'.($startRow + 2));
+        $processAssigned = $this->getCellValue($sheet, 'A'.($startRow + 3));
 
         // Clean driver model (usually "Electric Driver" or "Electic Driver")
         if ($driverModel) {
@@ -324,16 +337,16 @@ class TorqueChecksheetImport
         $amCol = $dateInfo['am_col'];
         $pmCol = $dateInfo['pm_col'];
 
-        $torqueAm = $this->getCellValue($sheet, $amCol . $startRow);
-        $torquePm = $this->getCellValue($sheet, $pmCol . $startRow);
-        $controlNoAm = $this->getCellValue($sheet, $amCol . ($startRow + 1));
-        $controlNoPm = $this->getCellValue($sheet, $pmCol . ($startRow + 1));
-        $picAm = $this->getCellValue($sheet, $amCol . ($startRow + 3));
-        $picPm = $this->getCellValue($sheet, $pmCol . ($startRow + 3));
-        $checkedByAm = $this->getCellValue($sheet, $amCol . ($startRow + 4));
-        $checkedByPm = $this->getCellValue($sheet, $pmCol . ($startRow + 4));
-        $remarksAm = $this->getCellValue($sheet, $amCol . ($startRow + 5));
-        $remarksPm = $this->getCellValue($sheet, $pmCol . ($startRow + 5));
+        $torqueAm = $this->getCellValue($sheet, $amCol.$startRow);
+        $torquePm = $this->getCellValue($sheet, $pmCol.$startRow);
+        $controlNoAm = $this->getCellValue($sheet, $amCol.($startRow + 1));
+        $controlNoPm = $this->getCellValue($sheet, $pmCol.($startRow + 1));
+        $picAm = $this->getCellValue($sheet, $amCol.($startRow + 3));
+        $picPm = $this->getCellValue($sheet, $pmCol.($startRow + 3));
+        $checkedByAm = $this->getCellValue($sheet, $amCol.($startRow + 4));
+        $checkedByPm = $this->getCellValue($sheet, $pmCol.($startRow + 4));
+        $remarksAm = $this->getCellValue($sheet, $amCol.($startRow + 5));
+        $remarksPm = $this->getCellValue($sheet, $pmCol.($startRow + 5));
 
         // Use AM control number primarily, fall back to PM
         $controlNo = $controlNoAm ?: $controlNoPm;
@@ -342,7 +355,7 @@ class TorqueChecksheetImport
         // Use AM checked by primarily, fall back to PM
         $checkedBy = $checkedByAm ?: $checkedByPm;
         // Combine remarks
-        $remarks = trim(($remarksAm ?: '') . ' ' . ($remarksPm ?: ''));
+        $remarks = trim(($remarksAm ?: '').' '.($remarksPm ?: ''));
 
         $times = $timeData[$amCol] ?? ['time_am' => null, 'time_pm' => null];
 
@@ -370,7 +383,35 @@ class TorqueChecksheetImport
      */
     protected function hasValidData(array $record): bool
     {
-        return !empty($record['torque_am']) || !empty($record['torque_pm']);
+        return ! empty($record['torque_am']) || ! empty($record['torque_pm']);
+    }
+
+    /**
+     * Preserve the existing workbook format by mapping its single AM/PM values
+     * to reading number one in the normalized readings table.
+     */
+    protected function syncImportedReadings(TorqueRecord $record, array $data): void
+    {
+        $rows = [];
+
+        foreach (['AM' => $data['torque_am'] ?? null, 'PM' => $data['torque_pm'] ?? null] as $period => $value) {
+            if ($value === null || trim((string) $value) === '') {
+                continue;
+            }
+
+            if (! is_numeric($value)) {
+                throw new \RuntimeException("The {$period} torque reading must be numeric.");
+            }
+
+            $rows[] = [
+                'period' => $period,
+                'reading_no' => 1,
+                'torque_value' => $value,
+            ];
+        }
+
+        $record->readings()->delete();
+        $record->readings()->createMany($rows);
     }
 
     /**
@@ -390,10 +431,13 @@ class TorqueChecksheetImport
      */
     protected function isFooterRow(?string $value): bool
     {
-        if (empty($value)) return true;
-        
+        if (empty($value)) {
+            return true;
+        }
+
         $lowerValue = strtolower($value);
-        return str_contains($lowerValue, 'hpi-pr') 
+
+        return str_contains($lowerValue, 'hpi-pr')
             || str_contains($lowerValue, 'note')
             || str_contains($lowerValue, 'approved')
             || str_contains($lowerValue, 'torque check sheet');
@@ -404,11 +448,13 @@ class TorqueChecksheetImport
      */
     protected function isValidScrewType(?string $value): bool
     {
-        if (empty($value)) return false;
-        
+        if (empty($value)) {
+            return false;
+        }
+
         // Screw types typically start with M (e.g., M4x40, M4 U-lock)
         // Or contain process names like "Fastening", "EM", etc.
-        return preg_match('/^M\d/i', $value) 
+        return preg_match('/^M\d/i', $value)
             || preg_match('/fastening/i', $value)
             || preg_match('/^[A-Z]{2,}/i', $value);
     }
@@ -419,7 +465,7 @@ class TorqueChecksheetImport
     protected function getCellValue($sheet, string $cell): ?string
     {
         $value = $sheet->getCell($cell)->getValue();
-        
+
         if ($value === null || $value === '') {
             return null;
         }
@@ -432,12 +478,15 @@ class TorqueChecksheetImport
      */
     protected function parseDate(?string $dateStr): ?string
     {
-        if (empty($dateStr)) return null;
+        if (empty($dateStr)) {
+            return null;
+        }
 
         if (preg_match('/(\d{1,2})\/(\d{1,2})\/(\d{4})/', $dateStr, $matches)) {
             $day = str_pad($matches[1], 2, '0', STR_PAD_LEFT);
             $month = str_pad($matches[2], 2, '0', STR_PAD_LEFT);
             $year = $matches[3];
+
             return "{$year}-{$month}-{$day}";
         }
 
@@ -449,7 +498,9 @@ class TorqueChecksheetImport
      */
     protected function parseTime(?string $timeStr): ?string
     {
-        if (empty($timeStr)) return null;
+        if (empty($timeStr)) {
+            return null;
+        }
 
         // Handle format like "10:00AM" or "6:20AM"
         if (preg_match('/(\d{1,2}):(\d{2})\s*(AM|PM)?/i', $timeStr, $matches)) {
@@ -472,6 +523,7 @@ class TorqueChecksheetImport
             $totalMinutes = round((float) $timeStr * 24 * 60);
             $hours = intdiv($totalMinutes, 60);
             $minutes = $totalMinutes % 60;
+
             return sprintf('%02d:%02d', $hours, $minutes);
         }
 

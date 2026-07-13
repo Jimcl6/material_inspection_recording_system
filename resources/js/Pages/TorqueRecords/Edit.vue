@@ -176,65 +176,20 @@
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <!-- AM Reading -->
-                  <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="text-md font-medium text-gray-900 mb-4">AM Reading</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label for="time_am" class="block text-sm font-medium text-gray-700">
-                          Time (AM)
-                        </label>
-                        <input
-                          id="time_am"
-                          v-model="form.time_am"
-                          type="time"
-                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label for="torque_am" class="block text-sm font-medium text-gray-700">
-                          Torque (AM)
-                        </label>
-                        <input
-                          id="torque_am"
-                          v-model="form.torque_am"
-                          type="text"
-                          maxlength="20"
-                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- PM Reading -->
-                  <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="text-md font-medium text-gray-900 mb-4">PM Reading</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label for="time_pm" class="block text-sm font-medium text-gray-700">
-                          Time (PM)
-                        </label>
-                        <input
-                          id="time_pm"
-                          v-model="form.time_pm"
-                          type="time"
-                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label for="torque_pm" class="block text-sm font-medium text-gray-700">
-                          Torque (PM)
-                        </label>
-                        <input
-                          id="torque_pm"
-                          v-model="form.torque_pm"
-                          type="text"
-                          maxlength="20"
-                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <TorqueReadingGroup
+                    period="am"
+                    title="Morning (AM)"
+                    v-model:time="form.time_am"
+                    v-model:readings="form.readings.am"
+                    :errors="form.errors"
+                  />
+                  <TorqueReadingGroup
+                    period="pm"
+                    title="Afternoon (PM)"
+                    v-model:time="form.time_pm"
+                    v-model:readings="form.readings.pm"
+                    :errors="form.errors"
+                  />
                 </div>
               </div>
 
@@ -293,6 +248,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import TorqueReadingGroup from '@/Components/TorqueReadingGroup.vue'
 
 const props = defineProps({
   record: {
@@ -302,6 +258,19 @@ const props = defineProps({
 })
 
 const dateEl = ref(null)
+
+const readingsFor = (record, period) => {
+  const readings = (record?.readings || [])
+    .filter((reading) => reading.period === period)
+    .sort((a, b) => a.reading_no - b.reading_no)
+    .map((reading) => ({ torque_value: reading.torque_value }))
+
+  if (readings.length) return readings
+
+  const legacyValue = period === 'AM' ? record?.torque_am : record?.torque_pm
+  return [{ torque_value: legacyValue || '' }]
+}
+
 const form = useForm({
   date: props.record?.date || '',
   model_series: props.record?.model_series || '',
@@ -313,9 +282,11 @@ const form = useForm({
   process_assigned: props.record?.process_assigned || '',
   person_in_charge: props.record?.person_in_charge || '',
   time_am: props.record?.time_am || '',
-  torque_am: props.record?.torque_am || '',
   time_pm: props.record?.time_pm || '',
-  torque_pm: props.record?.torque_pm || '',
+  readings: {
+    am: readingsFor(props.record, 'AM'),
+    pm: readingsFor(props.record, 'PM'),
+  },
   col_remarks: props.record?.col_remarks || '',
   checked_by: props.record?.checked_by || '',
   // verified_by: props.record?.verified_by || ''
@@ -334,9 +305,11 @@ watch(() => props.record, (newRecord) => {
     form.process_assigned = newRecord.process_assigned || ''
     form.person_in_charge = newRecord.person_in_charge || ''
     form.time_am = newRecord.time_am || ''
-    form.torque_am = newRecord.torque_am || ''
     form.time_pm = newRecord.time_pm || ''
-    form.torque_pm = newRecord.torque_pm || ''
+    form.readings = {
+      am: readingsFor(newRecord, 'AM'),
+      pm: readingsFor(newRecord, 'PM'),
+    }
     form.col_remarks = newRecord.col_remarks || ''
     form.checked_by = newRecord.checked_by || ''
   }

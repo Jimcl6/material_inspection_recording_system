@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TorqueRecord extends Model
 {
     protected $table = 'torque_records';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -37,4 +40,11 @@ class TorqueRecord extends Model
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',
     ];
+
+    public function readings(): HasMany
+    {
+        return $this->hasMany(TorqueReading::class)
+            ->orderBy('period')
+            ->orderBy('reading_no');
+    }
 }

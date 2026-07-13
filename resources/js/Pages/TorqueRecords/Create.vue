@@ -8,6 +8,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import Card from '@/Components/Card.vue';
 import SectionTitle from '@/Components/SectionTitle.vue';
+import TorqueReadingGroup from '@/Components/TorqueReadingGroup.vue';
 
 const form = useForm({
     date: new Date().toISOString().split('T')[0],
@@ -20,9 +21,11 @@ const form = useForm({
     process_assigned: '',
     person_in_charge: '',
     time_am: '',
-    torque_am: '',
     time_pm: '',
-    torque_pm: '',
+    readings: {
+        am: [{ torque_value: '' }],
+        pm: [{ torque_value: '' }],
+    },
     col_remarks: '',
     checked_by: '',
 });
@@ -202,77 +205,20 @@ const submit = () => {
                                 <SectionTitle>Torque Readings</SectionTitle>
                             </template>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <!-- Morning Reading -->
-                                <div class="border border-gray-200 rounded-lg p-6 bg-gray-50">
-                                    <h4 class="text-lg font-medium text-gray-900 mb-4">Morning (AM)</h4>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <InputLabel for="time_am" value="Time" />
-                                            <TextInput
-                                                id="time_am"
-                                                type="time"
-                                                v-model="form.time_am"
-                                                class="mt-1 block w-full"
-                                                :class="{ 'border-red-500': form.errors.time_am }"
-                                            />
-                                            <InputError :message="form.errors.time_am" class="mt-2" />
-                                        </div>
-                                        <div>
-                                            <InputLabel for="torque_am" value="Torque" />
-                                            <div class="relative rounded-md shadow-sm">
-                                                <TextInput
-                                                    id="torque_am"
-                                                    type="number"
-                                                    step="0.01"
-                                                    v-model="form.torque_am"
-                                                    class="block w-full pr-10"
-                                                    :class="{ 'border-red-500': form.errors.torque_am }"
-                                                    placeholder="0.00"
-                                                />
-                                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                                    <span class="text-gray-500 sm:text-sm">N·m</span>
-                                                </div>
-                                            </div>
-                                            <InputError :message="form.errors.torque_am" class="mt-2" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Afternoon Reading -->
-                                <div class="border border-gray-200 rounded-lg p-6 bg-gray-50">
-                                    <h4 class="text-lg font-medium text-gray-900 mb-4">Afternoon (PM)</h4>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <InputLabel for="time_pm" value="Time" />
-                                            <TextInput
-                                                id="time_pm"
-                                                type="time"
-                                                v-model="form.time_pm"
-                                                class="mt-1 block w-full"
-                                                :class="{ 'border-red-500': form.errors.time_pm }"
-                                            />
-                                            <InputError :message="form.errors.time_pm" class="mt-2" />
-                                        </div>
-                                        <div>
-                                            <InputLabel for="torque_pm" value="Torque" />
-                                            <div class="relative rounded-md shadow-sm">
-                                                <TextInput
-                                                    id="torque_pm"
-                                                    type="number"
-                                                    step="0.01"
-                                                    v-model="form.torque_pm"
-                                                    class="block w-full pr-10"
-                                                    :class="{ 'border-red-500': form.errors.torque_pm }"
-                                                    placeholder="0.00"
-                                                />
-                                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                                    <span class="text-gray-500 sm:text-sm">N·m</span>
-                                                </div>
-                                            </div>
-                                            <InputError :message="form.errors.torque_pm" class="mt-2" />
-                                        </div>
-                                    </div>
-                                </div>
+                                <TorqueReadingGroup
+                                    period="am"
+                                    title="Morning (AM)"
+                                    v-model:time="form.time_am"
+                                    v-model:readings="form.readings.am"
+                                    :errors="form.errors"
+                                />
+                                <TorqueReadingGroup
+                                    period="pm"
+                                    title="Afternoon (PM)"
+                                    v-model:time="form.time_pm"
+                                    v-model:readings="form.readings.pm"
+                                    :errors="form.errors"
+                                />
                             </div>
                         </Card>
 

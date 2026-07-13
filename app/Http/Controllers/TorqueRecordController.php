@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TorqueRecord;
 use App\Imports\TorqueChecksheetImport;
+use App\Models\TorqueRecord;
 use App\Services\ActivityService;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use App\Services\DuplicateRecordGuard;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class TorqueRecordController extends Controller
 {
     public function index(Request $request)
     {
-        $query = TorqueRecord::query();
+        $query = TorqueRecord::query()->with('readings');
 
         // Search filter
         if ($request->filled('search')) {
@@ -66,9 +68,8 @@ class TorqueRecordController extends Controller
                 'process_assigned' => $r->process_assigned,
                 'person_in_charge' => $r->person_in_charge,
                 'time_am' => $r->time_am,
-                'torque_am' => $r->torque_am,
                 'time_pm' => $r->time_pm,
-                'torque_pm' => $r->torque_pm,
+                'readings' => $r->readings->values(),
                 'col_remarks' => $r->col_remarks,
                 'checked_by' => $r->checked_by,
                 'status' => $r->status,
@@ -103,25 +104,11 @@ class TorqueRecordController extends Controller
         DuplicateRecordGuard $duplicateRecordGuard,
         ApprovalWorkflowService $approvalWorkflowService,
         ApprovalNotificationService $approvalNotificationService
-    )
-    {
-        $data = $request->validate([
-            'date' => ['nullable','date'],
-            'model_series'=> ['nullable','string','max:100'],
-            'driver_model' => ['nullable','string','max:100'],
-            'driver_type' => ['nullable','string','max:100'],
-            'line_assigned' => ['nullable','string','max:100'],
-            'control_no' => ['nullable','string','max:50'],
-            'screw_type' => ['nullable','string','max:50'],
-            'process_assigned' => ['nullable','string','max:100'],
-            'person_in_charge' => ['nullable','string','max:100'],
-            'time_am' => ['nullable','regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
-            'torque_am' => ['nullable','string','max:20'],
-            'time_pm' => ['nullable','regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
-            'torque_pm' => ['nullable','string','max:20'],
-            'col_remarks' => ['nullable','string','max:100'],
-            'checked_by' => ['nullable','string','max:100'],
-        ]);
+    ) {
+        $data = $this->validatedData($request);
+        $readingRows = $this->normalizeReadings($data['readings']);
+        unset($data['readings']);
+        $data = $this->withLegacyReadingValues($data, $readingRows);
 
         $data = array_merge($data, $approvalWorkflowService->initialState());
 
@@ -134,7 +121,12 @@ class TorqueRecordController extends Controller
                 'line_assigned' => $data['line_assigned'] ?? null,
             ],
             'torque record for this date, screw type, process, and line',
-            fn () => TorqueRecord::create($data)
+            function () use ($data, $readingRows) {
+                $record = TorqueRecord::create($data);
+                $record->readings()->createMany($readingRows);
+
+                return $record->load('readings');
+            }
         );
 
         if ($rec->status === 'pending') {
@@ -145,7 +137,7 @@ class TorqueRecordController extends Controller
             'create',
             "Created torque record for {$rec->model_series}",
             $rec,
-            $rec->toArray(),
+            $this->recordSnapshot($rec),
             'torque'
         );
 
@@ -159,44 +151,38 @@ class TorqueRecordController extends Controller
     public function show(TorqueRecord $torque_record)
     {
         return Inertia::render('TorqueRecords/Show', [
-            'record' => $torque_record,
+            'record' => $torque_record->load('readings'),
         ]);
     }
 
     public function edit(TorqueRecord $torque_record)
     {
         return Inertia::render('TorqueRecords/Edit', [
-            'record' => $torque_record,
+            'record' => $torque_record->load('readings'),
         ]);
     }
 
     public function update(Request $request, TorqueRecord $torque_record)
     {
-        $data = $request->validate([
-            'date' => ['nullable','date'],
-            'model_series'=> ['nullable','string','max:100'],
-            'driver_model' => ['nullable','string','max:100'],
-            'driver_type' => ['nullable','string','max:100'],
-            'line_assigned' => ['nullable','string','max:100'],
-            'control_no' => ['nullable','string','max:50'],
-            'screw_type' => ['nullable','string','max:50'],
-            'process_assigned' => ['nullable','string','max:100'],
-            'person_in_charge' => ['nullable','string','max:100'],
-            'time_am' => ['nullable','regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
-            'torque_am' => ['nullable','string','max:20'],
-            'time_pm' => ['nullable','regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
-            'torque_pm' => ['nullable','string','max:20'],
-            'col_remarks' => ['nullable','string','max:100'],
-            'checked_by' => ['nullable','string','max:100'],
-        ]);
+        $data = $this->validatedData($request);
+        $readingRows = $this->normalizeReadings($data['readings']);
+        unset($data['readings']);
+        $data = $this->withLegacyReadingValues($data, $readingRows);
 
-        $before = ActivityService::snapshot($torque_record);
-        $torque_record->update($data);
+        $before = $this->recordSnapshot($torque_record->load('readings'));
+
+        DB::transaction(function () use ($torque_record, $data, $readingRows) {
+            $torque_record->update($data);
+            $torque_record->readings()->delete();
+            $torque_record->readings()->createMany($readingRows);
+        });
+
+        $torque_record->refresh()->load('readings');
 
         ActivityService::logSnapshotUpdate(
             $torque_record,
             $before,
-            ActivityService::snapshot($torque_record),
+            $this->recordSnapshot($torque_record),
             "Updated torque record for {$torque_record->model_series}",
             'torque'
         );
@@ -206,9 +192,9 @@ class TorqueRecordController extends Controller
 
     public function destroy(TorqueRecord $torque_record)
     {
-        $recordData = $torque_record->toArray();
+        $recordData = $this->recordSnapshot($torque_record->load('readings'));
         $modelSeries = $torque_record->model_series;
-        
+
         $torque_record->delete();
 
         ActivityService::log(
@@ -224,7 +210,7 @@ class TorqueRecordController extends Controller
 
     public function approval(): \Inertia\Response
     {
-        $pendingRecords = TorqueRecord::where('status', 'pending')
+        $pendingRecords = TorqueRecord::with('readings')->where('status', 'pending')
             ->orderByDesc('id')
             ->get();
 
@@ -265,7 +251,7 @@ class TorqueRecordController extends Controller
         $approvalNotificationService->markRecordsActed($records, 'torque');
 
         return redirect()->route('torque-records.approval')
-            ->with('success', $records->count() . ' torque record(s) approved successfully.');
+            ->with('success', $records->count().' torque record(s) approved successfully.');
     }
 
     public function bulkReject(Request $request, ApprovalNotificationService $approvalNotificationService)
@@ -300,7 +286,7 @@ class TorqueRecordController extends Controller
         $approvalNotificationService->markRecordsActed($records, 'torque');
 
         return redirect()->route('torque-records.approval')
-            ->with('success', $records->count() . ' torque record(s) rejected successfully.');
+            ->with('success', $records->count().' torque record(s) rejected successfully.');
     }
 
     /**
@@ -324,7 +310,7 @@ class TorqueRecordController extends Controller
 
         try {
             $tempPath = $file->store('temp');
-            $fullPath = storage_path('app/' . $tempPath);
+            $fullPath = storage_path('app/'.$tempPath);
 
             $import = new TorqueChecksheetImport();
             $results = $import->preview($fullPath);
@@ -336,16 +322,15 @@ class TorqueRecordController extends Controller
                 'success' => true,
                 'preview' => $results,
             ]);
-
         } catch (\Exception $e) {
             Log::error('Torque Import Preview failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to preview file: ' . $e->getMessage(),
+                'error' => 'Failed to preview file: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -361,17 +346,18 @@ class TorqueRecordController extends Controller
 
         $tempPath = session('torque_import_file');
 
-        if (!$tempPath) {
+        if (! $tempPath) {
             return response()->json([
                 'success' => false,
                 'error' => 'No file to import. Please upload a file first.',
             ], 400);
         }
 
-        $fullPath = storage_path('app/' . $tempPath);
+        $fullPath = storage_path('app/'.$tempPath);
 
-        if (!file_exists($fullPath)) {
+        if (! file_exists($fullPath)) {
             session()->forget('torque_import_file');
+
             return response()->json([
                 'success' => false,
                 'error' => 'Import file expired. Please upload again.',
@@ -389,9 +375,15 @@ class TorqueRecordController extends Controller
             session()->forget('torque_import_file');
 
             $message = "Import completed: {$results['imported']} created";
-            if ($results['updated'] > 0) $message .= ", {$results['updated']} updated";
-            if ($results['skipped'] > 0) $message .= ", {$results['skipped']} skipped";
-            if (count($results['errors']) > 0) $message .= ", " . count($results['errors']) . " errors";
+            if ($results['updated'] > 0) {
+                $message .= ", {$results['updated']} updated";
+            }
+            if ($results['skipped'] > 0) {
+                $message .= ", {$results['skipped']} skipped";
+            }
+            if (count($results['errors']) > 0) {
+                $message .= ', '.count($results['errors']).' errors';
+            }
 
             ActivityService::logImport('torque', $results['imported'] + $results['updated'], [
                 'imported' => $results['imported'],
@@ -405,16 +397,15 @@ class TorqueRecordController extends Controller
                 'results' => $results,
                 'message' => $message,
             ]);
-
         } catch (\Exception $e) {
             Log::error('Torque Import Execute failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to import file: ' . $e->getMessage(),
+                'error' => 'Failed to import file: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -433,7 +424,7 @@ class TorqueRecordController extends Controller
 
         try {
             $tempPath = $file->store('temp');
-            $fullPath = storage_path('app/' . $tempPath);
+            $fullPath = storage_path('app/'.$tempPath);
 
             $updateDuplicates = $request->boolean('update_duplicates', false);
 
@@ -443,9 +434,15 @@ class TorqueRecordController extends Controller
             @unlink($fullPath);
 
             $message = "Import completed: {$results['imported']} created";
-            if ($results['updated'] > 0) $message .= ", {$results['updated']} updated";
-            if ($results['skipped'] > 0) $message .= ", {$results['skipped']} skipped";
-            if (count($results['errors']) > 0) $message .= ", " . count($results['errors']) . " errors";
+            if ($results['updated'] > 0) {
+                $message .= ", {$results['updated']} updated";
+            }
+            if ($results['skipped'] > 0) {
+                $message .= ", {$results['skipped']} skipped";
+            }
+            if (count($results['errors']) > 0) {
+                $message .= ', '.count($results['errors']).' errors';
+            }
 
             ActivityService::logImport('torque', $results['imported'] + $results['updated'], [
                 'imported' => $results['imported'],
@@ -458,16 +455,129 @@ class TorqueRecordController extends Controller
                 'import_results' => $results,
                 'success' => $message,
             ]);
-
         } catch (\Exception $e) {
             Log::error('Torque Import failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return Inertia::render('TorqueRecords/Import', [
-                'error' => 'Error importing file: ' . $e->getMessage(),
+                'error' => 'Error importing file: '.$e->getMessage(),
             ]);
         }
+    }
+
+    private function validatedData(Request $request): array
+    {
+        $data = $request->validate([
+            'date' => ['nullable', 'date'],
+            'model_series' => ['nullable', 'string', 'max:100'],
+            'driver_model' => ['nullable', 'string', 'max:100'],
+            'driver_type' => ['nullable', 'string', 'max:100'],
+            'line_assigned' => ['nullable', 'string', 'max:100'],
+            'control_no' => ['nullable', 'string', 'max:50'],
+            'screw_type' => ['nullable', 'string', 'max:50'],
+            'process_assigned' => ['nullable', 'string', 'max:100'],
+            'person_in_charge' => ['nullable', 'string', 'max:100'],
+            'time_am' => ['nullable', 'regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
+            'time_pm' => ['nullable', 'regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
+            'readings' => ['required', 'array'],
+            'readings.am' => ['present', 'array', 'max:8'],
+            'readings.am.*' => ['array'],
+            'readings.am.*.torque_value' => ['nullable', 'numeric', 'decimal:0,2', 'min:0', 'max:99999999.99'],
+            'readings.pm' => ['present', 'array', 'max:8'],
+            'readings.pm.*' => ['array'],
+            'readings.pm.*.torque_value' => ['nullable', 'numeric', 'decimal:0,2', 'min:0', 'max:99999999.99'],
+            'col_remarks' => ['nullable', 'string', 'max:100'],
+            'checked_by' => ['nullable', 'string', 'max:100'],
+        ], [
+            'readings.am.max' => 'Morning readings may not contain more than 8 torque values.',
+            'readings.pm.max' => 'Afternoon readings may not contain more than 8 torque values.',
+            'readings.am.*.torque_value.numeric' => 'Every morning torque reading must be numeric.',
+            'readings.pm.*.torque_value.numeric' => 'Every afternoon torque reading must be numeric.',
+        ]);
+
+        $readings = $this->normalizeReadings($data['readings']);
+        $errors = [];
+
+        if ($readings === []) {
+            $errors['readings'] = 'Enter at least one torque reading.';
+        }
+
+        if ($this->hasPeriod($readings, 'AM') && empty($data['time_am'])) {
+            $errors['time_am'] = 'Morning time is required when morning readings are entered.';
+        }
+
+        if ($this->hasPeriod($readings, 'PM') && empty($data['time_pm'])) {
+            $errors['time_pm'] = 'Afternoon time is required when afternoon readings are entered.';
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return $data;
+    }
+
+    private function normalizeReadings(array $readings): array
+    {
+        $rows = [];
+
+        foreach (['am' => 'AM', 'pm' => 'PM'] as $key => $period) {
+            $readingNo = 1;
+
+            foreach ($readings[$key] ?? [] as $reading) {
+                $value = $reading['torque_value'] ?? null;
+
+                if ($value === null || trim((string) $value) === '') {
+                    continue;
+                }
+
+                $rows[] = [
+                    'period' => $period,
+                    'reading_no' => $readingNo++,
+                    'torque_value' => $value,
+                ];
+            }
+        }
+
+        return $rows;
+    }
+
+    private function hasPeriod(array $readings, string $period): bool
+    {
+        foreach ($readings as $reading) {
+            if ($reading['period'] === $period) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function withLegacyReadingValues(array $data, array $readings): array
+    {
+        $data['torque_am'] = null;
+        $data['torque_pm'] = null;
+
+        foreach ($readings as $reading) {
+            $legacyKey = $reading['period'] === 'AM' ? 'torque_am' : 'torque_pm';
+
+            if ($data[$legacyKey] === null) {
+                $data[$legacyKey] = $reading['torque_value'];
+            }
+        }
+
+        return $data;
+    }
+
+    private function recordSnapshot(TorqueRecord $record): array
+    {
+        $snapshot = ActivityService::snapshot($record);
+        $snapshot['torque_readings'] = $record->readings
+            ->map(fn ($reading) => "{$reading->period} {$reading->reading_no}: {$reading->torque_value} N·m")
+            ->implode('; ');
+
+        return $snapshot;
     }
 }
