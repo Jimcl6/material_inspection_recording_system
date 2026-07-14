@@ -64,11 +64,10 @@
                   </label>
                   <input
                     id="date"
-                    ref="dateEl"
                     v-model="form.date"
                     type="date"
+                    :max="maximumDate"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="DD/MM/YYYY"
                     required
                   />
                 </div>
@@ -179,16 +178,20 @@
                   <TorqueReadingGroup
                     period="am"
                     title="Morning (AM)"
-                    v-model:time="form.time_am"
-                    v-model:readings="form.readings.am"
+                    :time="form.time_am"
+                    :readings="form.readings.am"
                     :errors="form.errors"
+                    @update:time="updateTime('am', $event)"
+                    @update:readings="updateReadings('am', $event)"
                   />
                   <TorqueReadingGroup
                     period="pm"
                     title="Afternoon (PM)"
-                    v-model:time="form.time_pm"
-                    v-model:readings="form.readings.pm"
+                    :time="form.time_pm"
+                    :readings="form.readings.pm"
                     :errors="form.errors"
+                    @update:time="updateTime('pm', $event)"
+                    @update:readings="updateReadings('pm', $event)"
                   />
                 </div>
               </div>
@@ -245,7 +248,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import TorqueReadingGroup from '@/Components/TorqueReadingGroup.vue'
@@ -257,20 +260,29 @@ const props = defineProps({
   }
 })
 
-const dateEl = ref(null)
-
-const now = new Date()
-const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-const isMorning = now.getHours() < 12
-
-const timeFor = (record, period) => {
-  const savedTime = period === 'AM' ? record?.time_am : record?.time_pm
-
-  if (savedTime) return savedTime
-
-  const isCurrentPeriod = period === 'AM' ? isMorning : !isMorning
-  return isCurrentPeriod ? currentTime : ''
+const timeTouched = {
+  am: false,
+  pm: false,
 }
+
+const padDatePart = (value) => String(value).padStart(2, '0')
+
+const formatLocalTime = (date) => (
+  `${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`
+)
+
+const formatLocalDate = (date) => (
+  `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}`
+)
+
+const normalizeDateForInput = (value) => {
+  if (!value) return ''
+
+  const normalizedDate = String(value).slice(0, 10)
+  return /^\d{4}-\d{2}-\d{2}$/.test(normalizedDate) ? normalizedDate : ''
+}
+
+const maximumDate = ref(formatLocalDate(new Date()))
 
 const readingsFor = (record, period) => {
   const readings = (record?.readings || [])
@@ -284,8 +296,13 @@ const readingsFor = (record, period) => {
   return [{ torque_value: legacyValue || '' }]
 }
 
+const hasReading = (readings) => (readings || []).some((reading) => {
+  const value = reading?.torque_value
+  return value !== null && value !== undefined && String(value).trim() !== ''
+})
+
 const form = useForm({
-  date: props.record?.date || '',
+  date: normalizeDateForInput(props.record?.date),
   model_series: props.record?.model_series || '',
   driver_model: props.record?.driver_model || '',
   driver_type: props.record?.driver_type || '',
@@ -294,8 +311,8 @@ const form = useForm({
   screw_type: props.record?.screw_type || '',
   process_assigned: props.record?.process_assigned || '',
   person_in_charge: props.record?.person_in_charge || '',
-  time_am: timeFor(props.record, 'AM'),
-  time_pm: timeFor(props.record, 'PM'),
+  time_am: props.record?.time_am || '',
+  time_pm: props.record?.time_pm || '',
   readings: {
     am: readingsFor(props.record, 'AM'),
     pm: readingsFor(props.record, 'PM'),
@@ -305,39 +322,82 @@ const form = useForm({
   // verified_by: props.record?.verified_by || ''
 })
 
+const applyTimeDefaults = () => {
+  const now = new Date()
+  const currentTime = formatLocalTime(now)
+  const isMorning = now.getHours() < 12
+
+  maximumDate.value = formatLocalDate(now)
+
+  for (const period of ['am', 'pm']) {
+    if (timeTouched[period] || hasReading(form.readings[period])) continue
+
+    const isCurrentPeriod = period === 'am' ? isMorning : !isMorning
+    const timeField = period === 'am' ? 'time_am' : 'time_pm'
+    form[timeField] = isCurrentPeriod ? currentTime : ''
+  }
+}
+
+const updateTime = (period, value) => {
+  timeTouched[period] = true
+  form[period === 'am' ? 'time_am' : 'time_pm'] = value
+}
+
+const updateReadings = (period, readings) => {
+  form.readings[period] = readings
+
+  if (!hasReading(readings) && !timeTouched[period]) {
+    applyTimeDefaults()
+  }
+}
+
+const loadRecord = (record) => {
+  timeTouched.am = false
+  timeTouched.pm = false
+
+  form.date = normalizeDateForInput(record.date)
+  form.model_series = record.model_series || ''
+  form.driver_model = record.driver_model || ''
+  form.driver_type = record.driver_type || ''
+  form.line_assigned = record.line_assigned || ''
+  form.control_no = record.control_no || ''
+  form.screw_type = record.screw_type || ''
+  form.process_assigned = record.process_assigned || ''
+  form.person_in_charge = record.person_in_charge || ''
+  form.time_am = record.time_am || ''
+  form.time_pm = record.time_pm || ''
+  form.readings = {
+    am: readingsFor(record, 'AM'),
+    pm: readingsFor(record, 'PM'),
+  }
+  form.col_remarks = record.col_remarks || ''
+  form.checked_by = record.checked_by || ''
+
+  applyTimeDefaults()
+}
+
 // Watch for record changes and update form
 watch(() => props.record, (newRecord) => {
   if (newRecord) {
-    form.date = newRecord.date || ''
-    form.model_series = newRecord.model_series || ''
-    form.driver_model = newRecord.driver_model || ''
-    form.driver_type = newRecord.driver_type || ''
-    form.line_assigned = newRecord.line_assigned || ''
-    form.control_no = newRecord.control_no || ''
-    form.screw_type = newRecord.screw_type || ''
-    form.process_assigned = newRecord.process_assigned || ''
-    form.person_in_charge = newRecord.person_in_charge || ''
-    form.time_am = timeFor(newRecord, 'AM')
-    form.time_pm = timeFor(newRecord, 'PM')
-    form.readings = {
-      am: readingsFor(newRecord, 'AM'),
-      pm: readingsFor(newRecord, 'PM'),
-    }
-    form.col_remarks = newRecord.col_remarks || ''
-    form.checked_by = newRecord.checked_by || ''
+    loadRecord(newRecord)
   }
 }, { immediate: true })
 
-onMounted(() => {
-  if (window.flatpickr && dateEl.value) {
-    window.flatpickr(dateEl.value, {
-      dateFormat: 'd/m/Y',
-      allowInput: true,
-      onOpen: function(selectedDates, dateStr, instance) {
-        instance.set('maxDate', new Date())
-      }
-    })
+const handleVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    applyTimeDefaults()
   }
+}
+
+onMounted(() => {
+  applyTimeDefaults()
+  window.addEventListener('focus', applyTimeDefaults)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('focus', applyTimeDefaults)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 
 function submit() {
