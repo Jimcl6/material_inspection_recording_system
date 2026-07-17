@@ -64,11 +64,10 @@
                   </label>
                   <input
                     id="date"
-                    ref="dateEl"
                     v-model="form.date"
-                    type="text"
+                    type="date"
+                    :max="maximumDate"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="DD/MM/YYYY"
                     required
                   />
                 </div>
@@ -174,9 +173,10 @@
                         </label>
                         <input
                           id="time_am"
-                          v-model="form.time_am"
+                          :value="form.time_am"
                           type="time"
                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          @input="updateTime('am', $event.target.value)"
                         />
                       </div>
                       <div>
@@ -185,10 +185,11 @@
                         </label>
                         <input
                           id="temp_am"
-                          v-model="form.temp_am"
+                          :value="form.temp_am"
                           type="text"
                           maxlength="20"
                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          @input="updateTemperature('am', $event.target.value)"
                         />
                       </div>
                     </div>
@@ -204,9 +205,10 @@
                         </label>
                         <input
                           id="time_pm"
-                          v-model="form.time_pm"
+                          :value="form.time_pm"
                           type="time"
                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          @input="updateTime('pm', $event.target.value)"
                         />
                       </div>
                       <div>
@@ -215,10 +217,11 @@
                         </label>
                         <input
                           id="temp_pm"
-                          v-model="form.temp_pm"
+                          :value="form.temp_pm"
                           type="text"
                           maxlength="20"
                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          @input="updateTemperature('pm', $event.target.value)"
                         />
                       </div>
                     </div>
@@ -278,7 +281,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 
@@ -293,9 +296,36 @@ const props = defineProps({
   }
 })
 
-const dateEl = ref(null)
+const timeTouched = {
+  am: false,
+  pm: false,
+}
+
+const padDatePart = (value) => String(value).padStart(2, '0')
+
+const formatLocalTime = (date) => (
+  `${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`
+)
+
+const formatLocalDate = (date) => (
+  `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}`
+)
+
+const normalizeDateForInput = (value) => {
+  if (!value) return ''
+
+  const normalizedDate = String(value).slice(0, 10)
+  return /^\d{4}-\d{2}-\d{2}$/.test(normalizedDate) ? normalizedDate : ''
+}
+
+const maximumDate = ref(formatLocalDate(new Date()))
+
+const hasReading = (value) => (
+  value !== null && value !== undefined && String(value).trim() !== ''
+)
+
 const form = useForm({
-  date: props.record?.date || '',
+  date: normalizeDateForInput(props.record?.date),
   model_series: props.record?.model_series || '',
   solder_model: props.record?.solder_model || '',
   line_assigned: props.record?.line_assigned || '',
@@ -311,36 +341,88 @@ const form = useForm({
   checked_by: props.record?.checked_by || ''
 })
 
+const applyTimeDefaults = () => {
+  const now = new Date()
+  const currentTime = formatLocalTime(now)
+  const isMorning = now.getHours() < 12
+
+  maximumDate.value = formatLocalDate(now)
+
+  for (const period of ['am', 'pm']) {
+    const readingField = period === 'am' ? 'temp_am' : 'temp_pm'
+
+    if (timeTouched[period] || hasReading(form[readingField])) continue
+
+    const isCurrentPeriod = period === 'am' ? isMorning : !isMorning
+    const timeField = period === 'am' ? 'time_am' : 'time_pm'
+    form[timeField] = isCurrentPeriod ? currentTime : ''
+  }
+}
+
+const updateTime = (period, value) => {
+  timeTouched[period] = true
+  form[period === 'am' ? 'time_am' : 'time_pm'] = value
+}
+
+const updateTemperature = (period, value) => {
+  const readingField = period === 'am' ? 'temp_am' : 'temp_pm'
+  const isFirstReading = !hasReading(form[readingField]) && hasReading(value)
+
+  if (isFirstReading && !timeTouched[period]) {
+    applyTimeDefaults()
+  }
+
+  form[readingField] = value
+
+  if (!hasReading(value) && !timeTouched[period]) {
+    applyTimeDefaults()
+  }
+}
+
+const loadRecord = (record) => {
+  timeTouched.am = false
+  timeTouched.pm = false
+
+  form.date = normalizeDateForInput(record.date)
+  form.model_series = record.model_series || ''
+  form.solder_model = record.solder_model || ''
+  form.line_assigned = record.line_assigned || ''
+  form.control_no = record.control_no || ''
+  form.equipment_type = record.equipment_type || ''
+  form.process_assigned = record.process_assigned || ''
+  form.person_in_charge = record.person_in_charge || ''
+  form.time_am = record.time_am || ''
+  form.temp_am = record.temp_am || ''
+  form.time_pm = record.time_pm || ''
+  form.temp_pm = record.temp_pm || ''
+  form.col_remarks = record.col_remarks || ''
+  form.checked_by = record.checked_by || ''
+
+  applyTimeDefaults()
+}
+
 // Watch for record changes and update form
 watch(() => props.record, (newRecord) => {
   if (newRecord) {
-    form.date = newRecord.date || ''
-    form.model_series = newRecord.model_series || ''
-    form.solder_model = newRecord.solder_model || ''
-    form.line_assigned = newRecord.line_assigned || ''
-    form.control_no = newRecord.control_no || ''
-    form.equipment_type = newRecord.equipment_type || ''
-    form.process_assigned = newRecord.process_assigned || ''
-    form.person_in_charge = newRecord.person_in_charge || ''
-    form.time_am = newRecord.time_am || ''
-    form.temp_am = newRecord.temp_am || ''
-    form.time_pm = newRecord.time_pm || ''
-    form.temp_pm = newRecord.temp_pm || ''
-    form.col_remarks = newRecord.col_remarks || ''
-    form.checked_by = newRecord.checked_by || ''
+    loadRecord(newRecord)
   }
 }, { immediate: true })
 
-onMounted(() => {
-  if (window.flatpickr && dateEl.value) {
-    window.flatpickr(dateEl.value, {
-      dateFormat: 'd/m/Y',
-      allowInput: true,
-      onOpen: function(selectedDates, dateStr, instance) {
-        instance.set('maxDate', new Date())
-      }
-    })
+const handleVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    applyTimeDefaults()
   }
+}
+
+onMounted(() => {
+  applyTimeDefaults()
+  window.addEventListener('focus', applyTimeDefaults)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('focus', applyTimeDefaults)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 
 function submit() {

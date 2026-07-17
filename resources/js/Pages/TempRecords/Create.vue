@@ -1,6 +1,5 @@
 <script setup>
-import { ref } from 'vue'
-import { Head, Link, useForm, router } from '@inertiajs/vue3'
+import { Head, Link, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import InputError from '@/Components/InputError.vue'
 import InputLabel from '@/Components/InputLabel.vue'
@@ -21,6 +20,10 @@ const props = defineProps({
     }
 })
 
+const now = new Date()
+const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+const isMorning = now.getHours() < 12
+
 const form = useForm({
     date: new Date().toISOString().split('T')[0],
     model_series: '',
@@ -30,9 +33,9 @@ const form = useForm({
     equipment_type: '',
     process_assigned: '',
     person_in_charge: '',
-    time_am: '',
+    time_am: isMorning ? currentTime : '',
     temp_am: '',
-    time_pm: '',
+    time_pm: isMorning ? '' : currentTime,
     temp_pm: '',
     col_remarks: '',
     checked_by: '',
