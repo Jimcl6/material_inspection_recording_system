@@ -48,9 +48,12 @@
                 </div>
 
                 <!-- Main Modules Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div
+                    v-if="hasVisibleDashboardModules"
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
+                >
                     <!-- Annealing Checks -->
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-blue-500">
+                    <div v-if="canView('annealing')" class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-blue-500">
                         <div class="p-6">
                             <div class="flex items-center">
                                 <div class="p-3 rounded-full bg-blue-100">
@@ -72,7 +75,7 @@
                     </div>
 
                     <!-- Temperature Records -->
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-green-500">
+                    <div v-if="canView('temperature')" class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-green-500">
                         <div class="p-6">
                             <div class="flex items-center">
                                 <div class="p-3 rounded-full bg-green-100">
@@ -94,7 +97,7 @@
                     </div>
 
                     <!-- Torque Records -->
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-yellow-500">
+                    <div v-if="canView('torque')" class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-yellow-500">
                         <div class="p-6">
                             <div class="flex items-center">
                                 <div class="p-3 rounded-full bg-yellow-100">
@@ -117,7 +120,7 @@
                     </div>
 
                     <!-- Magnetism Checksheet -->
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-purple-500">
+                    <div v-if="canView('magnetism')" class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-purple-500">
                         <div class="p-6">
                             <div class="flex items-center">
                                 <div class="p-3 rounded-full bg-purple-100">
@@ -139,7 +142,7 @@
                     </div>
 
                     <!-- Modification Logs -->
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-red-500">
+                    <div v-if="canView('modification')" class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-red-500">
                         <div class="p-6">
                             <div class="flex items-center">
                                 <div class="p-3 rounded-full bg-red-100">
@@ -160,8 +163,8 @@
                         </div>
                     </div>
 
-                    <!-- Welding Checksheet -->
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-orange-500">
+                    <!-- Material Monitoring Checksheet -->
+                    <div v-if="canView('material')" class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-orange-500">
                         <div class="p-6">
                             <div class="flex items-center">
                                 <div class="p-3 rounded-full bg-orange-100">
@@ -182,8 +185,8 @@
                         </div>
                     </div>
 
-                    <!-- Material Monitoring Checksheet -->
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-orange-500">
+                    <!-- Welding Checksheet -->
+                    <div v-if="canView('welding')" class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-orange-500">
                         <div class="p-6">
                             <div class="flex items-center">
                                 <div class="p-3 rounded-full bg-orange-100">
@@ -241,10 +244,24 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue';
+import { computed, defineProps } from 'vue';
 import { Link } from '@inertiajs/vue3';
 // import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { usePermissions } from '@/Composables/usePermissions';
+
+const dashboardModuleKeys = [
+    'annealing',
+    'temperature',
+    'torque',
+    'magnetism',
+    'modification',
+    'material',
+    'welding',
+];
+
+const { canView } = usePermissions();
+const hasVisibleDashboardModules = computed(() => dashboardModuleKeys.some((module) => canView(module)));
 
 const props = defineProps({
     stats: {
