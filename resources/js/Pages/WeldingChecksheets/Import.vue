@@ -72,6 +72,7 @@ const isImportLoading = ref(false);
 const errorMessage = ref('');
 const successMessage = ref('');
 
+const hasTypes = computed(() => props.types.length > 0);
 const selectedType = computed(() => props.types.find(type => type.id === Number(selectedTypeId.value)) || props.types[0]);
 const itemConfigs = computed(() => selectedType.value?.item_configs || []);
 const selectedItemConfig = computed(() => itemConfigs.value.find(config => config.id === Number(selectedItemConfigId.value)) || null);
@@ -80,7 +81,7 @@ const hasPreview = computed(() => previewResults.value !== null);
 const hasDuplicates = computed(() => (previewResults.value?.duplicate_records?.length || 0) > 0);
 const hasNewRecords = computed(() => (previewResults.value?.new_records?.length || 0) > 0);
 const hasErrors = computed(() => (previewResults.value?.errors?.length || 0) > 0);
-const canConfirmImport = computed(() => hasNewRecords.value || hasDuplicates.value);
+const canConfirmImport = computed(() => hasTypes.value && (hasNewRecords.value || hasDuplicates.value));
 
 watch(selectedTypeId, () => {
     selectedItemConfigId.value = null;
@@ -110,6 +111,11 @@ const handleFileChange = (event: Event) => {
 };
 
 const previewImport = async () => {
+    if (!hasTypes.value) {
+        errorMessage.value = 'No active welding checksheet types are available.';
+        return;
+    }
+
     if (!selectedTypeId.value) {
         errorMessage.value = 'Please select a checksheet type.';
         return;
@@ -149,6 +155,11 @@ const previewImport = async () => {
 };
 
 const executeImport = async () => {
+    if (!hasTypes.value) {
+        errorMessage.value = 'No active welding checksheet types are available.';
+        return;
+    }
+
     isImportLoading.value = true;
     errorMessage.value = '';
 
@@ -405,7 +416,11 @@ const resetForm = () => {
                     <div class="p-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Upload Excel File</h3>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div v-if="!hasTypes" role="alert" class="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                            No active welding checksheet types are available. Contact an administrator to restore the Welding configuration.
+                        </div>
+
+                        <div v-if="hasTypes" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                             <div>
                                 <label for="checksheet_type" class="block text-sm font-medium text-gray-700">
                                     Checksheet Type <span class="text-red-500">*</span>
@@ -452,7 +467,7 @@ const resetForm = () => {
                             </div>
                         </div>
 
-                        <div class="mb-6">
+                        <div v-if="hasTypes" class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 Select Excel File (.xlsx, .xls) <span class="text-red-500">*</span>
                             </label>
@@ -481,7 +496,7 @@ const resetForm = () => {
                             </p>
                         </div>
 
-                        <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div v-if="hasTypes" class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
                             <h4 class="font-medium text-blue-800 mb-2">Import Instructions</h4>
                             <ul class="text-sm text-blue-700 list-disc list-inside space-y-1">
                                 <li>Select a checksheet type before uploading the workbook.</li>
@@ -493,7 +508,7 @@ const resetForm = () => {
                             </ul>
                         </div>
 
-                        <div class="flex justify-end space-x-4">
+                        <div v-if="hasTypes" class="flex justify-end space-x-4">
                             <button
                                 type="button"
                                 @click="resetForm"
@@ -504,7 +519,7 @@ const resetForm = () => {
                             <button
                                 type="button"
                                 @click="previewImport"
-                                :disabled="isPreviewLoading || !selectedFile"
+                                :disabled="isPreviewLoading || !selectedFile || !hasTypes"
                                 class="px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 disabled:opacity-50"
                             >
                                 {{ isPreviewLoading ? 'Analyzing...' : 'Preview Import' }}

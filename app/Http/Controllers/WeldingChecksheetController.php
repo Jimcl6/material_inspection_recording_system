@@ -202,13 +202,26 @@ class WeldingChecksheetController extends Controller
     public function importPreview(ImportWeldingChecksheetRequest $request)
     {
         try {
+            $type = WeldingChecksheetType::query()
+                ->active()
+                ->find($request->integer('checksheet_type_id'));
+            $itemConfig = $request->filled('item_config_id')
+                ? WeldingItemConfig::query()
+                    ->active()
+                    ->where('checksheet_type_id', $type?->id)
+                    ->find($request->integer('item_config_id'))
+                : null;
+
+            if (!$type || ($request->filled('item_config_id') && !$itemConfig)) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'The selected checksheet type or item code is no longer active. Refresh the page and try again.',
+                ], 422);
+            }
+
             $file = $request->file('file');
             $tempPath = $file->store('temp');
             $fullPath = storage_path('app/' . $tempPath);
-            $type = WeldingChecksheetType::findOrFail($request->integer('checksheet_type_id'));
-            $itemConfig = $request->filled('item_config_id')
-                ? WeldingItemConfig::find($request->integer('item_config_id'))
-                : null;
 
             $import = new WeldingChecksheetImport($file->getClientOriginalName());
 
@@ -255,8 +268,26 @@ class WeldingChecksheetController extends Controller
         }
 
         try {
-            $type = WeldingChecksheetType::findOrFail($payload['checksheet_type_id']);
-            $itemConfig = !empty($payload['item_config_id']) ? WeldingItemConfig::find($payload['item_config_id']) : null;
+            $type = WeldingChecksheetType::query()
+                ->active()
+                ->find($payload['checksheet_type_id']);
+            $itemConfig = !empty($payload['item_config_id']) && $type
+                ? WeldingItemConfig::query()
+                    ->active()
+                    ->where('checksheet_type_id', $type->id)
+                    ->find($payload['item_config_id'])
+                : null;
+
+            if (!$type || (!empty($payload['item_config_id']) && !$itemConfig)) {
+                @unlink($fullPath);
+                session()->forget('welding_import');
+
+                return response()->json([
+                    'success' => false,
+                    'error' => 'The selected checksheet type or item code is no longer active. Preview the file again.',
+                ], 422);
+            }
+
             $import = new WeldingChecksheetImport($payload['source_file'] ?? null);
 
             $results = $import->execute(

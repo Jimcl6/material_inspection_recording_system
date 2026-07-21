@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\WeldingChecksheetType;
 use App\Models\WeldingItemConfig;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class StoreWeldingChecksheetRequest extends FormRequest
@@ -17,8 +18,18 @@ class StoreWeldingChecksheetRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'checksheet_type_id' => ['required', 'exists:welding_checksheet_types,id'],
-            'item_config_id' => ['nullable', 'exists:welding_item_configs,id'],
+            'checksheet_type_id' => [
+                'required',
+                Rule::exists('welding_checksheet_types', 'id')
+                    ->where(fn ($query) => $query->where('is_active', true)),
+            ],
+            'item_config_id' => [
+                'nullable',
+                Rule::exists('welding_item_configs', 'id')->where(function ($query) {
+                    $query->where('is_active', true)
+                        ->where('checksheet_type_id', $this->input('checksheet_type_id'));
+                }),
+            ],
             'item_name' => ['nullable', 'string', 'max:100'],
             'item_code' => ['nullable', 'string', 'max:50'],
             'month_year' => ['nullable', 'string', 'max:30'],
@@ -51,14 +62,14 @@ class StoreWeldingChecksheetRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            $type = WeldingChecksheetType::find($this->input('checksheet_type_id'));
+            $type = WeldingChecksheetType::query()->active()->find($this->input('checksheet_type_id'));
             if (!$type) {
                 return;
             }
 
             $itemConfig = null;
             if ($this->filled('item_config_id')) {
-                $itemConfig = WeldingItemConfig::find($this->input('item_config_id'));
+                $itemConfig = WeldingItemConfig::query()->active()->find($this->input('item_config_id'));
                 if ($itemConfig && (int) $itemConfig->checksheet_type_id !== (int) $type->id) {
                     $validator->errors()->add('item_config_id', 'Selected item code does not belong to the selected checksheet type.');
                     return;
@@ -67,6 +78,15 @@ class StoreWeldingChecksheetRequest extends FormRequest
 
             $this->validateConfiguredItems($validator, $type, $itemConfig);
         });
+    }
+
+    public function messages(): array
+    {
+        return [
+            'checksheet_type_id.required' => 'Select an active checksheet type.',
+            'checksheet_type_id.exists' => 'The selected checksheet type is unavailable or inactive.',
+            'item_config_id.exists' => 'The selected item code is unavailable, inactive, or belongs to another checksheet type.',
+        ];
     }
 
     protected function validateConfiguredItems(Validator $validator, WeldingChecksheetType $type, ?WeldingItemConfig $itemConfig): void
