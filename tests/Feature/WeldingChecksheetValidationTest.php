@@ -6,11 +6,14 @@ use App\Http\Requests\StoreWeldingChecksheetRequest;
 use App\Models\WeldingChecksheetType;
 use App\Models\WeldingItemConfig;
 use Database\Seeders\DiaphragmItemCodeSeeder;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
 
 class WeldingChecksheetValidationTest extends TestCase
 {
+    use DatabaseTransactions;
+
     public function test_non_formula_diaphragm_item_codes_validate_appearance_and_strength_only(): void
     {
         $this->seed(DiaphragmItemCodeSeeder::class);
