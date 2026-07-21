@@ -72,8 +72,7 @@ const isImportLoading = ref(false);
 const errorMessage = ref('');
 const successMessage = ref('');
 
-const hasTypes = computed(() => props.types.length > 0);
-const selectedType = computed(() => props.types.find(type => type.id === Number(selectedTypeId.value)) || props.types[0] || null);
+const selectedType = computed(() => props.types.find(type => type.id === Number(selectedTypeId.value)) || props.types[0]);
 const itemConfigs = computed(() => selectedType.value?.item_configs || []);
 const selectedItemConfig = computed(() => itemConfigs.value.find(config => config.id === Number(selectedItemConfigId.value)) || null);
 
@@ -81,7 +80,7 @@ const hasPreview = computed(() => previewResults.value !== null);
 const hasDuplicates = computed(() => (previewResults.value?.duplicate_records?.length || 0) > 0);
 const hasNewRecords = computed(() => (previewResults.value?.new_records?.length || 0) > 0);
 const hasErrors = computed(() => (previewResults.value?.errors?.length || 0) > 0);
-const canConfirmImport = computed(() => hasTypes.value && (hasNewRecords.value || hasDuplicates.value));
+const canConfirmImport = computed(() => hasNewRecords.value || hasDuplicates.value);
 
 watch(selectedTypeId, () => {
     selectedItemConfigId.value = null;
@@ -111,11 +110,6 @@ const handleFileChange = (event: Event) => {
 };
 
 const previewImport = async () => {
-    if (!hasTypes.value) {
-        errorMessage.value = 'No welding checksheet types are configured.';
-        return;
-    }
-
     if (!selectedTypeId.value) {
         errorMessage.value = 'Please select a checksheet type.';
         return;
@@ -155,11 +149,6 @@ const previewImport = async () => {
 };
 
 const executeImport = async () => {
-    if (!hasTypes.value) {
-        errorMessage.value = 'No welding checksheet types are configured.';
-        return;
-    }
-
     isImportLoading.value = true;
     errorMessage.value = '';
 
@@ -416,10 +405,6 @@ const resetForm = () => {
                     <div class="p-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Upload Excel File</h3>
 
-                        <div v-if="!hasTypes" class="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                            No welding checksheet types are configured.
-                        </div>
-
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                             <div>
                                 <label for="checksheet_type" class="block text-sm font-medium text-gray-700">
@@ -428,10 +413,8 @@ const resetForm = () => {
                                 <select
                                     id="checksheet_type"
                                     v-model="selectedTypeId"
-                                    :disabled="!hasTypes"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:bg-gray-100 disabled:text-gray-500"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                                 >
-                                    <option v-if="!hasTypes" :value="null">No types available</option>
                                     <option v-for="type in types" :key="type.id" :value="type.id">{{ type.name }}</option>
                                 </select>
                             </div>
@@ -521,7 +504,7 @@ const resetForm = () => {
                             <button
                                 type="button"
                                 @click="previewImport"
-                                :disabled="isPreviewLoading"
+                                :disabled="isPreviewLoading || !selectedFile"
                                 class="px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 disabled:opacity-50"
                             >
                                 {{ isPreviewLoading ? 'Analyzing...' : 'Preview Import' }}
