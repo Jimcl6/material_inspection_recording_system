@@ -51,7 +51,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             UserManagementSeeder::class,
-            WeldingChecksheetTypeSeeder::class,
             MaterialSubLotTitleSeeder::class,
         ]);
     }

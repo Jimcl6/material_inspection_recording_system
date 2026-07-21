@@ -682,16 +682,18 @@ const mainMargin = computed(() => {
                     </button>
 
                     <!-- Page header slot or title -->
-                    <div class="flex-1 flex items-center lg:ml-0 ml-4">
-                        <slot name="header">
-                            <h1 class="text-lg font-semibold text-gray-900">
-                                <!-- Default empty, pages can override -->
-                            </h1>
-                        </slot>
+                    <div class="flex min-w-0 flex-1 items-center lg:ml-0 ml-4">
+                        <div class="w-full min-w-0">
+                            <slot name="header">
+                                <h1 class="text-lg font-semibold text-gray-900">
+                                    <!-- Default empty, pages can override -->
+                                </h1>
+                            </slot>
+                        </div>
                     </div>
 
                     <!-- User dropdown -->
-                    <div class="flex items-center">
+                    <div class="ml-4 flex shrink-0 items-center">
                         <Dropdown align="right" width="notification">
                             <template #trigger>
                                 <button

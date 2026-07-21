@@ -138,8 +138,6 @@ const props = defineProps<{
 }>();
 
 const isEdit = computed(() => Boolean(props.checksheet?.id));
-const hasTypes = computed(() => props.types.length > 0);
-
 const firstType = props.types[0] || null;
 
 const form = useForm({
@@ -268,11 +266,6 @@ if (!form.samples.length && firstType) {
 }
 
 const submit = () => {
-    if (!hasTypes.value) {
-        form.setError('checksheet_type_id', 'No active welding checksheet types are configured.');
-        return;
-    }
-
     if (isEdit.value && props.checksheet) {
         form.put(route('welding-checksheets.update', props.checksheet.id));
         return;
@@ -512,14 +505,10 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
             <div class="p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Template</h3>
-                <div v-if="!hasTypes" class="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                    No active welding checksheet types are configured.
-                </div>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Checksheet Type *</label>
-                        <select v-model="form.checksheet_type_id" :disabled="!hasTypes" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500">
-                            <option v-if="!hasTypes" :value="null">No active types available</option>
+                        <select v-model="form.checksheet_type_id" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                             <option v-for="type in types" :key="type.id" :value="type.id">{{ type.name }}</option>
                         </select>
                         <p v-if="form.errors.checksheet_type_id" class="mt-1 text-sm text-red-600">{{ form.errors.checksheet_type_id }}</p>
@@ -691,7 +680,7 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
             <Link :href="route('welding-checksheets.index')" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
                 Cancel
             </Link>
-            <button type="submit" :disabled="form.processing || !hasTypes" class="px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50">
+            <button type="submit" :disabled="form.processing" class="px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50">
                 {{ form.processing ? 'Saving...' : (isEdit ? 'Update Checksheet' : 'Create Checksheet') }}
             </button>
         </div>
