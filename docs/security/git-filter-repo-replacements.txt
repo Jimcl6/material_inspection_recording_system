@@ -1,0 +1,8 @@
+***REMOVED***
+regex:(?m)^APP_KEY=[^\r\n]*$==>APP_KEY=
+regex:(?m)^DB_PASSWORD=[^\r\n]*$==>DB_PASSWORD=
+regex:(?m)^MAIL_PASSWORD=[^\r\n]*$==>MAIL_PASSWORD=
+regex:(?m)^PUSHER_APP_ID=[^\r\n]*$==>PUSHER_APP_ID=
+regex:(?m)^PUSHER_APP_KEY=[^\r\n]*$==>PUSHER_APP_KEY=
+regex:(?m)^PUSHER_APP_SECRET=[^\r\n]*$==>PUSHER_APP_SECRET=
+regex:(?m)^VITE_PUSHER_APP_KEY=[^\r\n]*$==>VITE_PUSHER_APP_KEY=

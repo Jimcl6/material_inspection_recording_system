@@ -2,15 +2,69 @@
 /public/build
 /public/hot
 /public/storage
-/storage/*.key
 /vendor
+
+# Environment and credentials. Keep only intentionally sanitized templates.
 .env
-.env.backup
-.env.production
+.env.*
+!.env.example
+!.env.docker.example
+*.pem
+*.key
+*.p12
+*.pfx
+auth.json
+
+# Database dumps and local database files. Canonical schemas and fixtures remain trackable.
+*.sql
+!database/schema/**/*.sql
+!database/fixtures/**/*.sql
+!tests/Fixtures/**/*.sql
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Backups, copied source, generated archives, and local exports.
+**/backup/
+**/backups/
+*.backup
+*.backup.*
+*.bak
+*.zip
+*.7z
+*.tar
+*.tar.gz
+/outputs/
+/exports/
+/storage/app/exports/
+
+# Generated badges and printable exports.
+/public/badges/
+/storage/app/badges/
+badge-*.png
+badge-*.pdf
+badges-*.pdf
+
+# Temporary migration, repair, and diagnostic scripts at the repository root.
+/_temp*
+/temp_*
+/setup_admin.*
+/check_users.php
+/clear_log.php
+
+# Local runtime and test artifacts.
+*.log
+/storage/*.key
+/storage/logs/*
+!/storage/logs/.gitignore
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/bootstrap/cache/*.php
+!/bootstrap/cache/.gitignore
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
-auth.json
 npm-debug.log
 yarn-error.log
 /.fleet
