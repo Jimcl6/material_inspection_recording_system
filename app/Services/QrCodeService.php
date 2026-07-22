@@ -4,9 +4,9 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\UserQrCode;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 class QrCodeService
 {
@@ -38,7 +38,7 @@ class QrCodeService
             $data = json_decode($decrypted, true);
 
             if (!$data || !isset($data['id'], $data['employee_id'], $data['signature'])) {
-                Log::warning('Invalid QR data structure', ['qr_data' => $qrData]);
+                Log::warning('Invalid QR data structure');
                 return null;
             }
 
@@ -50,8 +50,8 @@ class QrCodeService
             }
 
             return $data;
-        } catch (\Exception $e) {
-            Log::error('Failed to decode QR data', ['error' => $e->getMessage()]);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to decode QR data', ['exception' => $e::class]);
             return null;
         }
     }
@@ -107,9 +107,29 @@ class QrCodeService
                 'hire_date' => $hireDate,
                 'contract_end_date' => $contractEndDate,
                 'is_active' => true,
-                'last_scanned_at' => now(),
             ]
         );
+    }
+
+    /**
+     * Re-encrypt an existing stored badge without changing its operational metadata.
+     */
+    public function regenerateStoredQrCode(User $user): UserQrCode
+    {
+        $qrCode = $user->qrCode;
+
+        if (! $qrCode) {
+            throw new RuntimeException("User ID {$user->id} does not have a stored QR record.");
+        }
+
+        $qrCode->qr_data = $this->generateQrData(
+            $user,
+            $qrCode->employee_id,
+            $qrCode->employment_status
+        );
+        $qrCode->save();
+
+        return $qrCode;
     }
 
     /**
@@ -132,18 +152,6 @@ class QrCodeService
     public function recordScan(UserQrCode $qrCode): bool
     {
         return $qrCode->update(['last_scanned_at' => now()]);
-    }
-
-    /**
-     * Generate QR code image URL (for display)
-     */
-    public function generateQrImageUrl(string $qrData, int $size = 200): string
-    {
-        // Using Google Charts API for QR code generation
-        // In production, you might want to use a local QR code library
-        $encodedData = urlencode($qrData);
-        
-        return "https://chart.googleapis.com/chart?chs={$size}x{$size}&cht=qr&chl={$encodedData}&choe=UTF-8";
     }
 
     /**
@@ -186,7 +194,6 @@ class QrCodeService
             
             if (count($parts) !== 3) {
                 Log::warning('Invalid employee badge QR format - expected 3 parts', [
-                    'qr_data' => $qrData,
                     'parts_count' => count($parts)
                 ]);
                 return null;
@@ -198,13 +205,13 @@ class QrCodeService
 
             // Validate employee ID format (e.g., "25-431")
             if (empty($employeeId)) {
-                Log::warning('Empty employee ID in badge QR', ['qr_data' => $qrData]);
+                Log::warning('Empty employee ID in badge QR');
                 return null;
             }
 
             // Validate name
             if (empty($fullName)) {
-                Log::warning('Empty name in badge QR', ['qr_data' => $qrData]);
+                Log::warning('Empty name in badge QR');
                 return null;
             }
 
@@ -212,7 +219,6 @@ class QrCodeService
             $validStatuses = ['regular', 'contractual', 'probationary'];
             if (!in_array($employmentStatus, $validStatuses)) {
                 Log::warning('Invalid employment status in badge QR', [
-                    'qr_data' => $qrData,
                     'status' => $employmentStatus
                 ]);
                 return null;
@@ -223,10 +229,9 @@ class QrCodeService
                 'name' => $fullName,
                 'employment_status' => $employmentStatus,
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to parse employee badge QR', [
-                'error' => $e->getMessage(),
-                'qr_data' => $qrData
+                'exception' => $e::class,
             ]);
             return null;
         }
