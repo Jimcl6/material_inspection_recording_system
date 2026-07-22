@@ -13,6 +13,7 @@ use App\Http\Controllers\MagnetismController;
 use App\Http\Controllers\ModificationLogController;
 use App\Http\Controllers\MaterialPartController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\UserBadgeController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\RoleController;
@@ -393,6 +394,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('users.scan');
         Route::post('users/bulk-action', [UserManagementController::class, 'bulkAction'])
             ->name('users.bulk-action');
+        Route::get('users/badges', [UserBadgeController::class, 'index'])
+            ->name('users.badges');
+        Route::post('users/badges/reissue', [UserBadgeController::class, 'reissue'])
+            ->name('users.badges.reissue');
         Route::post('users/{user}/regenerate-qr', [UserManagementController::class, 'regenerateQr'])
             ->name('users.regenerate-qr');
         
