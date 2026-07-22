@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\SpreadsheetImportSecurity;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ImportDiaphragmWeldingRequest extends FormRequest
@@ -24,7 +25,7 @@ class ImportDiaphragmWeldingRequest extends FormRequest
     public function rules()
     {
         return [
-            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
+            'file' => SpreadsheetImportSecurity::rules(),
             'overwrite' => ['nullable', 'boolean'],
         ];
     }
@@ -38,7 +39,6 @@ class ImportDiaphragmWeldingRequest extends FormRequest
     {
         return [
             'file.required' => 'Please select an Excel file to import.',
-            'file.mimes' => 'The file must be an Excel file (.xlsx or .xls).',
             'file.max' => 'The file size must not exceed 10MB.',
         ];
     }

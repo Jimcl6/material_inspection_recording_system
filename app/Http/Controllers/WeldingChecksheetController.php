@@ -15,9 +15,9 @@ use App\Services\ActivityService;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use App\Services\DuplicateRecordGuard;
+use App\Support\SpreadsheetImportSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -201,6 +201,8 @@ class WeldingChecksheetController extends Controller
 
     public function importPreview(ImportWeldingChecksheetRequest $request)
     {
+        $tempPath = null;
+
         try {
             $type = WeldingChecksheetType::query()
                 ->active()
@@ -220,10 +222,11 @@ class WeldingChecksheetController extends Controller
             }
 
             $file = $request->file('file');
-            $tempPath = $file->store('temp');
-            $fullPath = storage_path('app/' . $tempPath);
+            SpreadsheetImportSecurity::delete(session('welding_import.file'));
+            [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'welding');
+            $sourceFile = SpreadsheetImportSecurity::safeOriginalName($file);
 
-            $import = new WeldingChecksheetImport($file->getClientOriginalName());
+            $import = new WeldingChecksheetImport($sourceFile);
 
             session([
                 'welding_import' => [
@@ -232,7 +235,7 @@ class WeldingChecksheetController extends Controller
                     'item_config_id' => $itemConfig?->id,
                     'item_code' => $request->input('item_code'),
                     'item_name' => $request->input('item_name'),
-                    'source_file' => $file->getClientOriginalName(),
+                    'source_file' => $sourceFile,
                 ],
             ]);
 
@@ -241,11 +244,12 @@ class WeldingChecksheetController extends Controller
                 'preview' => $import->preview($fullPath, $type, $itemConfig, $request->input('item_code'), $request->input('item_name')),
             ]);
         } catch (\Throwable $e) {
-            Log::error('Welding import preview failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            SpreadsheetImportSecurity::delete($tempPath);
+            $correlationId = SpreadsheetImportSecurity::reportFailure('welding.preview', $e);
 
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to preview file: ' . $e->getMessage(),
+                'error' => SpreadsheetImportSecurity::browserError($correlationId),
             ], 500);
         }
     }
@@ -261,8 +265,10 @@ class WeldingChecksheetController extends Controller
             return response()->json(['success' => false, 'error' => 'No file to import. Please upload a file first.'], 400);
         }
 
-        $fullPath = storage_path('app/' . $payload['file']);
-        if (!file_exists($fullPath)) {
+        $tempPath = $payload['file'] ?? null;
+        $fullPath = SpreadsheetImportSecurity::resolve($tempPath);
+        if ($fullPath === null) {
+            SpreadsheetImportSecurity::delete($tempPath);
             session()->forget('welding_import');
             return response()->json(['success' => false, 'error' => 'Import file expired. Please upload again.'], 400);
         }
@@ -279,9 +285,6 @@ class WeldingChecksheetController extends Controller
                 : null;
 
             if (!$type || (!empty($payload['item_config_id']) && !$itemConfig)) {
-                @unlink($fullPath);
-                session()->forget('welding_import');
-
                 return response()->json([
                     'success' => false,
                     'error' => 'The selected checksheet type or item code is no longer active. Preview the file again.',
@@ -299,15 +302,11 @@ class WeldingChecksheetController extends Controller
                 $request->boolean('update_duplicates')
             );
 
-            @unlink($fullPath);
-            session()->forget('welding_import');
-
             ActivityService::logImport('welding', (int) ($results['imported'] ?? 0), [
                 'updated' => $results['updated'] ?? 0,
                 'skipped' => $results['skipped'] ?? 0,
                 'errors' => count($results['errors'] ?? []),
                 'type' => $type->key,
-                'item_code' => $payload['item_code'] ?? null,
             ]);
 
             return response()->json([
@@ -316,12 +315,15 @@ class WeldingChecksheetController extends Controller
                 'message' => $this->importMessage($results),
             ]);
         } catch (\Throwable $e) {
-            Log::error('Welding import execute failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            $correlationId = SpreadsheetImportSecurity::reportFailure('welding.execute', $e);
 
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to import file: ' . $e->getMessage(),
+                'error' => SpreadsheetImportSecurity::browserError($correlationId),
             ], 500);
+        } finally {
+            SpreadsheetImportSecurity::delete($tempPath);
+            session()->forget('welding_import');
         }
     }
 

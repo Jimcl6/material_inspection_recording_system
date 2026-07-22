@@ -8,7 +8,6 @@ use App\Http\Requests\UpdateAnnealingCheckRequest;
 use App\Http\Requests\ImportAnnealingCheckRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AnnealingChecksExport;
@@ -17,6 +16,7 @@ use App\Services\ActivityService;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use App\Services\DuplicateRecordGuard;
+use App\Support\SpreadsheetImportSecurity;
 
 class AnnealingCheckController extends Controller
 {
@@ -146,14 +146,6 @@ class AnnealingCheckController extends Controller
         // Try to find user by name (case-insensitive)
         $user = \App\Models\User::whereRaw('LOWER(name) = ?', [$cleanName])->first();
         
-        // Log the conversion attempt for debugging
-        \Log::info("Name to ID conversion:", [
-            'input_name' => $name,
-            'clean_name' => $cleanName,
-            'found_user' => $user ? $user->toArray() : null,
-            'result_id' => $user ? $user->id : ($isRequired ? Auth::id() : null)
-        ]);
-        
         // Return user ID if found, otherwise use current user for required fields or null for optional
         return $user ? $user->id : ($isRequired ? Auth::id() : null);
     }
@@ -263,23 +255,9 @@ class AnnealingCheckController extends Controller
      */
     public function import(ImportAnnealingCheckRequest $request): \Inertia\Response
     {
-        Log::info('Import method called', [
-            'has_file' => $request->hasFile('file'),
-            'file_info' => $request->file('file') ? [
-                'original_name' => $request->file('file')->getClientOriginalName(),
-                'size' => $request->file('file')->getSize(),
-                'mime_type' => $request->file('file')->getMimeType()
-            ] : null
-        ]);
-
         $file = $request->file('file');
         $overwrite = $request->boolean('overwrite', false);
-        
-        if (!$file) {
-            Log::error('No file uploaded');
-            return Inertia::render('AnnealingChecks/Import')
-                ->with('error', 'No file uploaded.');
-        }
+        $tempPath = null;
 
         try {
             if ($overwrite) {
@@ -287,24 +265,13 @@ class AnnealingCheckController extends Controller
                 AnnealingCheck::truncate();
             }
 
-            Log::info('Starting Excel import');
             $import = new AnnealingChecksWithHeadersImport();
-            
-            // Store the uploaded file temporarily and import using PhpSpreadsheet directly
-            $tempPath = $file->store('temp');
-            $fullPath = storage_path('app/' . $tempPath);
-            
+
+            [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'annealing');
             $import->import($fullPath);
-            
-            // Clean up temp file
-            @unlink($fullPath);
-            
-            Log::info('Excel import completed');
-            
+
             $results = $import->getResults();
-            
-            Log::info('Import results', $results);
-            
+
             // Prepare summary message
             $totalImported = array_sum(array_column($results, 'imported'));
             $totalSkipped = array_sum(array_column($results, 'skipped'));
@@ -319,14 +286,13 @@ class AnnealingCheckController extends Controller
                 'success' => $message
             ]);
             
-        } catch (\Exception $e) {
-            Log::error('Import failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
+        } catch (\Throwable $e) {
+            $correlationId = SpreadsheetImportSecurity::reportFailure('annealing.direct', $e);
+
             return Inertia::render('AnnealingChecks/Import')
-                ->with('error', 'Error importing file: ' . $e->getMessage());
+                ->with('error', SpreadsheetImportSecurity::browserError($correlationId));
+        } finally {
+            SpreadsheetImportSecurity::delete($tempPath);
         }
     }
 
@@ -336,14 +302,15 @@ class AnnealingCheckController extends Controller
     public function importPreview(Request $request)
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
+            'file' => SpreadsheetImportSecurity::rules(),
         ]);
 
         $file = $request->file('file');
+        $tempPath = null;
 
         try {
-            $tempPath = $file->store('temp');
-            $fullPath = storage_path('app/' . $tempPath);
+            SpreadsheetImportSecurity::delete(session('annealing_import_file'));
+            [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'annealing');
 
             $import = new AnnealingChecksWithHeadersImport();
             $results = $import->preview($fullPath);
@@ -356,15 +323,13 @@ class AnnealingCheckController extends Controller
                 'preview' => $results,
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('Annealing Import Preview failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+        } catch (\Throwable $e) {
+            SpreadsheetImportSecurity::delete($tempPath);
+            $correlationId = SpreadsheetImportSecurity::reportFailure('annealing.preview', $e);
 
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to preview file: ' . $e->getMessage(),
+                'error' => SpreadsheetImportSecurity::browserError($correlationId),
             ], 500);
         }
     }
@@ -387,9 +352,10 @@ class AnnealingCheckController extends Controller
             ], 400);
         }
 
-        $fullPath = storage_path('app/' . $tempPath);
+        $fullPath = SpreadsheetImportSecurity::resolve($tempPath);
 
-        if (!file_exists($fullPath)) {
+        if ($fullPath === null) {
+            SpreadsheetImportSecurity::delete($tempPath);
             session()->forget('annealing_import_file');
             return response()->json([
                 'success' => false,
@@ -403,10 +369,6 @@ class AnnealingCheckController extends Controller
             $import = new AnnealingChecksWithHeadersImport();
             $results = $import->execute($fullPath, $updateDuplicates);
 
-            // Clean up temp file
-            @unlink($fullPath);
-            session()->forget('annealing_import_file');
-
             $message = "Import completed: {$results['imported']} created";
             if ($results['updated'] > 0) $message .= ", {$results['updated']} updated";
             if ($results['skipped'] > 0) $message .= ", {$results['skipped']} skipped";
@@ -418,16 +380,16 @@ class AnnealingCheckController extends Controller
                 'message' => $message,
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('Annealing Import Execute failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+        } catch (\Throwable $e) {
+            $correlationId = SpreadsheetImportSecurity::reportFailure('annealing.execute', $e);
 
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to import file: ' . $e->getMessage(),
+                'error' => SpreadsheetImportSecurity::browserError($correlationId),
             ], 500);
+        } finally {
+            SpreadsheetImportSecurity::delete($tempPath);
+            session()->forget('annealing_import_file');
         }
     }
 
