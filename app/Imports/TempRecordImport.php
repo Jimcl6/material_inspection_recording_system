@@ -5,7 +5,7 @@ namespace App\Imports;
 use App\Models\TempRecord;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
-use Illuminate\Support\Facades\Log;
+use App\Support\SpreadsheetImportSecurity;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
@@ -52,13 +52,12 @@ class TempRecordImport
 
             return $this->results;
 
-        } catch (\Exception $e) {
-            Log::error('Temp Record Import Preview failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            $this->results['errors'][] = 'Failed to process file: ' . $e->getMessage();
+        } catch (\Throwable $e) {
+            $this->results['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                'temperature.importer.preview',
+                $e,
+                'The spreadsheet could not be previewed.'
+            );
             return $this->results;
         }
     }
@@ -88,13 +87,12 @@ class TempRecordImport
 
             return $this->executeResults;
 
-        } catch (\Exception $e) {
-            Log::error('Temp Record Import Execute failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            $this->executeResults['errors'][] = 'Failed to process file: ' . $e->getMessage();
+        } catch (\Throwable $e) {
+            $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                'temperature.importer.execute',
+                $e,
+                'The spreadsheet could not be imported.'
+            );
             return $this->executeResults;
         }
     }
@@ -206,7 +204,7 @@ class TempRecordImport
         $footerData = $this->parseFooterData($sheet, $dateColumns);
 
         if (empty($dateColumns)) {
-            $this->results['errors'][] = "Sheet '{$sheetName}': No date columns found";
+            $this->results['errors'][] = 'A worksheet does not contain the required date columns.';
             return;
         }
 
@@ -249,7 +247,7 @@ class TempRecordImport
         $footerData = $this->parseFooterData($sheet, $dateColumns);
 
         if (empty($dateColumns)) {
-            $this->executeResults['errors'][] = "Sheet '{$sheetName}': No date columns found";
+            $this->executeResults['errors'][] = 'A worksheet does not contain the required date columns.';
             return;
         }
 
@@ -277,8 +275,12 @@ class TempRecordImport
 
                         $this->executeResults['imported']++;
                     }
-                } catch (\Exception $e) {
-                    $this->executeResults['errors'][] = "Date {$record['date']}: " . $e->getMessage();
+                } catch (\Throwable $e) {
+                    $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                        'temperature.importer.row',
+                        $e,
+                        'A spreadsheet row could not be imported.'
+                    );
                 }
             }
         }

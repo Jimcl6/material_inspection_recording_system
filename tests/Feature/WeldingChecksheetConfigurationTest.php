@@ -10,6 +10,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Tests\TestCase;
@@ -166,7 +167,7 @@ class WeldingChecksheetConfigurationTest extends TestCase
             ->actingAs(User::factory()->create());
 
         $type = WeldingChecksheetType::where('key', 'casing_tank')->firstOrFail();
-        $tempPath = 'temp/welding-configuration-'.uniqid().'.xlsx';
+        $tempPath = 'temp/imports/welding/'.Str::uuid().'.xlsx';
         Storage::disk('local')->put($tempPath, 'test workbook placeholder');
 
         session([

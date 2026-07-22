@@ -8,9 +8,9 @@ use App\Services\ActivityService;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use App\Services\DuplicateRecordGuard;
+use App\Support\SpreadsheetImportSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -303,14 +303,15 @@ class TorqueRecordController extends Controller
     public function importPreview(Request $request)
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
+            'file' => SpreadsheetImportSecurity::rules(),
         ]);
 
         $file = $request->file('file');
+        $tempPath = null;
 
         try {
-            $tempPath = $file->store('temp');
-            $fullPath = storage_path('app/'.$tempPath);
+            SpreadsheetImportSecurity::delete(session('torque_import_file'));
+            [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'torque');
 
             $import = new TorqueChecksheetImport();
             $results = $import->preview($fullPath);
@@ -322,15 +323,13 @@ class TorqueRecordController extends Controller
                 'success' => true,
                 'preview' => $results,
             ]);
-        } catch (\Exception $e) {
-            Log::error('Torque Import Preview failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+        } catch (\Throwable $e) {
+            SpreadsheetImportSecurity::delete($tempPath);
+            $correlationId = SpreadsheetImportSecurity::reportFailure('torque.preview', $e);
 
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to preview file: '.$e->getMessage(),
+                'error' => SpreadsheetImportSecurity::browserError($correlationId),
             ], 500);
         }
     }
@@ -353,9 +352,10 @@ class TorqueRecordController extends Controller
             ], 400);
         }
 
-        $fullPath = storage_path('app/'.$tempPath);
+        $fullPath = SpreadsheetImportSecurity::resolve($tempPath);
 
-        if (! file_exists($fullPath)) {
+        if ($fullPath === null) {
+            SpreadsheetImportSecurity::delete($tempPath);
             session()->forget('torque_import_file');
 
             return response()->json([
@@ -369,10 +369,6 @@ class TorqueRecordController extends Controller
 
             $import = new TorqueChecksheetImport();
             $results = $import->execute($fullPath, $updateDuplicates);
-
-            // Clean up temp file
-            @unlink($fullPath);
-            session()->forget('torque_import_file');
 
             $message = "Import completed: {$results['imported']} created";
             if ($results['updated'] > 0) {
@@ -397,16 +393,16 @@ class TorqueRecordController extends Controller
                 'results' => $results,
                 'message' => $message,
             ]);
-        } catch (\Exception $e) {
-            Log::error('Torque Import Execute failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+        } catch (\Throwable $e) {
+            $correlationId = SpreadsheetImportSecurity::reportFailure('torque.execute', $e);
 
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to import file: '.$e->getMessage(),
+                'error' => SpreadsheetImportSecurity::browserError($correlationId),
             ], 500);
+        } finally {
+            SpreadsheetImportSecurity::delete($tempPath);
+            session()->forget('torque_import_file');
         }
     }
 
@@ -416,22 +412,20 @@ class TorqueRecordController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
+            'file' => SpreadsheetImportSecurity::rules(),
             'update_duplicates' => ['nullable', 'boolean'],
         ]);
 
         $file = $request->file('file');
+        $tempPath = null;
 
         try {
-            $tempPath = $file->store('temp');
-            $fullPath = storage_path('app/'.$tempPath);
+            [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'torque');
 
             $updateDuplicates = $request->boolean('update_duplicates', false);
 
             $import = new TorqueChecksheetImport();
             $results = $import->execute($fullPath, $updateDuplicates);
-
-            @unlink($fullPath);
 
             $message = "Import completed: {$results['imported']} created";
             if ($results['updated'] > 0) {
@@ -455,15 +449,14 @@ class TorqueRecordController extends Controller
                 'import_results' => $results,
                 'success' => $message,
             ]);
-        } catch (\Exception $e) {
-            Log::error('Torque Import failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+        } catch (\Throwable $e) {
+            $correlationId = SpreadsheetImportSecurity::reportFailure('torque.direct', $e);
 
             return Inertia::render('TorqueRecords/Import', [
-                'error' => 'Error importing file: '.$e->getMessage(),
+                'error' => SpreadsheetImportSecurity::browserError($correlationId),
             ]);
+        } finally {
+            SpreadsheetImportSecurity::delete($tempPath);
         }
     }
 

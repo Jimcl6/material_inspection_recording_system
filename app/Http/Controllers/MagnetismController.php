@@ -10,9 +10,9 @@ use App\Http\Requests\MagnetismBatchRequest;
 use App\Imports\MagnetismChecksheetImport;
 use App\Services\ActivityService;
 use App\Services\DuplicateRecordGuard;
+use App\Support\SpreadsheetImportSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class MagnetismController extends Controller
@@ -443,18 +443,20 @@ class MagnetismController extends Controller
     public function importPreview(Request $request)
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
+            'file' => SpreadsheetImportSecurity::rules(),
             'item_code' => ['required', 'string', 'max:50'],
             'item_name' => ['required', 'string', 'max:100'],
             'machine_no' => ['required', 'string', 'max:50'],
             'format' => ['nullable', 'string', 'in:HPI-PR03-01,HPI-PR05-03'],
         ]);
 
+        $tempPath = null;
+
         try {
             // Store file temporarily
             $file = $request->file('file');
-            $tempPath = $file->store('temp/magnetism-imports');
-            $fullPath = Storage::path($tempPath);
+            SpreadsheetImportSecurity::delete(session('magnetism_import_file'));
+            [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'magnetism');
 
             // Get format (null = auto-detect)
             $format = $request->input('format');
@@ -485,10 +487,13 @@ class MagnetismController extends Controller
                 'available_formats' => MagnetismChecksheetImport::getAvailableFormats(),
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            SpreadsheetImportSecurity::delete($tempPath);
+            $correlationId = SpreadsheetImportSecurity::reportFailure('magnetism.preview', $e);
+
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to process file: ' . $e->getMessage(),
+                'error' => SpreadsheetImportSecurity::browserError($correlationId),
             ], 500);
         }
     }
@@ -510,7 +515,17 @@ class MagnetismController extends Controller
         $machineNo = session('magnetism_import_machine_no');
         $detectedFormat = session('magnetism_import_format');
 
-        if (!$tempPath || !Storage::exists($tempPath)) {
+        $fullPath = SpreadsheetImportSecurity::resolve($tempPath);
+        if ($fullPath === null) {
+            SpreadsheetImportSecurity::delete($tempPath);
+            session()->forget([
+                'magnetism_import_file',
+                'magnetism_import_item_code',
+                'magnetism_import_item_name',
+                'magnetism_import_machine_no',
+                'magnetism_import_format',
+            ]);
+
             return response()->json([
                 'success' => false,
                 'error' => 'Import session expired. Please upload the file again.',
@@ -518,7 +533,6 @@ class MagnetismController extends Controller
         }
 
         try {
-            $fullPath = Storage::path($tempPath);
             $updateDuplicates = $request->boolean('update_duplicates', false);
             // Use format from request, or fall back to detected format from preview
             $format = $request->input('format') ?? $detectedFormat;
@@ -534,16 +548,6 @@ class MagnetismController extends Controller
                 $format
             );
 
-            // Clean up temp file
-            Storage::delete($tempPath);
-            session()->forget([
-                'magnetism_import_file',
-                'magnetism_import_item_code',
-                'magnetism_import_item_name',
-                'magnetism_import_machine_no',
-                'magnetism_import_format',
-            ]);
-
             // Calculate totals for message
             $totalImported = $results['batches_imported'] + $results['checkpoints_imported'];
             $totalUpdated = $results['batches_updated'] + $results['checkpoints_updated'];
@@ -554,7 +558,6 @@ class MagnetismController extends Controller
             if ($totalSkipped > 0) $message .= ", {$totalSkipped} skipped";
 
             ActivityService::logImport('magnetism', $totalImported + $totalUpdated, [
-                'item_code' => $itemCode,
                 'batches_imported' => $results['batches_imported'],
                 'batches_updated' => $results['batches_updated'],
                 'checkpoints_imported' => $results['checkpoints_imported'],
@@ -580,11 +583,22 @@ class MagnetismController extends Controller
                 'redirect_id' => $redirectId,
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            $correlationId = SpreadsheetImportSecurity::reportFailure('magnetism.execute', $e);
+
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to import: ' . $e->getMessage(),
+                'error' => SpreadsheetImportSecurity::browserError($correlationId),
             ], 500);
+        } finally {
+            SpreadsheetImportSecurity::delete($tempPath);
+            session()->forget([
+                'magnetism_import_file',
+                'magnetism_import_item_code',
+                'magnetism_import_item_name',
+                'magnetism_import_machine_no',
+                'magnetism_import_format',
+            ]);
         }
     }
 

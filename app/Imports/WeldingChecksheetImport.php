@@ -8,7 +8,7 @@ use App\Models\WeldingItemConfig;
 use App\Models\User;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
-use Illuminate\Support\Facades\Log;
+use App\Support\SpreadsheetImportSecurity;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
@@ -36,9 +36,12 @@ class WeldingChecksheetImport
     {
         try {
             $this->processWorkbook($filePath, $type, $itemConfig, $itemCode, $itemName, false, false);
-        } catch (\Exception $e) {
-            Log::error('Welding import preview failed', ['error' => $e->getMessage()]);
-            $this->previewResults['errors'][] = 'Failed to process file: ' . $e->getMessage();
+        } catch (\Throwable $e) {
+            $this->previewResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                'welding.importer.preview',
+                $e,
+                'The spreadsheet could not be previewed.'
+            );
         }
 
         return $this->previewResults;
@@ -48,9 +51,12 @@ class WeldingChecksheetImport
     {
         try {
             $this->processWorkbook($filePath, $type, $itemConfig, $itemCode, $itemName, true, $updateDuplicates);
-        } catch (\Exception $e) {
-            Log::error('Welding import execute failed', ['error' => $e->getMessage()]);
-            $this->executeResults['errors'][] = 'Failed to process file: ' . $e->getMessage();
+        } catch (\Throwable $e) {
+            $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                'welding.importer.execute',
+                $e,
+                'The spreadsheet could not be imported.'
+            );
         }
 
         return $this->executeResults;
@@ -101,14 +107,17 @@ class WeldingChecksheetImport
                 } else {
                     $this->handlePreviewRecord($record, $existing);
                 }
-            } catch (\Exception $e) {
-                $message = "Sheet '{$sheetName}' Row {$currentRow}: " . $e->getMessage();
+            } catch (\Throwable $e) {
+                $message = SpreadsheetImportSecurity::safeFailure(
+                    'welding.importer.row',
+                    $e,
+                    "Row {$currentRow} could not be processed."
+                );
                 if ($execute) {
                     $this->executeResults['errors'][] = $message;
                 } else {
                     $this->previewResults['errors'][] = $message;
                 }
-                Log::error('Welding import row failed', ['message' => $message]);
             }
 
             $currentRow += $recordSpan;

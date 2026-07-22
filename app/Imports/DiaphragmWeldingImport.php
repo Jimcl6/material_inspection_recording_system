@@ -4,7 +4,7 @@ namespace App\Imports;
 
 use App\Models\DiaphragmWeldingChecksheet;
 use App\Models\DiaphragmWeldingSample;
-use Illuminate\Support\Facades\Log;
+use App\Support\SpreadsheetImportSecurity;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
@@ -83,9 +83,12 @@ class DiaphragmWeldingImport
                 // Each record spans 10 rows
                 $currentRow += 10;
                 
-            } catch (\Exception $e) {
-                $this->results['errors'][] = "Row {$currentRow}: " . $e->getMessage();
-                Log::error("Import error at row {$currentRow}", ['error' => $e->getMessage()]);
+            } catch (\Throwable $e) {
+                $this->results['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                    'diaphragm-welding.importer.row',
+                    $e,
+                    "Row {$currentRow} could not be imported."
+                );
                 $currentRow += 10;
             }
         }
@@ -265,11 +268,6 @@ class DiaphragmWeldingImport
         try {
             $spreadsheet = IOFactory::load($filePath);
 
-            Log::info('Diaphragm Welding Import Preview - Excel file loaded', [
-                'total_sheets' => count($spreadsheet->getSheetNames()),
-                'sheet_names' => $spreadsheet->getSheetNames(),
-            ]);
-
             foreach ($spreadsheet->getSheetNames() as $sheetName) {
                 $lowerName = strtolower($sheetName);
                 if (str_contains($lowerName, 'master') || str_contains($lowerName, 'template') || str_contains($lowerName, 'item code')) {
@@ -282,13 +280,12 @@ class DiaphragmWeldingImport
 
             return $this->previewResults;
 
-        } catch (\Exception $e) {
-            Log::error('Diaphragm Welding Import Preview failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            $this->previewResults['errors'][] = 'Failed to process file: ' . $e->getMessage();
+        } catch (\Throwable $e) {
+            $this->previewResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                'diaphragm-welding.importer.preview',
+                $e,
+                'The spreadsheet could not be previewed.'
+            );
             return $this->previewResults;
         }
     }
@@ -303,11 +300,6 @@ class DiaphragmWeldingImport
         try {
             $spreadsheet = IOFactory::load($filePath);
 
-            Log::info('Diaphragm Welding Import Execute - Excel file loaded', [
-                'total_sheets' => count($spreadsheet->getSheetNames()),
-                'update_duplicates' => $updateDuplicates,
-            ]);
-
             foreach ($spreadsheet->getSheetNames() as $sheetName) {
                 $lowerName = strtolower($sheetName);
                 if (str_contains($lowerName, 'master') || str_contains($lowerName, 'template') || str_contains($lowerName, 'item code')) {
@@ -320,13 +312,12 @@ class DiaphragmWeldingImport
 
             return $this->executeResults;
 
-        } catch (\Exception $e) {
-            Log::error('Diaphragm Welding Import Execute failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            $this->executeResults['errors'][] = 'Failed to process file: ' . $e->getMessage();
+        } catch (\Throwable $e) {
+            $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                'diaphragm-welding.importer.execute',
+                $e,
+                'The spreadsheet could not be imported.'
+            );
             return $this->executeResults;
         }
     }
@@ -376,18 +367,15 @@ class DiaphragmWeldingImport
                 
                 $currentRow += 10;
                 
-            } catch (\Exception $e) {
-                $this->previewResults['errors'][] = "Sheet '{$sheetName}' Row {$currentRow}: " . $e->getMessage();
-                Log::error("Preview error at row {$currentRow}", ['error' => $e->getMessage()]);
+            } catch (\Throwable $e) {
+                $this->previewResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                    'diaphragm-welding.importer.preview-row',
+                    $e,
+                    "Row {$currentRow} could not be processed."
+                );
                 $currentRow += 10;
             }
         }
-
-        Log::info("Preview: Sheet '{$sheetName}' complete", [
-            'new_records' => count($this->previewResults['new_records']),
-            'duplicates' => count($this->previewResults['duplicate_records']),
-            'total_parsed' => $this->previewResults['total_parsed'],
-        ]);
     }
 
     /**
@@ -417,32 +405,26 @@ class DiaphragmWeldingImport
                         if ($updateDuplicates) {
                             $this->updateChecksheet($existing, $record);
                             $this->executeResults['updated']++;
-                            Log::info("Updated: {$record['production_date']} - {$record['lasermark_lot_number']} from '{$sheetName}'");
                         } else {
                             $this->executeResults['skipped']++;
                         }
                     } else {
                         $this->createChecksheet($record);
                         $this->executeResults['imported']++;
-                        Log::info("Imported: {$record['production_date']} - {$record['lasermark_lot_number']} from '{$sheetName}'");
                     }
                 }
                 
                 $currentRow += 10;
                 
-            } catch (\Exception $e) {
-                $this->executeResults['errors'][] = "Sheet '{$sheetName}' Row {$currentRow}: " . $e->getMessage();
-                Log::error("Execute error at row {$currentRow}", ['error' => $e->getMessage()]);
+            } catch (\Throwable $e) {
+                $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                    'diaphragm-welding.importer.execute-row',
+                    $e,
+                    "Row {$currentRow} could not be imported."
+                );
                 $currentRow += 10;
             }
         }
-
-        Log::info("Execute: Sheet '{$sheetName}' complete", [
-            'imported' => $this->executeResults['imported'],
-            'updated' => $this->executeResults['updated'],
-            'skipped' => $this->executeResults['skipped'],
-            'errors' => count($this->executeResults['errors']),
-        ]);
     }
 
     /**

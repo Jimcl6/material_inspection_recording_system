@@ -8,8 +8,8 @@ use App\Services\ActivityService;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use App\Services\DuplicateRecordGuard;
+use App\Support\SpreadsheetImportSecurity;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -337,14 +337,16 @@ class TempRecordController extends Controller
     public function importPreview(Request $request)
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
+            'file' => SpreadsheetImportSecurity::rules(),
             'equipment_type' => ['nullable', 'string'],
         ]);
 
+        $tempPath = null;
+
         try {
             $file = $request->file('file');
-            $tempPath = $file->store('temp');
-            $fullPath = storage_path('app/' . $tempPath);
+            SpreadsheetImportSecurity::delete(session('temp_record_import_file'));
+            [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'temperature');
 
             $equipmentType = $request->input('equipment_type');
 
@@ -359,15 +361,13 @@ class TempRecordController extends Controller
                 'preview' => $results,
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('Temp Record Import Preview failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+        } catch (\Throwable $e) {
+            SpreadsheetImportSecurity::delete($tempPath);
+            $correlationId = SpreadsheetImportSecurity::reportFailure('temperature.preview', $e);
 
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to process file: ' . $e->getMessage(),
+                'error' => SpreadsheetImportSecurity::browserError($correlationId),
             ], 500);
         }
     }
@@ -393,9 +393,10 @@ class TempRecordController extends Controller
             ], 400);
         }
 
-        $fullPath = storage_path('app/' . $tempPath);
+        $fullPath = SpreadsheetImportSecurity::resolve($tempPath);
 
-        if (!file_exists($fullPath)) {
+        if ($fullPath === null) {
+            SpreadsheetImportSecurity::delete($tempPath);
             session()->forget('temp_record_import_file');
             return response()->json([
                 'success' => false,
@@ -411,10 +412,6 @@ class TempRecordController extends Controller
 
             $import = new TempRecordImport();
             $results = $import->execute($fullPath, $equipmentType, $lineAssigned, $processAssigned, $updateDuplicates);
-
-            // Clean up temp file
-            @unlink($fullPath);
-            session()->forget('temp_record_import_file');
 
             $message = "Import completed: {$results['imported']} created";
             if ($results['updated'] > 0) $message .= ", {$results['updated']} updated";
@@ -435,16 +432,16 @@ class TempRecordController extends Controller
                 'message' => $message,
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('Temp Record Import Execute failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+        } catch (\Throwable $e) {
+            $correlationId = SpreadsheetImportSecurity::reportFailure('temperature.execute', $e);
 
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to import file: ' . $e->getMessage(),
+                'error' => SpreadsheetImportSecurity::browserError($correlationId),
             ], 500);
+        } finally {
+            SpreadsheetImportSecurity::delete($tempPath);
+            session()->forget('temp_record_import_file');
         }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\SpreadsheetImportSecurity;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,7 +16,7 @@ class ImportWeldingChecksheetRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
+            'file' => SpreadsheetImportSecurity::rules(),
             'checksheet_type_id' => [
                 'required',
                 Rule::exists('welding_checksheet_types', 'id')

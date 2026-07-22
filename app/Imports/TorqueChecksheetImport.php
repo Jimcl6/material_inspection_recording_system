@@ -5,8 +5,8 @@ namespace App\Imports;
 use App\Models\TorqueRecord;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
+use App\Support\SpreadsheetImportSecurity;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
@@ -45,13 +45,12 @@ class TorqueChecksheetImport
             }
 
             return $this->results;
-        } catch (\Exception $e) {
-            Log::error('Torque Checksheet Import Preview failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            $this->results['errors'][] = 'Failed to process file: '.$e->getMessage();
+        } catch (\Throwable $e) {
+            $this->results['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                'torque.importer.preview',
+                $e,
+                'The spreadsheet could not be previewed.'
+            );
 
             return $this->results;
         }
@@ -76,13 +75,12 @@ class TorqueChecksheetImport
             }
 
             return $this->executeResults;
-        } catch (\Exception $e) {
-            Log::error('Torque Checksheet Import Execute failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            $this->executeResults['errors'][] = 'Failed to process file: '.$e->getMessage();
+        } catch (\Throwable $e) {
+            $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                'torque.importer.execute',
+                $e,
+                'The spreadsheet could not be imported.'
+            );
 
             return $this->executeResults;
         }
@@ -98,7 +96,7 @@ class TorqueChecksheetImport
         $timeData = $this->parseTimeData($sheet, $dateColumns);
 
         if (empty($dateColumns)) {
-            $this->results['errors'][] = "Sheet '{$sheetName}': No date columns found";
+            $this->results['errors'][] = 'A worksheet does not contain the required date columns.';
 
             return;
         }
@@ -163,7 +161,7 @@ class TorqueChecksheetImport
         $timeData = $this->parseTimeData($sheet, $dateColumns);
 
         if (empty($dateColumns)) {
-            $this->executeResults['errors'][] = "Sheet '{$sheetName}': No date columns found";
+            $this->executeResults['errors'][] = 'A worksheet does not contain the required date columns.';
 
             return;
         }
@@ -214,8 +212,12 @@ class TorqueChecksheetImport
 
                             $this->executeResults['imported']++;
                         }
-                    } catch (\Exception $e) {
-                        $this->executeResults['errors'][] = "Row {$currentRow}: ".$e->getMessage();
+                    } catch (\Throwable $e) {
+                        $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                            'torque.importer.row',
+                            $e,
+                            "Row {$currentRow} could not be imported."
+                        );
                     }
                 }
             }

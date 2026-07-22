@@ -5,7 +5,7 @@ namespace App\Imports;
 use App\Models\MagnetismChecksheet;
 use App\Models\MagnetismBatch;
 use App\Models\MagnetismCheckpoint;
-use Illuminate\Support\Facades\Log;
+use App\Support\SpreadsheetImportSecurity;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -128,12 +128,6 @@ class MagnetismChecksheetImport
             $this->formatMapping = self::FORMAT_MAPPINGS[$this->format];
             $this->results['detected_format'] = $this->format;
 
-            Log::info('Magnetism Import Preview - Excel file loaded', [
-                'total_sheets' => $spreadsheet->getSheetCount(),
-                'sheet_names' => $spreadsheet->getSheetNames(),
-                'format' => $this->format,
-            ]);
-
             foreach ($spreadsheet->getSheetNames() as $sheetName) {
                 // Skip master/template sheets
                 $lowerName = strtolower($sheetName);
@@ -144,7 +138,6 @@ class MagnetismChecksheetImport
                 // Try to detect month/year from sheet name
                 $monthYear = $this->parseMonthYearFromSheetName($sheetName);
                 if (!$monthYear) {
-                    Log::info("Skipping sheet '{$sheetName}': Could not detect month/year");
                     continue;
                 }
 
@@ -154,13 +147,12 @@ class MagnetismChecksheetImport
 
             return $this->results;
 
-        } catch (\Exception $e) {
-            Log::error('Magnetism Import Preview failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            $this->results['errors'][] = 'Failed to process file: ' . $e->getMessage();
+        } catch (\Throwable $e) {
+            $this->results['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                'magnetism.importer.preview',
+                $e,
+                'The spreadsheet could not be previewed.'
+            );
             return $this->results;
         }
     }
@@ -188,12 +180,6 @@ class MagnetismChecksheetImport
             $this->format = $this->resolveFormat($spreadsheet, $format);
             $this->formatMapping = self::FORMAT_MAPPINGS[$this->format];
 
-            Log::info('Magnetism Import Execute - Excel file loaded', [
-                'total_sheets' => $spreadsheet->getSheetCount(),
-                'update_duplicates' => $updateDuplicates,
-                'format' => $this->format,
-            ]);
-
             foreach ($spreadsheet->getSheetNames() as $sheetName) {
                 // Skip master/template sheets
                 $lowerName = strtolower($sheetName);
@@ -213,13 +199,12 @@ class MagnetismChecksheetImport
 
             return $this->executeResults;
 
-        } catch (\Exception $e) {
-            Log::error('Magnetism Import Execute failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            $this->executeResults['errors'][] = 'Failed to process file: ' . $e->getMessage();
+        } catch (\Throwable $e) {
+            $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                'magnetism.importer.execute',
+                $e,
+                'The spreadsheet could not be imported.'
+            );
             return $this->executeResults;
         }
     }
@@ -264,11 +249,6 @@ class MagnetismChecksheetImport
 
         // Auto-detect format from spreadsheet structure
         $detectedFormat = $this->detectFormat($spreadsheet);
-
-        Log::info('Magnetism Import - Format resolved', [
-            'provided' => $format,
-            'detected' => $detectedFormat,
-        ]);
 
         return $detectedFormat;
     }
@@ -370,7 +350,7 @@ class MagnetismChecksheetImport
         // Detect column mapping
         $columnMap = $this->detectColumnMapping($sheet);
         if (empty($columnMap)) {
-            $this->results['errors'][] = "Sheet '{$sheetName}': Could not detect column mapping";
+            $this->results['errors'][] = 'A worksheet does not match a supported magnetism format.';
             return;
         }
 
@@ -396,12 +376,6 @@ class MagnetismChecksheetImport
             $this->parseCheckpointsPreviewFromRows($sheet, $rows, $columnMap, $checksheetId, $month, $year, $productionDate);
         }
 
-        Log::info("Preview: Sheet '{$sheetName}' complete", [
-            'month' => $month,
-            'year' => $year,
-            'batches' => $this->results['total_batches_parsed'],
-            'checkpoints' => $this->results['total_checkpoints_parsed'],
-        ]);
     }
 
     /**
@@ -440,8 +414,12 @@ class MagnetismChecksheetImport
                     'month' => $month,
                     'year' => $year,
                 ];
-            } catch (\Exception $e) {
-                $this->executeResults['errors'][] = "Sheet '{$sheetName}': Failed to create checksheet - " . $e->getMessage();
+            } catch (\Throwable $e) {
+                $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                    'magnetism.importer.checksheet',
+                    $e,
+                    'A checksheet could not be created.'
+                );
                 return;
             }
         }
@@ -449,7 +427,7 @@ class MagnetismChecksheetImport
         // Detect column mapping
         $columnMap = $this->detectColumnMapping($sheet);
         if (empty($columnMap)) {
-            $this->executeResults['errors'][] = "Sheet '{$sheetName}': Could not detect column mapping";
+            $this->executeResults['errors'][] = 'A worksheet does not match a supported magnetism format.';
             return;
         }
 
@@ -475,11 +453,6 @@ class MagnetismChecksheetImport
             $this->importCheckpointsFromRows($sheet, $rows, $columnMap, $checksheet, $updateDuplicates, $productionDate);
         }
 
-        Log::info("Execute: Sheet '{$sheetName}' complete", [
-            'checksheet_id' => $checksheet->id,
-            'batches_imported' => $this->executeResults['batches_imported'],
-            'checkpoints_imported' => $this->executeResults['checkpoints_imported'],
-        ]);
     }
 
     /**
@@ -750,8 +723,12 @@ class MagnetismChecksheetImport
                     ]);
                     $this->executeResults['batches_imported']++;
                 }
-            } catch (\Exception $e) {
-                $this->executeResults['errors'][] = "Batch row {$row}: " . $e->getMessage();
+            } catch (\Throwable $e) {
+                $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                    'magnetism.importer.batch',
+                    $e,
+                    "Batch row {$row} could not be imported."
+                );
             }
         }
     }
@@ -802,8 +779,12 @@ class MagnetismChecksheetImport
                     ]));
                     $this->executeResults['checkpoints_imported']++;
                 }
-            } catch (\Exception $e) {
-                $this->executeResults['errors'][] = "Checkpoint {$checkpointNum} for {$productionDate}: " . $e->getMessage();
+            } catch (\Throwable $e) {
+                $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                    'magnetism.importer.checkpoint',
+                    $e,
+                    'A checkpoint could not be imported.'
+                );
             }
         }
     }

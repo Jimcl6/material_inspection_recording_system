@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Support\SpreadsheetImportSecurity;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Contracts\Validation\ValidationRule;
 
 class ImportAnnealingCheckRequest extends FormRequest
 {
@@ -24,12 +24,7 @@ class ImportAnnealingCheckRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => [
-                'required',
-                'file',
-                'mimes:xlsx,xls,csv',
-                'max:10240', // 10MB max
-            ],
+            'file' => SpreadsheetImportSecurity::rules(allowCsv: true),
             'overwrite' => 'sometimes|boolean',
         ];
     }

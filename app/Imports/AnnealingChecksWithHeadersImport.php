@@ -4,8 +4,8 @@ namespace App\Imports;
 
 use App\Models\AnnealingCheck;
 use App\Models\User;
+use App\Support\SpreadsheetImportSecurity;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
@@ -43,18 +43,12 @@ class AnnealingChecksWithHeadersImport
         $reader = IOFactory::createReaderForFile($filePath);
         $spreadsheet = $reader->load($filePath);
 
-        Log::info('Excel file loaded', [
-            'total_sheets' => $spreadsheet->getSheetCount(),
-            'sheet_names' => $spreadsheet->getSheetNames(),
-        ]);
-
         foreach ($spreadsheet->getSheetNames() as $index => $sheetName) {
             $sheet = $spreadsheet->getSheet($index);
             $highestRow = $sheet->getHighestRow();
 
             // Skip sheets with very few rows (no data)
             if ($highestRow < 10) {
-                Log::info("Skipping sheet '{$sheetName}': only {$highestRow} rows");
                 continue;
             }
 
@@ -62,14 +56,8 @@ class AnnealingChecksWithHeadersImport
             $columnMap = $this->detectColumnMapping($sheet);
 
             if (empty($columnMap) || !isset($columnMap['item_code'])) {
-                Log::info("Skipping sheet '{$sheetName}': could not detect column mapping");
                 continue;
             }
-
-            Log::info("Processing sheet '{$sheetName}'", [
-                'highest_row' => $highestRow,
-                'column_map' => $columnMap,
-            ]);
 
             $this->processSheet($sheet, $sheetName, $highestRow, $columnMap);
         }
@@ -170,24 +158,19 @@ class AnnealingChecksWithHeadersImport
 
             try {
                 $data = $this->extractRowData($sheet, $rowNum, $columnMap, $sheetName);
-                $annealingCheck = AnnealingCheck::create($data);
+                AnnealingCheck::create($data);
                 $sheetResults['imported']++;
-
-                Log::info("Imported: {$annealingCheck->item_code} from '{$sheetName}' row {$rowNum}");
-
-            } catch (\Exception $e) {
-                $sheetResults['errors'][] = "Row {$rowNum}: " . $e->getMessage();
-                Log::error("Import error on '{$sheetName}' row {$rowNum}: " . $e->getMessage());
+            } catch (\Throwable $e) {
+                $sheetResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                    'annealing.importer.row',
+                    $e,
+                    "Row {$rowNum} could not be imported."
+                );
             }
         }
 
         $this->importResults[] = $sheetResults;
 
-        Log::info("Sheet '{$sheetName}' complete", [
-            'imported' => $sheetResults['imported'],
-            'skipped' => $sheetResults['skipped'],
-            'errors' => count($sheetResults['errors']),
-        ]);
     }
 
     /**
@@ -352,18 +335,12 @@ class AnnealingChecksWithHeadersImport
             $reader = IOFactory::createReaderForFile($filePath);
             $spreadsheet = $reader->load($filePath);
 
-            Log::info('Annealing Import Preview - Excel file loaded', [
-                'total_sheets' => $spreadsheet->getSheetCount(),
-                'sheet_names' => $spreadsheet->getSheetNames(),
-            ]);
-
             foreach ($spreadsheet->getSheetNames() as $index => $sheetName) {
                 $sheet = $spreadsheet->getSheet($index);
                 $highestRow = $sheet->getHighestRow();
 
                 // Skip sheets with very few rows (no data)
                 if ($highestRow < 10) {
-                    Log::info("Preview: Skipping sheet '{$sheetName}': only {$highestRow} rows");
                     continue;
                 }
 
@@ -371,27 +348,20 @@ class AnnealingChecksWithHeadersImport
                 $columnMap = $this->detectColumnMapping($sheet);
 
                 if (empty($columnMap) || !isset($columnMap['item_code'])) {
-                    Log::info("Preview: Skipping sheet '{$sheetName}': could not detect column mapping");
                     continue;
                 }
-
-                Log::info("Preview: Processing sheet '{$sheetName}'", [
-                    'highest_row' => $highestRow,
-                    'column_map' => $columnMap,
-                ]);
 
                 $this->processSheetPreview($sheet, $sheetName, $highestRow, $columnMap);
             }
 
             return $this->previewResults;
 
-        } catch (\Exception $e) {
-            Log::error('Annealing Import Preview failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            $this->previewResults['errors'][] = 'Failed to process file: ' . $e->getMessage();
+        } catch (\Throwable $e) {
+            $this->previewResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                'annealing.importer.preview',
+                $e,
+                'The spreadsheet could not be previewed.'
+            );
             return $this->previewResults;
         }
     }
@@ -404,11 +374,6 @@ class AnnealingChecksWithHeadersImport
         try {
             $reader = IOFactory::createReaderForFile($filePath);
             $spreadsheet = $reader->load($filePath);
-
-            Log::info('Annealing Import Execute - Excel file loaded', [
-                'total_sheets' => $spreadsheet->getSheetCount(),
-                'update_duplicates' => $updateDuplicates,
-            ]);
 
             foreach ($spreadsheet->getSheetNames() as $index => $sheetName) {
                 $sheet = $spreadsheet->getSheet($index);
@@ -431,13 +396,12 @@ class AnnealingChecksWithHeadersImport
 
             return $this->executeResults;
 
-        } catch (\Exception $e) {
-            Log::error('Annealing Import Execute failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            $this->executeResults['errors'][] = 'Failed to process file: ' . $e->getMessage();
+        } catch (\Throwable $e) {
+            $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                'annealing.importer.execute',
+                $e,
+                'The spreadsheet could not be imported.'
+            );
             return $this->executeResults;
         }
     }
@@ -489,17 +453,14 @@ class AnnealingChecksWithHeadersImport
                     $this->previewResults['new_records'][] = $previewRecord;
                 }
 
-            } catch (\Exception $e) {
-                $this->previewResults['errors'][] = "Sheet '{$sheetName}' Row {$rowNum}: " . $e->getMessage();
-                Log::error("Preview error on '{$sheetName}' row {$rowNum}: " . $e->getMessage());
+            } catch (\Throwable $e) {
+                $this->previewResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                    'annealing.importer.preview-row',
+                    $e,
+                    "Row {$rowNum} could not be processed."
+                );
             }
         }
-
-        Log::info("Preview: Sheet '{$sheetName}' complete", [
-            'new_records' => count($this->previewResults['new_records']),
-            'duplicates' => count($this->previewResults['duplicate_records']),
-            'total_parsed' => $this->previewResults['total_parsed'],
-        ]);
     }
 
     /**
@@ -532,28 +493,21 @@ class AnnealingChecksWithHeadersImport
                     if ($updateDuplicates) {
                         $existing->update($data);
                         $this->executeResults['updated']++;
-                        Log::info("Updated: {$data['item_code']} from '{$sheetName}' row {$rowNum}");
                     } else {
                         $this->executeResults['skipped']++;
                     }
                 } else {
                     AnnealingCheck::create($data);
                     $this->executeResults['imported']++;
-                    Log::info("Imported: {$data['item_code']} from '{$sheetName}' row {$rowNum}");
                 }
-
-            } catch (\Exception $e) {
-                $this->executeResults['errors'][] = "Sheet '{$sheetName}' Row {$rowNum}: " . $e->getMessage();
-                Log::error("Execute error on '{$sheetName}' row {$rowNum}: " . $e->getMessage());
+            } catch (\Throwable $e) {
+                $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
+                    'annealing.importer.execute-row',
+                    $e,
+                    "Row {$rowNum} could not be imported."
+                );
             }
         }
-
-        Log::info("Execute: Sheet '{$sheetName}' complete", [
-            'imported' => $this->executeResults['imported'],
-            'updated' => $this->executeResults['updated'],
-            'skipped' => $this->executeResults['skipped'],
-            'errors' => count($this->executeResults['errors']),
-        ]);
     }
 
     /**

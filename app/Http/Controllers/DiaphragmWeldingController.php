@@ -9,9 +9,9 @@ use App\Http\Requests\StoreDiaphragmWeldingRequest;
 use App\Http\Requests\UpdateDiaphragmWeldingRequest;
 use App\Http\Requests\ImportDiaphragmWeldingRequest;
 use App\Services\ActivityService;
+use App\Support\SpreadsheetImportSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class DiaphragmWeldingController extends Controller
@@ -231,6 +231,7 @@ class DiaphragmWeldingController extends Controller
     {
         $file = $request->file('file');
         $overwrite = $request->boolean('overwrite', false);
+        $tempPath = null;
 
         if (!$file) {
             return Inertia::render('DiaphragmWelding/Import')
@@ -244,12 +245,9 @@ class DiaphragmWeldingController extends Controller
 
             $import = new \App\Imports\DiaphragmWeldingImport();
             
-            $tempPath = $file->store('temp');
-            $fullPath = storage_path('app/' . $tempPath);
+            [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'diaphragm-welding');
             
             $import->import($fullPath);
-            
-            @unlink($fullPath);
             
             $results = $import->getResults();
 
@@ -266,14 +264,13 @@ class DiaphragmWeldingController extends Controller
                 'success' => $message
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('Diaphragm Welding Import failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+        } catch (\Throwable $e) {
+            $correlationId = SpreadsheetImportSecurity::reportFailure('diaphragm-welding.direct', $e);
 
             return Inertia::render('DiaphragmWelding/Import')
-                ->with('error', 'Error importing file: ' . $e->getMessage());
+                ->with('error', SpreadsheetImportSecurity::browserError($correlationId));
+        } finally {
+            SpreadsheetImportSecurity::delete($tempPath);
         }
     }
 
@@ -294,14 +291,15 @@ class DiaphragmWeldingController extends Controller
     public function importPreview(Request $request)
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
+            'file' => SpreadsheetImportSecurity::rules(),
         ]);
 
         $file = $request->file('file');
+        $tempPath = null;
 
         try {
-            $tempPath = $file->store('temp');
-            $fullPath = storage_path('app/' . $tempPath);
+            SpreadsheetImportSecurity::delete(session('diaphragm_welding_import_file'));
+            [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'diaphragm-welding');
 
             $import = new \App\Imports\DiaphragmWeldingImport();
             $results = $import->preview($fullPath);
@@ -314,15 +312,13 @@ class DiaphragmWeldingController extends Controller
                 'preview' => $results,
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('Diaphragm Welding Import Preview failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+        } catch (\Throwable $e) {
+            SpreadsheetImportSecurity::delete($tempPath);
+            $correlationId = SpreadsheetImportSecurity::reportFailure('diaphragm-welding.preview', $e);
 
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to preview file: ' . $e->getMessage(),
+                'error' => SpreadsheetImportSecurity::browserError($correlationId),
             ], 500);
         }
     }
@@ -345,9 +341,10 @@ class DiaphragmWeldingController extends Controller
             ], 400);
         }
 
-        $fullPath = storage_path('app/' . $tempPath);
+        $fullPath = SpreadsheetImportSecurity::resolve($tempPath);
 
-        if (!file_exists($fullPath)) {
+        if ($fullPath === null) {
+            SpreadsheetImportSecurity::delete($tempPath);
             session()->forget('diaphragm_welding_import_file');
             return response()->json([
                 'success' => false,
@@ -361,10 +358,6 @@ class DiaphragmWeldingController extends Controller
             $import = new \App\Imports\DiaphragmWeldingImport();
             $results = $import->execute($fullPath, $updateDuplicates);
 
-            // Clean up temp file
-            @unlink($fullPath);
-            session()->forget('diaphragm_welding_import_file');
-
             $message = "Import completed: {$results['imported']} created";
             if ($results['updated'] > 0) $message .= ", {$results['updated']} updated";
             if ($results['skipped'] > 0) $message .= ", {$results['skipped']} skipped";
@@ -376,16 +369,16 @@ class DiaphragmWeldingController extends Controller
                 'message' => $message,
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('Diaphragm Welding Import Execute failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+        } catch (\Throwable $e) {
+            $correlationId = SpreadsheetImportSecurity::reportFailure('diaphragm-welding.execute', $e);
 
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to import file: ' . $e->getMessage(),
+                'error' => SpreadsheetImportSecurity::browserError($correlationId),
             ], 500);
+        } finally {
+            SpreadsheetImportSecurity::delete($tempPath);
+            session()->forget('diaphragm_welding_import_file');
         }
     }
 
