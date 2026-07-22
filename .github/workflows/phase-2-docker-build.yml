@@ -1,0 +1,30 @@
+name: Phase 2 Docker Build
+
+on:
+  push:
+    branches:
+      - hardening/phase-2-dependency-patches
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase-2-docker-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build application image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build application target
+        run: docker build --pull --target app --tag mirs:phase-2-verification .
+
+      - name: Verify image exists
+        run: docker image inspect mirs:phase-2-verification --format '{{.Id}}'
