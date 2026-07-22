@@ -1,0 +1,23 @@
+# Exact Git paths approved for Phase 1 removal from every branch and tag.
+.env.before-mysql97-20260702-164057
+backups/sqlite-switch-20260702-160330/.env.before-sqlite
+database/fc_1_data_db_testing (1).sql
+database/productionbatches (2).sql
+docs/redkite-laravel-subdomain-upload-guide.pdf
+docs/redkite-subdomain-and-git-upload-guide.pdf
+resources/js/Layouts/AppLayout.backup.vue
+setup_admin.php
+setup_admin.sql
+check_users.php
+clear_log.php
+temp_read.php
+_temp_read.php
+outputs
+database/CSB29043P1-P NEW.xlsx
+database/DFB660023P..xlsx
+dfb660024p_full.txt
+dfb660024p_structure.txt
+excel_structure.txt
+excel_structure2.txt
+item_codes.txt
+master_copy.txt
