@@ -3,21 +3,13 @@
 declare(strict_types=1);
 
 $allowedAdvisories = [
-    'PKSA-2n2k-66v2-bwg3',
-    'PKSA-28rh-rzzn-djk4',
-    'PKSA-365x-2zjk-pt47',
     'PKSA-3r5d-mb8f-1qw9',
     'PKSA-8qx3-n5y5-vvnd',
     'PKSA-b14r-zh1d-vdrc',
-    'PKSA-b35n-565h-rs4q',
-    'PKSA-bf7t-jnpz-492k',
     'PKSA-ft77-7h5f-p3r6',
     'PKSA-m5cs-t1y6-qpcs',
     'PKSA-mdq4-51ck-6kdq',
     'PKSA-v5yj-8nmz-sk2q',
-    'PKSA-wtxr-p26d-nn42',
-    'PKSA-wws7-mr54-jsny',
-    'PKSA-yc7t-91v9-99xs',
 ];
 
 $path = $argv[1] ?? '';

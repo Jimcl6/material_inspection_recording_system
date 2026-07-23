@@ -3,7 +3,7 @@
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "node",
-    "strict": false,
+    "strict": true,
     "jsx": "preserve",
     "sourceMap": true,
     "resolveJsonModule": true,
@@ -19,7 +19,7 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "noImplicitAny": false,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "typeRoots": [
       "./node_modules/@types",
       "./resources/js/types"
@@ -41,6 +41,6 @@
   ],
   "vueCompilerOptions": {
     "target": 3,
-    "strictTemplates": false
+    "strictTemplates": true
   }
 }
