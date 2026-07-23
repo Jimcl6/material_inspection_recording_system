@@ -222,9 +222,7 @@ const syncTemplateFields = (resetSamples = false) => {
         return;
     }
 
-    const existing = new Map<string, ChecksheetSample>(
-        form.samples.map((sample: ChecksheetSample) => [sample.check_item_key, sample])
-    );
+    const existing = new Map(form.samples.map(sample => [sample.check_item_key, sample]));
     form.samples = type.check_items.map((item, index) => {
         const sample = existing.get(item.key);
         return {

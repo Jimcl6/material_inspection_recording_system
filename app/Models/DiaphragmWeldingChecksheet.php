@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DiaphragmWeldingChecksheet extends Model
 {
@@ -117,7 +117,7 @@ class DiaphragmWeldingChecksheet extends Model
     public function hasAppearanceFail(): bool
     {
         $appearanceSample = $this->getSampleByType('appearance');
-        if (! $appearanceSample) {
+        if (!$appearanceSample) {
             return false;
         }
 

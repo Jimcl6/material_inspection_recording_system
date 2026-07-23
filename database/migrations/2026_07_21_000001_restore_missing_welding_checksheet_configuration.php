@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (! Schema::hasTable('welding_checksheet_types') || ! Schema::hasTable('welding_item_configs')) {
+        if (!Schema::hasTable('welding_checksheet_types') || !Schema::hasTable('welding_item_configs')) {
             return;
         }
 
@@ -78,7 +78,7 @@ return new class extends Migration
 
     private function insertDiaphragmItemConfigs(int $typeId): void
     {
-        if (! Schema::hasTable('diaphragm_item_codes')) {
+        if (!Schema::hasTable('diaphragm_item_codes')) {
             return;
         }
 

@@ -3,36 +3,35 @@ import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { route } from 'ziggy-js';
 
-interface UserOption {
-    id: number;
-    name: string;
-}
-
-const props = withDefaults(defineProps<{
-    annealingCheck: Record<string, any>;
-    users?: UserOption[];
-}>(), {
-    users: () => []
+const props = defineProps({
+    annealingCheck: {
+        type: Object,
+        required: true
+    },
+    users: {
+        type: Array,
+        default: () => []
+    }
 });
 
 // Format date to YYYY-MM-DD for HTML date input
-const formatDateForInput = (dateString: string | null | undefined) => {
+const formatDateForInput = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toISOString().split('T')[0];
 };
 
 // Helper to get user name by ID or return the value if it's already a name
-const getUserName = (value: string | number | null | undefined) => {
+const getUserName = (value) => {
     if (!value) return '';
     
     // If it's already a string (not a number), return as-is
-    if (typeof value === 'string' && Number.isNaN(Number(value))) {
+    if (typeof value === 'string' && isNaN(value)) {
         return value;
     }
     
     // If it's a number ID, find the user name
-    const userId = Number.parseInt(String(value), 10);
+    const userId = parseInt(value);
     if (!isNaN(userId)) {
         const user = props.users.find(u => u.id === userId);
         return user ? user.name : value;

@@ -19,7 +19,7 @@ class ApprovalNotificationsChanged implements ShouldBroadcastNow
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('approval-notifications.'.$this->userId);
+        return new PrivateChannel('approval-notifications.' . $this->userId);
     }
 
     public function broadcastAs(): string

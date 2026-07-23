@@ -2,20 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * @property string $status
- */
 class TempRecord extends Model
 {
-    use HasFactory;
-
     protected $table = 'temp_records';
-
     protected $primaryKey = 'id';
-
     public $timestamps = false;
 
     protected $fillable = [

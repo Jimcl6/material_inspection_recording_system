@@ -1,8 +1,7 @@
 import { usePage } from '@inertiajs/vue3';
-import type { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { computed } from 'vue';
 
-interface PageProps extends InertiaPageProps {
+interface PageProps {
     auth: {
         user: {
             id: number;

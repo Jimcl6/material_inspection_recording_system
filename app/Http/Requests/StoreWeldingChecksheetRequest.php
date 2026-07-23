@@ -63,7 +63,7 @@ class StoreWeldingChecksheetRequest extends FormRequest
     {
         $validator->after(function (Validator $validator) {
             $type = WeldingChecksheetType::query()->active()->find($this->input('checksheet_type_id'));
-            if (! $type) {
+            if (!$type) {
                 return;
             }
 
@@ -72,7 +72,6 @@ class StoreWeldingChecksheetRequest extends FormRequest
                 $itemConfig = WeldingItemConfig::query()->active()->find($this->input('item_config_id'));
                 if ($itemConfig && (int) $itemConfig->checksheet_type_id !== (int) $type->id) {
                     $validator->errors()->add('item_config_id', 'Selected item code does not belong to the selected checksheet type.');
-
                     return;
                 }
             }
@@ -97,7 +96,7 @@ class StoreWeldingChecksheetRequest extends FormRequest
 
         foreach ($configuredItems as $item) {
             $key = $item['key'] ?? null;
-            if ($key && ! $samples->has($key)) {
+            if ($key && !$samples->has($key)) {
                 $validator->errors()->add('samples', "Missing sample row for {$item['label']}.");
             }
         }
@@ -136,12 +135,12 @@ class StoreWeldingChecksheetRequest extends FormRequest
             foreach (['measurement_2', 'measurement_3', 'measurement_4', 'measurement_5'] as $key) {
                 $values = $samples->get($key)['sample_values'] ?? [];
                 for ($i = 0; $i < 5; $i++) {
-                    if (! $this->isNumericLike($center[$i] ?? null) || ! $this->isNumericLike($values[$i] ?? null)) {
+                    if (!$this->isNumericLike($center[$i] ?? null) || !$this->isNumericLike($values[$i] ?? null)) {
                         continue;
                     }
                     $diff = abs((float) $values[$i] - (float) $center[$i]) / 2;
                     if ($diff > $maxDiff) {
-                        $validator->errors()->add('samples', "Circumference difference for {$key} sample ".($i + 1)." must be <= {$maxDiff}.");
+                        $validator->errors()->add('samples', "Circumference difference for {$key} sample " . ($i + 1) . " must be <= {$maxDiff}.");
                     }
                 }
             }
@@ -178,18 +177,18 @@ class StoreWeldingChecksheetRequest extends FormRequest
                 continue;
             }
 
-            $validator->errors()->add('samples', 'Appearance sample '.($index + 1).' must be P or /.');
+            $validator->errors()->add('samples', 'Appearance sample ' . ($index + 1) . " must be P or /.");
         }
     }
 
     protected function validateNumericMinimum(Validator $validator, $samples, string $key, float $min, string $message): void
     {
         foreach (($samples->get($key)['sample_values'] ?? []) as $index => $value) {
-            if (! $this->isNumericLike($value)) {
+            if (!$this->isNumericLike($value)) {
                 continue;
             }
             if ((float) $value < $min) {
-                $validator->errors()->add('samples', $message.' Sample '.($index + 1)." got {$value}.");
+                $validator->errors()->add('samples', $message . ' Sample ' . ($index + 1) . " got {$value}.");
             }
         }
     }
@@ -197,12 +196,12 @@ class StoreWeldingChecksheetRequest extends FormRequest
     protected function validateNumericRange(Validator $validator, $samples, string $key, float $min, float $max, string $message): void
     {
         foreach (($samples->get($key)['sample_values'] ?? []) as $index => $value) {
-            if (! $this->isNumericLike($value)) {
+            if (!$this->isNumericLike($value)) {
                 continue;
             }
             $num = (float) $value;
             if ($num < $min || $num > $max) {
-                $validator->errors()->add('samples', $message.' Sample '.($index + 1)." got {$value}.");
+                $validator->errors()->add('samples', $message . ' Sample ' . ($index + 1) . " got {$value}.");
             }
         }
     }
@@ -215,7 +214,7 @@ class StoreWeldingChecksheetRequest extends FormRequest
                 continue;
             }
 
-            $validator->errors()->add('samples', $message.' Sample '.($index + 1)." got {$value}.");
+            $validator->errors()->add('samples', $message . ' Sample ' . ($index + 1) . " got {$value}.");
         }
     }
 

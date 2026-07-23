@@ -2,24 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AnnealingCheck;
-use App\Services\ActivityService;
 use App\Services\ApprovalWorkflowService;
-use Illuminate\Support\Facades\Auth;
+use App\Services\ActivityService;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
+use App\Models\AnnealingCheck;
 
 class DashboardController extends Controller
 {
     public function index(ApprovalWorkflowService $approvalWorkflowService): \Inertia\Response
     {
         $user = Auth::user();
-
+        
         // Get actual stats
         $totalInspections = AnnealingCheck::count();
         $passed = AnnealingCheck::where('status', 'approved')->count();
         $failed = AnnealingCheck::where('status', 'rejected')->count();
         $pending = AnnealingCheck::where('status', 'pending')->count();
-
+        
         // Calculate percentage changes compared to last month
         $lastMonth = now()->subMonth();
         $lastMonthTotal = AnnealingCheck::where('created_at', '<', $lastMonth)->count();
@@ -28,7 +28,7 @@ class DashboardController extends Controller
 
         $approvalModules = $approvalWorkflowService->modulesForUser($user);
         $pendingApprovalsCount = $approvalWorkflowService->totalPending($approvalModules);
-
+        
         return Inertia::render('Dashboard', [
             'stats' => [
                 ['name' => 'Total Inspections', 'value' => number_format($totalInspections), 'change' => $totalChange >= 0 ? "+{$totalChange}%" : "{$totalChange}%", 'changeType' => $totalChange >= 0 ? 'increase' : 'decrease'],

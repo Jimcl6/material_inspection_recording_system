@@ -13,40 +13,40 @@ return new class extends Migration
     {
         Schema::table('activities', function (Blueprint $table) {
             // Check and add columns if they don't exist
-            if (! Schema::hasColumn('activities', 'user_id')) {
+            if (!Schema::hasColumn('activities', 'user_id')) {
                 $table->unsignedBigInteger('user_id')->nullable()->after('id');
                 $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
             }
-
-            if (! Schema::hasColumn('activities', 'type')) {
+            
+            if (!Schema::hasColumn('activities', 'type')) {
                 $table->string('type', 50)->after('user_id');
             }
-
-            if (! Schema::hasColumn('activities', 'module')) {
+            
+            if (!Schema::hasColumn('activities', 'module')) {
                 $table->string('module', 50)->nullable()->after('type');
             }
-
-            if (! Schema::hasColumn('activities', 'subject_type')) {
+            
+            if (!Schema::hasColumn('activities', 'subject_type')) {
                 $table->string('subject_type')->nullable()->after('module');
             }
-
-            if (! Schema::hasColumn('activities', 'subject_id')) {
+            
+            if (!Schema::hasColumn('activities', 'subject_id')) {
                 $table->unsignedBigInteger('subject_id')->nullable()->after('subject_type');
             }
-
-            if (! Schema::hasColumn('activities', 'description')) {
+            
+            if (!Schema::hasColumn('activities', 'description')) {
                 $table->text('description')->nullable()->after('subject_id');
             }
-
-            if (! Schema::hasColumn('activities', 'properties')) {
+            
+            if (!Schema::hasColumn('activities', 'properties')) {
                 $table->json('properties')->nullable()->after('description');
             }
-
-            if (! Schema::hasColumn('activities', 'ip_address')) {
+            
+            if (!Schema::hasColumn('activities', 'ip_address')) {
                 $table->string('ip_address', 45)->nullable()->after('properties');
             }
-
-            if (! Schema::hasColumn('activities', 'user_agent')) {
+            
+            if (!Schema::hasColumn('activities', 'user_agent')) {
                 $table->string('user_agent', 500)->nullable()->after('ip_address');
             }
         });
@@ -56,19 +56,19 @@ return new class extends Migration
         $indexes = collect($sm->listTableIndexes('activities'))->keys()->toArray();
 
         Schema::table('activities', function (Blueprint $table) use ($indexes) {
-            if (! in_array('activities_user_id_index', $indexes)) {
+            if (!in_array('activities_user_id_index', $indexes)) {
                 $table->index('user_id', 'activities_user_id_index');
             }
-            if (! in_array('activities_type_index', $indexes)) {
+            if (!in_array('activities_type_index', $indexes)) {
                 $table->index('type', 'activities_type_index');
             }
-            if (! in_array('activities_module_index', $indexes)) {
+            if (!in_array('activities_module_index', $indexes)) {
                 $table->index('module', 'activities_module_index');
             }
-            if (! in_array('activities_subject_index', $indexes)) {
+            if (!in_array('activities_subject_index', $indexes)) {
                 $table->index(['subject_type', 'subject_id'], 'activities_subject_index');
             }
-            if (! in_array('activities_created_at_index', $indexes)) {
+            if (!in_array('activities_created_at_index', $indexes)) {
                 $table->index('created_at', 'activities_created_at_index');
             }
         });

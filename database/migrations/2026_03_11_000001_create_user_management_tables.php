@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-
+            
             $table->index('code');
         });
 
@@ -30,7 +30,7 @@ return new class extends Migration
             $table->unsignedBigInteger('department_id')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-
+            
             $table->foreign('department_id')->references('id')->on('departments')->onDelete('set null');
             $table->index('code');
             $table->index('department_id');
@@ -47,7 +47,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamp('last_scanned_at')->nullable();
             $table->timestamps();
-
+            
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->index('employee_id');
             $table->index('employment_status');
@@ -61,7 +61,7 @@ return new class extends Migration
             $table->string('module', 50); // Module name (e.g., 'annealing', 'material')
             $table->string('action', 50); // Action (e.g., 'create', 'read', 'update', 'delete')
             $table->timestamps();
-
+            
             $table->index(['module', 'action']);
         });
 
@@ -70,7 +70,7 @@ return new class extends Migration
             $table->unsignedBigInteger('role_id');
             $table->unsignedBigInteger('permission_id');
             $table->timestamps();
-
+            
             $table->foreign('role_id')->references('id')->on('roles')->onDelete('cascade');
             $table->foreign('permission_id')->references('id')->on('user_permissions')->onDelete('cascade');
             $table->unique(['role_id', 'permission_id']);
@@ -85,7 +85,7 @@ return new class extends Migration
             $table->enum('status', ['active', 'inactive', 'suspended'])->default('active')->after('contact_number');
             $table->timestamp('last_login_at')->nullable()->after('updated_at');
             $table->string('last_login_ip', 45)->nullable()->after('last_login_at');
-
+            
             $table->foreign('department_id')->references('id')->on('departments')->onDelete('set null');
             $table->foreign('position_id')->references('id')->on('positions')->onDelete('set null');
             $table->index('employee_id');
@@ -103,7 +103,7 @@ return new class extends Migration
             $table->timestamp('logout_at')->nullable();
             $table->boolean('is_successful')->default(true);
             $table->text('failure_reason')->nullable();
-
+            
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->index(['user_id', 'login_at']);
             $table->index('login_type');
@@ -121,7 +121,7 @@ return new class extends Migration
         Schema::dropIfExists('user_qr_codes');
         Schema::dropIfExists('positions');
         Schema::dropIfExists('departments');
-
+        
         Schema::table('users', function (Blueprint $table) {
             $table->dropForeign(['department_id']);
             $table->dropForeign(['position_id']);
@@ -132,7 +132,7 @@ return new class extends Migration
                 'contact_number',
                 'status',
                 'last_login_at',
-                'last_login_ip',
+                'last_login_ip'
             ]);
         });
     }

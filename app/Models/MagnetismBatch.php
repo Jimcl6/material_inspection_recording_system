@@ -77,7 +77,7 @@ class MagnetismBatch extends Model
             ->orderBy('letter_code', 'desc')
             ->value('letter_code');
 
-        if (! $maxLetter) {
+        if (!$maxLetter) {
             return 'A';
         }
 
@@ -91,7 +91,6 @@ class MagnetismBatch extends Model
 
     /**
      * Get the next available letter code for a given checksheet and date.
-     *
      * @deprecated Use getLetterForMaterialLot() instead
      */
     public static function getNextLetterCode(int $checksheetId, string $date): ?string
@@ -104,6 +103,6 @@ class MagnetismBatch extends Model
      */
     public function getFormattedDateAttribute(): string
     {
-        return $this->production_date->format('Y-m-d');
+        return $this->production_date ? $this->production_date->format('Y-m-d') : '';
     }
 }

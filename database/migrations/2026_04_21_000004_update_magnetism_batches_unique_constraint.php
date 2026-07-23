@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
+     * 
      * Drop the unique constraint that enforces unique letter_code per date.
      * Letter codes are now tied to material_lot_number, not production_date.
      * Same material lot = same letter code, even across different dates.

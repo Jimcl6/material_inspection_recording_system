@@ -41,12 +41,12 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (! Schema::hasTable('welding_item_configs') || ! Schema::hasTable('welding_checksheet_types')) {
+        if (!Schema::hasTable('welding_item_configs') || !Schema::hasTable('welding_checksheet_types')) {
             return;
         }
 
         $diaphragmTypeId = DB::table('welding_checksheet_types')->where('key', 'diaphragm')->value('id');
-        if (! $diaphragmTypeId) {
+        if (!$diaphragmTypeId) {
             return;
         }
 
@@ -73,12 +73,12 @@ return new class extends Migration
 
     private function syncWeldingItemConfigs(array $rules): void
     {
-        if (! Schema::hasTable('welding_item_configs') || ! Schema::hasTable('welding_checksheet_types')) {
+        if (!Schema::hasTable('welding_item_configs') || !Schema::hasTable('welding_checksheet_types')) {
             return;
         }
 
         $diaphragmTypeId = DB::table('welding_checksheet_types')->where('key', 'diaphragm')->value('id');
-        if (! $diaphragmTypeId) {
+        if (!$diaphragmTypeId) {
             return;
         }
 
@@ -97,7 +97,6 @@ return new class extends Migration
             $exists = DB::table('welding_item_configs')->where($keys)->exists();
             if ($exists) {
                 DB::table('welding_item_configs')->where($keys)->update($values);
-
                 continue;
             }
 
@@ -107,7 +106,7 @@ return new class extends Migration
 
     private function syncLegacyDiaphragmItemCodes(array $rules): void
     {
-        if (! Schema::hasTable('diaphragm_item_codes')) {
+        if (!Schema::hasTable('diaphragm_item_codes')) {
             return;
         }
 
@@ -129,7 +128,6 @@ return new class extends Migration
             $exists = DB::table('diaphragm_item_codes')->where($keys)->exists();
             if ($exists) {
                 DB::table('diaphragm_item_codes')->where($keys)->update($values);
-
                 continue;
             }
 
