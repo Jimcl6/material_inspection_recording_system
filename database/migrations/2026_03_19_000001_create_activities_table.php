@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('description'); // Human-readable description
             $table->json('properties')->nullable(); // Additional data
             $table->timestamps();
-
+            
             $table->index(['user_id', 'created_at']);
             $table->index(['subject_type', 'subject_id']);
         });

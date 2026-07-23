@@ -18,22 +18,22 @@ return new class extends Migration
         foreach (['temperature', 'torque'] as $module) {
             foreach (['approve', 'reject'] as $action) {
                 UserPermission::createOrUpdate(
-                    ucfirst($action).' '.ucfirst($module),
+                    ucfirst($action) . ' ' . ucfirst($module),
                     $module,
                     $action,
-                    'Permission to '.$action.' '.$module.' module'
+                    'Permission to ' . $action . ' ' . $module . ' module'
                 );
             }
         }
 
         Schema::table('approval_notifications', function (Blueprint $table) {
-            if (! Schema::hasColumn('approval_notifications', 'module')) {
+            if (!Schema::hasColumn('approval_notifications', 'module')) {
                 $table->string('module', 50)->nullable()->after('annealing_check_id');
             }
-            if (! Schema::hasColumn('approval_notifications', 'approvable_type')) {
+            if (!Schema::hasColumn('approval_notifications', 'approvable_type')) {
                 $table->string('approvable_type')->nullable()->after('module');
             }
-            if (! Schema::hasColumn('approval_notifications', 'approvable_id')) {
+            if (!Schema::hasColumn('approval_notifications', 'approvable_id')) {
                 $table->unsignedBigInteger('approvable_id')->nullable()->after('approvable_type');
             }
         });
@@ -83,19 +83,19 @@ return new class extends Migration
     private function addApprovalColumns(string $table): void
     {
         Schema::table($table, function (Blueprint $blueprint) use ($table) {
-            if (! Schema::hasColumn($table, 'status')) {
+            if (!Schema::hasColumn($table, 'status')) {
                 $blueprint->enum('status', ['pending', 'approved', 'rejected'])->default('approved')->after('checked_by');
             }
-            if (! Schema::hasColumn($table, 'submitted_at')) {
+            if (!Schema::hasColumn($table, 'submitted_at')) {
                 $blueprint->timestamp('submitted_at')->nullable()->after('status');
             }
-            if (! Schema::hasColumn($table, 'approved_at')) {
+            if (!Schema::hasColumn($table, 'approved_at')) {
                 $blueprint->timestamp('approved_at')->nullable()->after('submitted_at');
             }
-            if (! Schema::hasColumn($table, 'approval_notes')) {
+            if (!Schema::hasColumn($table, 'approval_notes')) {
                 $blueprint->text('approval_notes')->nullable()->after('approved_at');
             }
-            $blueprint->index('status', $table.'_approval_status_idx');
+            $blueprint->index('status', $table . '_approval_status_idx');
         });
     }
 
@@ -125,7 +125,7 @@ return new class extends Migration
     {
         Schema::table($table, function (Blueprint $blueprint) use ($table) {
             if (Schema::hasColumn($table, 'status')) {
-                $blueprint->dropIndex($table.'_approval_status_idx');
+                $blueprint->dropIndex($table . '_approval_status_idx');
             }
         });
 

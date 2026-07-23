@@ -22,11 +22,11 @@ class UpdateDiaphragmWeldingRequest extends StoreDiaphragmWeldingRequest
     public function rules()
     {
         $rules = parent::rules();
-
+        
         // Add status for updates
         $rules['status'] = ['nullable', 'string', 'in:pending,approved,rejected'];
         $rules['approval_notes'] = ['nullable', 'string'];
-
+        
         return $rules;
     }
 }

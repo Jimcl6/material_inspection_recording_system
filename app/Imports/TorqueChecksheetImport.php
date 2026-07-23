@@ -522,7 +522,7 @@ class TorqueChecksheetImport
 
         // Handle Excel numeric time (0.0 - 1.0)
         if (is_numeric($timeStr)) {
-            $totalMinutes = (int) round((float) $timeStr * 24 * 60);
+            $totalMinutes = round((float) $timeStr * 24 * 60);
             $hours = intdiv($totalMinutes, 60);
             $minutes = $totalMinutes % 60;
 

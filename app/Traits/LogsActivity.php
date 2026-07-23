@@ -20,7 +20,7 @@ trait LogsActivity
             if ($model->wasChanged()) {
                 $changes = $model->getChanges();
                 unset($changes['updated_at']);
-                if (! empty($changes)) {
+                if (!empty($changes)) {
                     ActivityService::logUpdate($model, $changes);
                 }
             }
@@ -39,11 +39,11 @@ trait LogsActivity
         if (isset($this->name)) {
             return $this->name;
         }
-
+        
         if (isset($this->id)) {
-            return '# '.$this->id;
+            return '# ' . $this->id;
         }
-
+        
         return 'Record';
     }
 }

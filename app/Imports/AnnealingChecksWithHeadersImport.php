@@ -12,7 +12,6 @@ use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 class AnnealingChecksWithHeadersImport
 {
     private $importResults = [];
-
     private $currentUser;
 
     // Preview results
@@ -56,7 +55,7 @@ class AnnealingChecksWithHeadersImport
             // Detect column mapping from header rows 8 and 9
             $columnMap = $this->detectColumnMapping($sheet);
 
-            if (empty($columnMap) || ! isset($columnMap['item_code'])) {
+            if (empty($columnMap) || !isset($columnMap['item_code'])) {
                 continue;
             }
 
@@ -74,58 +73,35 @@ class AnnealingChecksWithHeadersImport
 
         // Scan row 8 for main headers
         foreach ($columns as $col) {
-            $val = $sheet->getCell($col.'8')->getValue();
-            if ($val === null) {
-                continue;
-            }
+            $val = $sheet->getCell($col . '8')->getValue();
+            if ($val === null) continue;
             $val = strtoupper(trim(preg_replace('/\s+/', ' ', $val)));
 
-            if (str_contains($val, 'ITEM CODE')) {
-                $map['item_code'] = $col;
-            } elseif (str_contains($val, 'RECEIVING')) {
-                $map['receiving_date'] = $col;
-            } elseif (str_contains($val, 'SUPPLIER LOT') && ! isset($map['supplier_lot_number'])) {
-                $map['supplier_lot_number'] = $col;
-            } elseif (str_contains($val, 'VARNISHING')) {
-                $map['varnishing_date'] = $col;
-            } elseif (str_contains($val, 'QUANTITY') && ! isset($map['quantity'])) {
-                $map['quantity'] = $col;
-            } elseif (str_contains($val, 'ANNEALING') && str_contains($val, 'DATE')) {
-                $map['annealing_date'] = $col;
-            } elseif (str_contains($val, 'MACHINE') && str_contains($val, '#')) {
-                $map['machine_number'] = $col;
-            } elseif (str_contains($val, 'TIME') && ! isset($map['time_start'])) {
-                $map['time_start'] = $col;
-            } elseif (str_contains($val, 'PIC')) {
-                $map['pic'] = $col;
-            } elseif (str_contains($val, 'CHECKED')) {
-                $map['checked_by'] = $col;
-            } elseif (str_contains($val, 'VERIFIED')) {
-                $map['verified_by'] = $col;
-            } elseif (str_contains($val, 'REMARKS')) {
-                $map['remarks'] = $col;
-            }
+            if (str_contains($val, 'ITEM CODE')) $map['item_code'] = $col;
+            elseif (str_contains($val, 'RECEIVING')) $map['receiving_date'] = $col;
+            elseif (str_contains($val, 'SUPPLIER LOT') && !isset($map['supplier_lot_number'])) $map['supplier_lot_number'] = $col;
+            elseif (str_contains($val, 'VARNISHING')) $map['varnishing_date'] = $col;
+            elseif (str_contains($val, 'QUANTITY') && !isset($map['quantity'])) $map['quantity'] = $col;
+            elseif (str_contains($val, 'ANNEALING') && str_contains($val, 'DATE')) $map['annealing_date'] = $col;
+            elseif (str_contains($val, 'MACHINE') && str_contains($val, '#')) $map['machine_number'] = $col;
+            elseif (str_contains($val, 'TIME') && !isset($map['time_start'])) $map['time_start'] = $col;
+            elseif (str_contains($val, 'PIC')) $map['pic'] = $col;
+            elseif (str_contains($val, 'CHECKED')) $map['checked_by'] = $col;
+            elseif (str_contains($val, 'VERIFIED')) $map['verified_by'] = $col;
+            elseif (str_contains($val, 'REMARKS')) $map['remarks'] = $col;
         }
 
         // Scan row 9 for sub-headers (temperature, annealing time, damper, time in/out)
         foreach ($columns as $col) {
-            $val = $sheet->getCell($col.'9')->getValue();
-            if ($val === null) {
-                continue;
-            }
+            $val = $sheet->getCell($col . '9')->getValue();
+            if ($val === null) continue;
             $val = strtoupper(trim(preg_replace('/\s+/', ' ', $val)));
 
-            if (str_contains($val, 'TEMPERATURE')) {
-                $map['temperature'] = $col;
-            } elseif (str_contains($val, 'ANNEALING TIME')) {
-                $map['annealing_time'] = $col;
-            } elseif (str_contains($val, 'DAMPER')) {
-                $map['damper_setting'] = $col;
-            } elseif (str_contains($val, 'IN') && ! str_contains($val, 'ANNEAL')) {
-                $map['time_in'] = $col;
-            } elseif (str_contains($val, 'OUT')) {
-                $map['time_out'] = $col;
-            }
+            if (str_contains($val, 'TEMPERATURE')) $map['temperature'] = $col;
+            elseif (str_contains($val, 'ANNEALING TIME')) $map['annealing_time'] = $col;
+            elseif (str_contains($val, 'DAMPER')) $map['damper_setting'] = $col;
+            elseif (str_contains($val, 'IN') && !str_contains($val, 'ANNEAL')) $map['time_in'] = $col;
+            elseif (str_contains($val, 'OUT')) $map['time_out'] = $col;
         }
 
         // Also check row 8 for second supplier lot / quantity that appears after annealing date
@@ -134,18 +110,15 @@ class AnnealingChecksWithHeadersImport
         if ($annealingDateCol) {
             $nextColIndex = ord($annealingDateCol) - ord('A') + 1;
             foreach ($columns as $col) {
-                if (ord($col) - ord('A') <= ord($annealingDateCol) - ord('A')) {
-                    continue;
-                }
-                $val = $sheet->getCell($col.'8')->getValue();
-                if ($val === null) {
-                    continue;
-                }
+                if (ord($col) - ord('A') <= ord($annealingDateCol) - ord('A')) continue;
+                $val = $sheet->getCell($col . '8')->getValue();
+                if ($val === null) continue;
                 $val = strtoupper(trim(preg_replace('/\s+/', ' ', $val)));
 
                 if (str_contains($val, 'SUPPLIER LOT') && isset($map['supplier_lot_number'])) {
                     $map['supplier_lot_number_prod'] = $col;
-                } elseif (str_contains($val, 'QUANTITY') && isset($map['quantity'])) {
+                }
+                elseif (str_contains($val, 'QUANTITY') && isset($map['quantity'])) {
                     $map['quantity_prod'] = $col;
                 }
             }
@@ -163,25 +136,23 @@ class AnnealingChecksWithHeadersImport
             'sheet_name' => $sheetName,
             'imported' => 0,
             'skipped' => 0,
-            'errors' => [],
+            'errors' => []
         ];
 
         // Data starts at row 10
         for ($rowNum = 10; $rowNum <= $highestRow; $rowNum++) {
             // Read item code first to check if row has data
-            $itemCode = trim((string) $sheet->getCell($columnMap['item_code'].$rowNum)->getValue());
+            $itemCode = trim((string) $sheet->getCell($columnMap['item_code'] . $rowNum)->getValue());
 
             // Skip empty rows or non-data rows
             if (empty($itemCode) || preg_match('/^HPI-PR/i', $itemCode) || preg_match('/NOTE/i', $itemCode)) {
                 $sheetResults['skipped']++;
-
                 continue;
             }
 
             // Must look like a real item code (letters, numbers, hyphens)
-            if (! preg_match('/^[A-Z]{2}[\dA-Z]/', $itemCode)) {
+            if (!preg_match('/^[A-Z]{2}[\dA-Z]/', $itemCode)) {
                 $sheetResults['skipped']++;
-
                 continue;
             }
 
@@ -199,6 +170,7 @@ class AnnealingChecksWithHeadersImport
         }
 
         $this->importResults[] = $sheetResults;
+
     }
 
     /**
@@ -207,11 +179,8 @@ class AnnealingChecksWithHeadersImport
     private function extractRowData($sheet, int $rowNum, array $columnMap, string $sheetName): array
     {
         $get = function (string $key) use ($sheet, $rowNum, $columnMap) {
-            if (! isset($columnMap[$key])) {
-                return null;
-            }
-
-            return $sheet->getCell($columnMap[$key].$rowNum)->getCalculatedValue();
+            if (!isset($columnMap[$key])) return null;
+            return $sheet->getCell($columnMap[$key] . $rowNum)->getCalculatedValue();
         };
 
         $itemCode = trim((string) $get('item_code'));
@@ -248,11 +217,8 @@ class AnnealingChecksWithHeadersImport
      */
     private function parseTemperature($value): ?float
     {
-        if ($value === null) {
-            return null;
-        }
+        if ($value === null) return null;
         $cleaned = preg_replace('/[^0-9.]/', '', (string) $value);
-
         return is_numeric($cleaned) ? (float) $cleaned : null;
     }
 
@@ -261,9 +227,7 @@ class AnnealingChecksWithHeadersImport
      */
     private function parseAnnealingTime($value): ?string
     {
-        if ($value === null) {
-            return null;
-        }
+        if ($value === null) return null;
         $str = (string) $value;
         // Extract number of hours
         if (preg_match('/(\d+)\s*HR/i', $str, $m)) {
@@ -272,10 +236,8 @@ class AnnealingChecksWithHeadersImport
         if (is_numeric($value)) {
             $hours = floor($value);
             $minutes = round(($value - $hours) * 60);
-
             return sprintf('%02d:%02d:00', $hours, $minutes);
         }
-
         return $str;
     }
 
@@ -284,30 +246,23 @@ class AnnealingChecksWithHeadersImport
      */
     private function parseExcelTime($value): ?string
     {
-        if ($value === null) {
-            return null;
-        }
+        if ($value === null) return null;
         if (is_numeric($value) && $value >= 0 && $value <= 1) {
-            $totalMinutes = (int) round($value * 24 * 60);
+            $totalMinutes = round($value * 24 * 60);
             $hours = intdiv($totalMinutes, 60);
             $minutes = $totalMinutes % 60;
-
             return sprintf('%02d:%02d:00', $hours, $minutes);
         }
         // Try HH:MM format
         if (is_string($value) && preg_match('/(\d{1,2}):(\d{2})/', $value, $m)) {
             return sprintf('%02d:%02d:00', $m[1], $m[2]);
         }
-
         return null;
     }
 
     private function parseInteger($value): int
     {
-        if ($value === null || $value === '') {
-            return 0;
-        }
-
+        if ($value === null || $value === '') return 0;
         return is_numeric($value) ? (int) $value : 0;
     }
 
@@ -316,9 +271,7 @@ class AnnealingChecksWithHeadersImport
      */
     protected function parseDate($date)
     {
-        if ($date === null) {
-            return null;
-        }
+        if ($date === null) return null;
 
         if ($date instanceof \DateTime) {
             return $date->format('Y-m-d');
@@ -357,16 +310,11 @@ class AnnealingChecksWithHeadersImport
      */
     private function convertNameToId($name): ?int
     {
-        if (empty($name)) {
-            return null;
-        }
-        if (is_numeric($name)) {
-            return (int) $name;
-        }
+        if (empty($name)) return null;
+        if (is_numeric($name)) return (int) $name;
 
         $cleanName = trim(strtolower((string) $name));
         $user = User::whereRaw('LOWER(name) = ?', [$cleanName])->first();
-
         return $user ? $user->id : null;
     }
 
@@ -399,7 +347,7 @@ class AnnealingChecksWithHeadersImport
                 // Detect column mapping from header rows 8 and 9
                 $columnMap = $this->detectColumnMapping($sheet);
 
-                if (empty($columnMap) || ! isset($columnMap['item_code'])) {
+                if (empty($columnMap) || !isset($columnMap['item_code'])) {
                     continue;
                 }
 
@@ -407,13 +355,13 @@ class AnnealingChecksWithHeadersImport
             }
 
             return $this->previewResults;
+
         } catch (\Throwable $e) {
             $this->previewResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
                 'annealing.importer.preview',
                 $e,
                 'The spreadsheet could not be previewed.'
             );
-
             return $this->previewResults;
         }
     }
@@ -439,7 +387,7 @@ class AnnealingChecksWithHeadersImport
                 // Detect column mapping from header rows 8 and 9
                 $columnMap = $this->detectColumnMapping($sheet);
 
-                if (empty($columnMap) || ! isset($columnMap['item_code'])) {
+                if (empty($columnMap) || !isset($columnMap['item_code'])) {
                     continue;
                 }
 
@@ -447,13 +395,13 @@ class AnnealingChecksWithHeadersImport
             }
 
             return $this->executeResults;
+
         } catch (\Throwable $e) {
             $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
                 'annealing.importer.execute',
                 $e,
                 'The spreadsheet could not be imported.'
             );
-
             return $this->executeResults;
         }
     }
@@ -466,7 +414,7 @@ class AnnealingChecksWithHeadersImport
         // Data starts at row 10
         for ($rowNum = 10; $rowNum <= $highestRow; $rowNum++) {
             // Read item code first to check if row has data
-            $itemCode = trim((string) $sheet->getCell($columnMap['item_code'].$rowNum)->getValue());
+            $itemCode = trim((string) $sheet->getCell($columnMap['item_code'] . $rowNum)->getValue());
 
             // Skip empty rows or non-data rows
             if (empty($itemCode) || preg_match('/^HPI-PR/i', $itemCode) || preg_match('/NOTE/i', $itemCode)) {
@@ -474,7 +422,7 @@ class AnnealingChecksWithHeadersImport
             }
 
             // Must look like a real item code (letters, numbers, hyphens)
-            if (! preg_match('/^[A-Z]{2}[\dA-Z]/', $itemCode)) {
+            if (!preg_match('/^[A-Z]{2}[\dA-Z]/', $itemCode)) {
                 continue;
             }
 
@@ -492,8 +440,8 @@ class AnnealingChecksWithHeadersImport
                         'existing_id' => $existing->id,
                         'existing_data' => [
                             'item_code' => $existing->item_code,
-                            'annealing_date' => $existing->annealing_date->format('Y-m-d'),
-                            'receiving_date' => $existing->receiving_date->format('Y-m-d'),
+                            'annealing_date' => $existing->annealing_date ? $existing->annealing_date->format('Y-m-d') : null,
+                            'receiving_date' => $existing->receiving_date ? $existing->receiving_date->format('Y-m-d') : null,
                             'supplier_lot_number' => $existing->supplier_lot_number,
                             'quantity' => $existing->quantity,
                             'machine_number' => $existing->machine_number,
@@ -504,6 +452,7 @@ class AnnealingChecksWithHeadersImport
                 } else {
                     $this->previewResults['new_records'][] = $previewRecord;
                 }
+
             } catch (\Throwable $e) {
                 $this->previewResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
                     'annealing.importer.preview-row',
@@ -522,7 +471,7 @@ class AnnealingChecksWithHeadersImport
         // Data starts at row 10
         for ($rowNum = 10; $rowNum <= $highestRow; $rowNum++) {
             // Read item code first to check if row has data
-            $itemCode = trim((string) $sheet->getCell($columnMap['item_code'].$rowNum)->getValue());
+            $itemCode = trim((string) $sheet->getCell($columnMap['item_code'] . $rowNum)->getValue());
 
             // Skip empty rows or non-data rows
             if (empty($itemCode) || preg_match('/^HPI-PR/i', $itemCode) || preg_match('/NOTE/i', $itemCode)) {
@@ -530,7 +479,7 @@ class AnnealingChecksWithHeadersImport
             }
 
             // Must look like a real item code (letters, numbers, hyphens)
-            if (! preg_match('/^[A-Z]{2}[\dA-Z]/', $itemCode)) {
+            if (!preg_match('/^[A-Z]{2}[\dA-Z]/', $itemCode)) {
                 continue;
             }
 

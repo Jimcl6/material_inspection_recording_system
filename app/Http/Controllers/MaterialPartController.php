@@ -118,41 +118,41 @@ class MaterialPartController extends Controller
      * Display the specified resource.
      */
     public function show($material_monitoring_checksheet)
-    {
-        $materialPart = MaterialPart::findOrFail($material_monitoring_checksheet);
-
-        // Get sub lot titles for the current material type
-        $subLotTitles = $materialPart->material_type
-            ? MaterialSubLotTitle::getTitlesForMaterialType($materialPart->material_type)
-            : [];
-
-        return Inertia::render('MaterialMonitoringChecksheets/Show', [
-            'materialPart' => $materialPart,
-            'materialTypes' => MaterialPart::getMaterialTypes(),
-            'subLotTitles' => $subLotTitles,
-        ]);
-    }
+{
+    $materialPart = MaterialPart::findOrFail($material_monitoring_checksheet);
+    
+    // Get sub lot titles for the current material type
+    $subLotTitles = $materialPart->material_type 
+        ? MaterialSubLotTitle::getTitlesForMaterialType($materialPart->material_type)
+        : [];
+    
+    return Inertia::render('MaterialMonitoringChecksheets/Show', [
+        'materialPart' => $materialPart,
+        'materialTypes' => MaterialPart::getMaterialTypes(),
+        'subLotTitles' => $subLotTitles,
+    ]);
+}
 
     /**
      * Show the form for editing the specified resource.
      */
     public function edit($material_monitoring_checksheet)
-    {
-        $materialPart = MaterialPart::findOrFail($material_monitoring_checksheet);
-
-        // Get sub lot titles for the current material type
-        $subLotTitles = $materialPart->material_type
-            ? MaterialSubLotTitle::getTitlesForMaterialType($materialPart->material_type)
-            : [];
-
-        // Debug: Log what we're getting
+{
+    $materialPart = MaterialPart::findOrFail($material_monitoring_checksheet);
+    
+    // Get sub lot titles for the current material type
+    $subLotTitles = $materialPart->material_type 
+        ? MaterialSubLotTitle::getTitlesForMaterialType($materialPart->material_type)
+        : [];
+    
+    // Debug: Log what we're getting
         \Log::info('Edit method called with materialPart:', [
             'materialPart' => $materialPart,
             'materialPart->toArray()' => $materialPart->toArray(),
             'request params' => request()->all(),
-            'subLotTitles' => $subLotTitles,
+            'subLotTitles' => $subLotTitles
         ]);
-
+        
         return Inertia::render('MaterialMonitoringChecksheets/Edit', [
             'materialPart' => $materialPart,
             'materialTypes' => MaterialPart::getMaterialTypes(),
@@ -203,7 +203,7 @@ class MaterialPartController extends Controller
         $materialPart = MaterialPart::findOrFail($material_monitoring_checksheet);
         $recordData = $materialPart->toArray();
         $itemBlockCode = $materialPart->item_block_code;
-
+        
         $materialPart->delete();
 
         ActivityService::log(
@@ -217,4 +217,5 @@ class MaterialPartController extends Controller
         return redirect()->route('material-monitoring-checksheets.index')
             ->with('success', 'Material part deleted successfully.');
     }
+
 }

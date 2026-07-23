@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Models\Role;
 use App\Models\Department;
 use App\Models\Position;
-use App\Models\Role;
-use App\Models\User;
 use App\Models\UserQrCode;
-use App\Services\AccountAccessService;
-use App\Services\ActivityService;
 use App\Services\QrCodeService;
+use App\Services\ActivityService;
+use App\Services\AccountAccessService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,7 +24,8 @@ class UserManagementController extends Controller
     public function __construct(
         QrCodeService $qrCodeService,
         private AccountAccessService $accountAccess
-    ) {
+    )
+    {
         $this->qrCodeService = $qrCodeService;
         $this->middleware(['auth', 'role:admin,super_admin']);
     }
@@ -64,7 +65,7 @@ class UserManagementController extends Controller
             });
         }
 
-        $users = $query->latest()->paginate(10)->withQueryString();
+        $users = $query->latest()->paginate(10)->withQueryString(); // @phpstan-ignore-line - withQueryString() is valid in Laravel 9
 
         // Ensure relationships are loaded and serialized properly
         $users->getCollection()->each(function ($user) {
@@ -155,10 +156,9 @@ class UserManagementController extends Controller
             DB::rollBack();
             \Log::error('User creation failed:', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'trace' => $e->getTraceAsString()
             ]);
-
-            return back()->with('error', 'Failed to create user: '.$e->getMessage());
+            return back()->with('error', 'Failed to create user: ' . $e->getMessage());
         }
     }
 
@@ -168,18 +168,18 @@ class UserManagementController extends Controller
     public function show(User $user): Response
     {
         $user->load(['role', 'department', 'position', 'qrCode']);
-
+        
         // Load login history separately to avoid created_at issues
         $loginHistory = \App\Models\UserLoginHistory::where('user_id', $user->id)
             ->orderBy('login_at', 'desc')
             ->limit(10)
             ->get();
-
+        
         $user->setRelation('loginHistory', $loginHistory);
 
         $qrStatus = null;
         $qrData = null;
-
+        
         if ($user->qrCode) {
             $qrStatus = $this->qrCodeService->checkQrCodeStatus($user->qrCode);
             $qrData = $user->qrCode->qr_data;
@@ -280,8 +280,7 @@ class UserManagementController extends Controller
                 ->with('success', 'User updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-
-            return back()->with('error', 'Failed to update user: '.$e->getMessage());
+            return back()->with('error', 'Failed to update user: ' . $e->getMessage());
         }
     }
 
@@ -293,11 +292,11 @@ class UserManagementController extends Controller
         try {
             $userName = $user->name;
             $employeeId = $user->employee_id;
-
+            
             // Soft delete by deactivating
             $user->update(['status' => 'inactive']);
             $this->accountAccess->revoke($user, 'user_management_delete');
-
+            
             // Deactivate QR code
             if ($user->qrCode) {
                 $this->qrCodeService->deactivateQrCode($user);
@@ -315,7 +314,7 @@ class UserManagementController extends Controller
             return redirect()->route('users.index')
                 ->with('success', 'User deactivated successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to deactivate user: '.$e->getMessage());
+            return back()->with('error', 'Failed to deactivate user: ' . $e->getMessage());
         }
     }
 
@@ -342,8 +341,7 @@ class UserManagementController extends Controller
             return back()->with('success', 'QR code regenerated successfully.');
         } catch (\Exception $e) {
             \Log::error('QR regeneration failed:', ['error' => $e->getMessage()]);
-
-            return back()->with('error', 'Failed to regenerate QR code: '.$e->getMessage());
+            return back()->with('error', 'Failed to regenerate QR code: ' . $e->getMessage());
         }
     }
 
@@ -369,7 +367,7 @@ class UserManagementController extends Controller
         $materialCode = $request->get('material_code');
         $user = $this->qrCodeService->findUserByQrData($qrData);
 
-        if (! $user) {
+        if (!$user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid or inactive QR code.',
@@ -419,8 +417,6 @@ class UserManagementController extends Controller
         $action = $request->get('action');
 
         try {
-            $message = '';
-
             switch ($action) {
                 case 'activate':
                     User::whereIn('id', $userIds)->update(['status' => 'active']);
@@ -447,7 +443,7 @@ class UserManagementController extends Controller
 
             return back()->with('success', $message);
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to perform bulk action: '.$e->getMessage());
+            return back()->with('error', 'Failed to perform bulk action: ' . $e->getMessage());
         }
     }
 
@@ -475,7 +471,7 @@ class UserManagementController extends Controller
         $qrData = $request->get('qr_data');
         $parsed = $this->qrCodeService->parseEmployeeBadgeQr($qrData);
 
-        if (! $parsed) {
+        if (!$parsed) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid QR code format. Expected format: "Employee ID , Full Name , Employment Status"',

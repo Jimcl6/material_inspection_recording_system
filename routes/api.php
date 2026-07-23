@@ -1,9 +1,9 @@
 <?php
 
-use App\Http\Controllers\Api\MaterialTypeController;
-use App\Http\Controllers\MaterialSubLotTitleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MaterialSubLotTitleController;
+use App\Http\Controllers\Api\MaterialTypeController;
 
 /*
 |--------------------------------------------------------------------------

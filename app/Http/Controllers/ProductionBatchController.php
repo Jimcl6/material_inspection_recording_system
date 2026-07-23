@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ProductionBatch;
 use App\Models\InspectionCheckpoint;
 use App\Models\InspectionSample;
-use App\Models\ProductionBatch;
 use App\Services\ActivityService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -56,29 +56,24 @@ class ProductionBatchController extends Controller
 
     public function show($magnetism_checksheet)
     {
-        /** @var ProductionBatch $batch */
         $batch = ProductionBatch::findOrFail($magnetism_checksheet);
-
+        
         try {
             $batch->load(['checkpoints.samples']);
         } catch (\Exception $e) {
             // If checkpoints relationship fails, continue without checkpoints
-            $batch->setRelation('checkpoints', collect());
+            $batch->checkpoints = collect();
         }
 
         // Build checkpoints with samples organized by phase
         $checkpointsData = $batch->checkpoints->map(function ($cp) {
             $samplesFirst = $cp->samples->where('Phase', 'FIRST')->sortBy('SampleOrder')->pluck('Value')->values()->toArray();
             $samplesLast = $cp->samples->where('Phase', 'LAST')->sortBy('SampleOrder')->pluck('Value')->values()->toArray();
-
+            
             // Pad arrays to always have 5 elements
-            while (count($samplesFirst) < 5) {
-                $samplesFirst[] = '';
-            }
-            while (count($samplesLast) < 5) {
-                $samplesLast[] = '';
-            }
-
+            while (count($samplesFirst) < 5) $samplesFirst[] = '';
+            while (count($samplesLast) < 5) $samplesLast[] = '';
+            
             return [
                 'CheckpointID' => $cp->CheckpointID,
                 'CheckpointNumber' => $cp->CheckpointNumber,
@@ -118,9 +113,9 @@ class ProductionBatchController extends Controller
     public function createCheckpoint($magnetism_checksheet)
     {
         $productionBatch = ProductionBatch::findOrFail($magnetism_checksheet);
-
+        
         return Inertia::render('Batches/CreateCheckpoint', [
-            'batch' => $productionBatch,
+            'batch' => $productionBatch
         ]);
     }
 
@@ -150,9 +145,9 @@ class ProductionBatchController extends Controller
         ]);
 
         // Create samples if provided
-        if (! empty($data['samples'])) {
+        if (!empty($data['samples'])) {
             foreach ($data['samples'] as $sample) {
-                if (! empty($sample['Value'])) {
+                if (!empty($sample['Value'])) {
                     InspectionSample::create([
                         'CheckpointID' => $checkpoint->CheckpointID, // Use the model's primary key
                         'SampleOrder' => $sample['SampleOrder'] ?? 1,
@@ -178,34 +173,30 @@ class ProductionBatchController extends Controller
     public function editCheckpoint($magnetism_checksheet, $checkpoint = null)
     {
         $productionBatch = ProductionBatch::findOrFail($magnetism_checksheet);
-
+        
         // Load all checkpoints with samples for grid editing
         $productionBatch->load(['checkpoints.samples']);
-
+        
         // Build checkpoints data organized by checkpoint number (1-4)
         $checkpointsData = [];
         $inspectorFirst = '';
         $inspectorLast = '';
-
+        
         for ($i = 1; $i <= 4; $i++) {
             $cp = $productionBatch->checkpoints->firstWhere('CheckpointNumber', $i);
-
+            
             if ($cp) {
                 $samplesFirst = $cp->samples->where('Phase', 'FIRST')->sortBy('SampleOrder')->pluck('Value')->values()->toArray();
                 $samplesLast = $cp->samples->where('Phase', 'LAST')->sortBy('SampleOrder')->pluck('Value')->values()->toArray();
-
+                
                 // Get inspector names from first checkpoint found
-                if (! $inspectorFirst && $cp->InspectorName_First) {
-                    $inspectorFirst = $cp->InspectorName_First;
-                }
-                if (! $inspectorLast && $cp->InspectorName_Last) {
-                    $inspectorLast = $cp->InspectorName_Last;
-                }
-
+                if (!$inspectorFirst && $cp->InspectorName_First) $inspectorFirst = $cp->InspectorName_First;
+                if (!$inspectorLast && $cp->InspectorName_Last) $inspectorLast = $cp->InspectorName_Last;
+                
                 $checkpointsData[] = [
                     'CheckpointID' => $cp->CheckpointID,
                     'CheckpointNumber' => $i,
-                    'label' => InspectionCheckpoint::POSITION_LABELS[$i],
+                    'label' => InspectionCheckpoint::POSITION_LABELS[$i] ?? "Checkpoint {$i}",
                     'Judgement_First' => $cp->Judgement_First ?? '',
                     'Judgement_Last' => $cp->Judgement_Last ?? '',
                     'samples_first' => array_pad($samplesFirst, 5, ''),
@@ -216,7 +207,7 @@ class ProductionBatchController extends Controller
                 $checkpointsData[] = [
                     'CheckpointID' => null,
                     'CheckpointNumber' => $i,
-                    'label' => InspectionCheckpoint::POSITION_LABELS[$i],
+                    'label' => InspectionCheckpoint::POSITION_LABELS[$i] ?? "Checkpoint {$i}",
                     'Judgement_First' => '',
                     'Judgement_Last' => '',
                     'samples_first' => ['', '', '', '', ''],
@@ -224,7 +215,7 @@ class ProductionBatchController extends Controller
                 ];
             }
         }
-
+        
         return Inertia::render('Batches/EditCheckpoint', [
             'batch' => [
                 'BatchID' => $productionBatch->BatchID,
@@ -242,7 +233,7 @@ class ProductionBatchController extends Controller
     public function updateCheckpoint(Request $request, $magnetism_checksheet, $checkpoint = null)
     {
         $productionBatch = ProductionBatch::findOrFail($magnetism_checksheet);
-
+        
         $data = $request->validate([
             'inspectorFirst' => ['nullable', 'string', 'max:255'],
             'inspectorLast' => ['nullable', 'string', 'max:255'],
@@ -259,14 +250,14 @@ class ProductionBatchController extends Controller
 
         // Process each checkpoint
         foreach ($data['checkpoints'] as $cpData) {
-            $checkpointNumber = (int) $cpData['CheckpointNumber'];
-
+            $checkpointNumber = (int)$cpData['CheckpointNumber'];
+            
             // Find or create checkpoint
             $cp = InspectionCheckpoint::where('BatchID', $productionBatch->BatchID)
                 ->where('CheckpointNumber', $checkpointNumber)
                 ->first();
-
-            if (! $cp) {
+            
+            if (!$cp) {
                 $cp = InspectionCheckpoint::create([
                     'BatchID' => $productionBatch->BatchID,
                     'CheckpointNumber' => $checkpointNumber,
@@ -295,7 +286,7 @@ class ProductionBatchController extends Controller
                         'CheckpointID' => $cp->CheckpointID,
                         'SampleOrder' => $i + 1,
                         'Phase' => 'FIRST',
-                        'Value' => (string) $val,
+                        'Value' => (string)$val,
                     ]);
                 }
             }
@@ -308,7 +299,7 @@ class ProductionBatchController extends Controller
                         'CheckpointID' => $cp->CheckpointID,
                         'SampleOrder' => $i + 1,
                         'Phase' => 'LAST',
-                        'Value' => (string) $val,
+                        'Value' => (string)$val,
                     ]);
                 }
             }
@@ -331,10 +322,10 @@ class ProductionBatchController extends Controller
         $productionBatch = ProductionBatch::findOrFail($magnetism_checksheet);
         $checkpointModel = InspectionCheckpoint::where('BatchID', $productionBatch->BatchID)
             ->findOrFail($checkpoint);
-
+        
         $checkpointData = $checkpointModel->toArray();
         $checkpointNumber = $checkpointModel->CheckpointNumber;
-
+        
         // Delete the checkpoint and its samples (cascade delete should handle samples)
         $checkpointModel->delete();
 
@@ -353,20 +344,20 @@ class ProductionBatchController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'ProductionDate' => ['required', 'date'],
-            'LetterCode' => ['nullable', 'string', 'max:5'],
-            'QRCode' => ['required', 'string', 'max:20'],
-            'MaterialLotNumber' => ['required', 'string', 'max:50'],
-            'ProduceQty' => ['required', 'integer', 'min:0'],
-            'JobNumber' => ['required', 'string', 'max:50'],
-            'TotalQty' => ['required', 'integer', 'min:0'],
-            'Remarks' => ['nullable', 'string'],
-            'ItemName' => ['nullable', 'string', 'max:50'],
-            'ItemCode' => ['nullable', 'string', 'max:50'],
+            'ProductionDate' => ['required','date'],
+            'LetterCode' => ['nullable','string','max:5'],
+            'QRCode' => ['required','string','max:20'],
+            'MaterialLotNumber' => ['required','string','max:50'],
+            'ProduceQty' => ['required','integer','min:0'],
+            'JobNumber' => ['required','string','max:50'],
+            'TotalQty' => ['required','integer','min:0'],
+            'Remarks' => ['nullable','string'],
+            'ItemName' => ['nullable','string','max:50'],
+            'ItemCode' => ['nullable','string','max:50'],
         ]);
 
         // Auto-generate letter if missing or set to AUTO
-        $letter = strtoupper((string) ($data['LetterCode'] ?? ''));
+        $letter = strtoupper((string)($data['LetterCode'] ?? ''));
         if ($letter === '' || $letter === 'AUTO') {
             $next = $this->nextLetterForDate($data['ProductionDate']);
             if ($next === null) {
@@ -381,10 +372,8 @@ class ProductionBatchController extends Controller
         $checkpoints = $request->input('checkpoints');
         if (is_array($checkpoints)) {
             foreach ($checkpoints as $cpData) {
-                $checkpointNumber = (int) ($cpData['CheckpointNumber'] ?? 0);
-                if ($checkpointNumber < 1 || $checkpointNumber > 4) {
-                    continue;
-                }
+                $checkpointNumber = (int)($cpData['CheckpointNumber'] ?? 0);
+                if ($checkpointNumber < 1 || $checkpointNumber > 4) continue;
 
                 $cp = InspectionCheckpoint::create([
                     'BatchID' => $batch->BatchID,
@@ -400,17 +389,15 @@ class ProductionBatchController extends Controller
                 foreach ($samplesFirst as $i => $val) {
                     $order = $i + 1;
                     if (is_array($val)) {
-                        $order = (int) ($val['SampleOrder'] ?? $order);
+                        $order = (int)($val['SampleOrder'] ?? $order);
                         $val = $val['Value'] ?? null;
                     }
-                    if ($val === null || $val === '') {
-                        continue;
-                    }
+                    if ($val === null || $val === '') continue;
                     InspectionSample::create([
                         'CheckpointID' => $cp->CheckpointID,
                         'SampleOrder' => $order,
                         'Phase' => 'FIRST',
-                        'Value' => (string) $val,
+                        'Value' => (string)$val,
                     ]);
                 }
 
@@ -419,17 +406,15 @@ class ProductionBatchController extends Controller
                 foreach ($samplesLast as $i => $val) {
                     $order = $i + 1;
                     if (is_array($val)) {
-                        $order = (int) ($val['SampleOrder'] ?? $order);
+                        $order = (int)($val['SampleOrder'] ?? $order);
                         $val = $val['Value'] ?? null;
                     }
-                    if ($val === null || $val === '') {
-                        continue;
-                    }
+                    if ($val === null || $val === '') continue;
                     InspectionSample::create([
                         'CheckpointID' => $cp->CheckpointID,
                         'SampleOrder' => $order,
                         'Phase' => 'LAST',
-                        'Value' => (string) $val,
+                        'Value' => (string)$val,
                     ]);
                 }
             }
@@ -457,7 +442,7 @@ class ProductionBatchController extends Controller
     public function edit($magnetism_checksheet)
     {
         $batch = ProductionBatch::findOrFail($magnetism_checksheet);
-
+        
         return Inertia::render('Batches/Edit', [
             'batch' => [
                 'BatchID' => $batch->BatchID,
@@ -479,16 +464,16 @@ class ProductionBatchController extends Controller
     {
         $batch = ProductionBatch::findOrFail($magnetism_checksheet);
         $data = $request->validate([
-            'ProductionDate' => ['required', 'date'],
-            'LetterCode' => ['required', 'string', 'max:5'],
-            'QRCode' => ['required', 'string', 'max:20'],
-            'MaterialLotNumber' => ['required', 'string', 'max:50'],
-            'ProduceQty' => ['required', 'integer', 'min:0'],
-            'JobNumber' => ['required', 'string', 'max:50'],
-            'TotalQty' => ['required', 'integer', 'min:0'],
-            'Remarks' => ['nullable', 'string'],
-            'ItemName' => ['nullable', 'string', 'max:50'],
-            'ItemCode' => ['nullable', 'string', 'max:50'],
+            'ProductionDate' => ['required','date'],
+            'LetterCode' => ['required','string','max:5'],
+            'QRCode' => ['required','string','max:20'],
+            'MaterialLotNumber' => ['required','string','max:50'],
+            'ProduceQty' => ['required','integer','min:0'],
+            'JobNumber' => ['required','string','max:50'],
+            'TotalQty' => ['required','integer','min:0'],
+            'Remarks' => ['nullable','string'],
+            'ItemName' => ['nullable','string','max:50'],
+            'ItemCode' => ['nullable','string','max:50'],
         ]);
 
         $before = ActivityService::snapshot($batch);
@@ -515,7 +500,7 @@ class ProductionBatchController extends Controller
         $batch = ProductionBatch::findOrFail($magnetism_checksheet);
         $batchData = $batch->toArray();
         $qrCode = $batch->QRCode;
-
+        
         $batch->delete();
 
         ActivityService::log(
@@ -531,9 +516,8 @@ class ProductionBatchController extends Controller
 
     public function nextLetter(Request $request)
     {
-        $request->validate(['date' => ['required', 'date']]);
+        $request->validate(['date' => ['required','date']]);
         $letter = $this->nextLetterForDate($request->input('date'));
-
         return response()->json(['letter' => $letter]);
     }
 
@@ -542,18 +526,11 @@ class ProductionBatchController extends Controller
         $last = ProductionBatch::whereDate('ProductionDate', $date)
             ->orderBy('LetterCode', 'desc')
             ->value('LetterCode');
-        $last = strtoupper((string) $last);
-        if ($last === '') {
-            return 'A';
-        }
+        $last = strtoupper((string)$last);
+        if ($last === '') return 'A';
         $code = ord($last);
-        if ($code < ord('A')) {
-            return 'A';
-        }
-        if ($code >= ord('Z')) {
-            return null;
-        } // exhausted
-
+        if ($code < ord('A')) return 'A';
+        if ($code >= ord('Z')) return null; // exhausted
         return chr($code + 1);
     }
 }

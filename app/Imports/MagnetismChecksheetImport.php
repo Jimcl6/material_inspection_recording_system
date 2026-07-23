@@ -2,22 +2,20 @@
 
 namespace App\Imports;
 
+use App\Models\MagnetismChecksheet;
 use App\Models\MagnetismBatch;
 use App\Models\MagnetismCheckpoint;
-use App\Models\MagnetismChecksheet;
 use App\Support\SpreadsheetImportSecurity;
-use Carbon\Carbon;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use Carbon\Carbon;
 
 class MagnetismChecksheetImport
 {
     // Supported format types
     public const FORMAT_HPI_PR03_01 = 'HPI-PR03-01';
-
     public const FORMAT_HPI_PR05_03 = 'HPI-PR05-03';
-
     public const DEFAULT_FORMAT = self::FORMAT_HPI_PR05_03;
 
     // Format-specific column mappings
@@ -80,18 +78,6 @@ class MagnetismChecksheetImport
         'detected_format' => null,
     ];
 
-    /**
-     * @var array{
-     *     batches_imported: int,
-     *     batches_updated: int,
-     *     batches_skipped: int,
-     *     checkpoints_imported: int,
-     *     checkpoints_updated: int,
-     *     checkpoints_skipped: int,
-     *     checksheets_created: list<array{id: mixed, month: int, year: int}>,
-     *     errors: list<string>
-     * }
-     */
     protected $executeResults = [
         'batches_imported' => 0,
         'batches_updated' => 0,
@@ -104,13 +90,9 @@ class MagnetismChecksheetImport
     ];
 
     protected $itemCode;
-
     protected $itemName;
-
     protected $machineNo;
-
     protected $format;
-
     protected $formatMapping;
 
     // Month name to number mapping
@@ -126,11 +108,11 @@ class MagnetismChecksheetImport
     /**
      * Preview import - Phase 1: Parse file and detect duplicates
      *
-     * @param  string  $filePath Path to Excel file
-     * @param  string  $itemCode Item code
-     * @param  string  $itemName Item name
-     * @param  string  $machineNo Machine number
-     * @param  string|null  $format Format type (HPI-PR03-01 or HPI-PR05-03), null for auto-detect
+     * @param string $filePath Path to Excel file
+     * @param string $itemCode Item code
+     * @param string $itemName Item name
+     * @param string $machineNo Machine number
+     * @param string|null $format Format type (HPI-PR03-01 or HPI-PR05-03), null for auto-detect
      */
     public function preview(string $filePath, string $itemCode, string $itemName, string $machineNo, ?string $format = null): array
     {
@@ -155,7 +137,7 @@ class MagnetismChecksheetImport
 
                 // Try to detect month/year from sheet name
                 $monthYear = $this->parseMonthYearFromSheetName($sheetName);
-                if (! $monthYear) {
+                if (!$monthYear) {
                     continue;
                 }
 
@@ -164,13 +146,13 @@ class MagnetismChecksheetImport
             }
 
             return $this->results;
+
         } catch (\Throwable $e) {
             $this->results['errors'][] = SpreadsheetImportSecurity::safeFailure(
                 'magnetism.importer.preview',
                 $e,
                 'The spreadsheet could not be previewed.'
             );
-
             return $this->results;
         }
     }
@@ -178,22 +160,12 @@ class MagnetismChecksheetImport
     /**
      * Execute import - Phase 2: Create/update records based on user choice
      *
-     * @param  string  $filePath Path to Excel file
-     * @param  string  $itemCode Item code
-     * @param  string  $itemName Item name
-     * @param  string  $machineNo Machine number
-     * @param  bool  $updateDuplicates Whether to update duplicate records
-     * @param  string|null  $format Format type (HPI-PR03-01 or HPI-PR05-03)
-     * @return array{
-     *     batches_imported: int,
-     *     batches_updated: int,
-     *     batches_skipped: int,
-     *     checkpoints_imported: int,
-     *     checkpoints_updated: int,
-     *     checkpoints_skipped: int,
-     *     checksheets_created: list<array{id: mixed, month: int, year: int}>,
-     *     errors: list<string>
-     * }
+     * @param string $filePath Path to Excel file
+     * @param string $itemCode Item code
+     * @param string $itemName Item name
+     * @param string $machineNo Machine number
+     * @param bool $updateDuplicates Whether to update duplicate records
+     * @param string|null $format Format type (HPI-PR03-01 or HPI-PR05-03)
      */
     public function execute(string $filePath, string $itemCode, string $itemName, string $machineNo, bool $updateDuplicates = false, ?string $format = null): array
     {
@@ -217,7 +189,7 @@ class MagnetismChecksheetImport
 
                 // Try to detect month/year from sheet name
                 $monthYear = $this->parseMonthYearFromSheetName($sheetName);
-                if (! $monthYear) {
+                if (!$monthYear) {
                     continue;
                 }
 
@@ -226,13 +198,13 @@ class MagnetismChecksheetImport
             }
 
             return $this->executeResults;
+
         } catch (\Throwable $e) {
             $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
                 'magnetism.importer.execute',
                 $e,
                 'The spreadsheet could not be imported.'
             );
-
             return $this->executeResults;
         }
     }
@@ -295,7 +267,7 @@ class MagnetismChecksheetImport
             }
 
             // Check if this sheet has month/year data
-            if (! $this->parseMonthYearFromSheetName($sheetName)) {
+            if (!$this->parseMonthYearFromSheetName($sheetName)) {
                 continue;
             }
 
@@ -379,7 +351,6 @@ class MagnetismChecksheetImport
         $columnMap = $this->detectColumnMapping($sheet);
         if (empty($columnMap)) {
             $this->results['errors'][] = 'A worksheet does not match a supported magnetism format.';
-
             return;
         }
 
@@ -390,7 +361,7 @@ class MagnetismChecksheetImport
         $rowsByDate = [];
         foreach ($parsedRows as $rowData) {
             $date = $rowData['date'];
-            if (! isset($rowsByDate[$date])) {
+            if (!isset($rowsByDate[$date])) {
                 $rowsByDate[$date] = [];
             }
             $rowsByDate[$date][] = $rowData;
@@ -404,6 +375,7 @@ class MagnetismChecksheetImport
             // Parse checkpoints for this date (only rows with checkpoint numbers)
             $this->parseCheckpointsPreviewFromRows($sheet, $rows, $columnMap, $checksheetId, $month, $year, $productionDate);
         }
+
     }
 
     /**
@@ -448,7 +420,6 @@ class MagnetismChecksheetImport
                     $e,
                     'A checksheet could not be created.'
                 );
-
                 return;
             }
         }
@@ -457,7 +428,6 @@ class MagnetismChecksheetImport
         $columnMap = $this->detectColumnMapping($sheet);
         if (empty($columnMap)) {
             $this->executeResults['errors'][] = 'A worksheet does not match a supported magnetism format.';
-
             return;
         }
 
@@ -468,7 +438,7 @@ class MagnetismChecksheetImport
         $rowsByDate = [];
         foreach ($parsedRows as $rowData) {
             $date = $rowData['date'];
-            if (! isset($rowsByDate[$date])) {
+            if (!isset($rowsByDate[$date])) {
                 $rowsByDate[$date] = [];
             }
             $rowsByDate[$date][] = $rowData;
@@ -482,6 +452,7 @@ class MagnetismChecksheetImport
             // Import checkpoints for this date (only rows with checkpoint numbers)
             $this->importCheckpointsFromRows($sheet, $rows, $columnMap, $checksheet, $updateDuplicates, $productionDate);
         }
+
     }
 
     /**
@@ -509,25 +480,25 @@ class MagnetismChecksheetImport
 
         for ($row = $dataStartRow; $row <= $highestRow; $row++) {
             // Check for date in this row
-            $cellDate = $this->parseDate($this->getCellValue($sheet, $dateCol.$row));
-
+            $cellDate = $this->parseDate($this->getCellValue($sheet, $dateCol . $row));
+            
             // If this row has a date, update current date
             if ($cellDate) {
                 $currentDate = $cellDate;
             }
 
             // Skip rows without any date context
-            if (! $currentDate) {
+            if (!$currentDate) {
                 continue;
             }
 
             // Check if row has any meaningful data (batch or checkpoint)
-            if (! $this->rowHasData($sheet, $row, $columnMap)) {
+            if (!$this->rowHasData($sheet, $row, $columnMap)) {
                 continue;
             }
 
             // Get checkpoint number from the checkpoint column (if present)
-            $checkpointValue = $this->getCellValue($sheet, $checkpointCol.$row);
+            $checkpointValue = $this->getCellValue($sheet, $checkpointCol . $row);
             $checkpointNum = $this->parseCheckpointNumber($checkpointValue);
 
             $rows[] = [
@@ -547,21 +518,21 @@ class MagnetismChecksheetImport
     protected function rowHasData($sheet, int $row, array $columnMap): bool
     {
         // Check for batch data
-        $materialLot = $this->getCellValue($sheet, ($columnMap['material_lot_col'] ?? 'J').$row);
-        $qrCode = $this->getCellValue($sheet, ($columnMap['qr_code_col'] ?? 'K').$row);
-        $letterCode = $this->getCellValue($sheet, ($columnMap['letter_col'] ?? 'I').$row);
-
+        $materialLot = $this->getCellValue($sheet, ($columnMap['material_lot_col'] ?? 'J') . $row);
+        $qrCode = $this->getCellValue($sheet, ($columnMap['qr_code_col'] ?? 'K') . $row);
+        $letterCode = $this->getCellValue($sheet, ($columnMap['letter_col'] ?? 'I') . $row);
+        
         // Check for checkpoint data
         $checkpointCol = $columnMap['checkpoint_col'] ?? 'O';
-        $checkpointValue = $this->getCellValue($sheet, $checkpointCol.$row);
-
+        $checkpointValue = $this->getCellValue($sheet, $checkpointCol . $row);
+        
         // Check for sample data
         $firstSamplesStartCol = $columnMap['first_samples_start_col'] ?? 'P';
         $firstStartIndex = Coordinate::columnIndexFromString($firstSamplesStartCol);
-        $sample1First = $this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex).$row);
+        $sample1First = $this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex) . $row);
 
-        return ! empty($materialLot) || ! empty($qrCode) || ! empty($letterCode) ||
-               ! empty($checkpointValue) || ! empty($sample1First);
+        return !empty($materialLot) || !empty($qrCode) || !empty($letterCode) || 
+               !empty($checkpointValue) || !empty($sample1First);
     }
 
     /**
@@ -602,14 +573,14 @@ class MagnetismChecksheetImport
 
         foreach ($rows as $rowData) {
             $row = $rowData['row'];
-
+            
             $batchData = $this->extractBatchData($sheet, $row, $columnMap, $productionDate);
-            if (! $this->isValidBatch($batchData)) {
+            if (!$this->isValidBatch($batchData)) {
                 continue;
             }
 
             // Create unique key for this batch
-            $batchKey = $productionDate.'|'.$batchData['material_lot_number'].'|'.$batchData['qr_code'];
+            $batchKey = $productionDate . '|' . $batchData['material_lot_number'] . '|' . $batchData['qr_code'];
             if (isset($seenBatches[$batchKey])) {
                 continue;
             }
@@ -667,7 +638,7 @@ class MagnetismChecksheetImport
             $seenCheckpoints[$checkpointNum] = true;
 
             $checkpointData = $this->extractCheckpointDataFromRow($sheet, $row, $columnMap);
-            if (! $this->hasCheckpointData($checkpointData)) {
+            if (!$this->hasCheckpointData($checkpointData)) {
                 continue;
             }
 
@@ -705,14 +676,14 @@ class MagnetismChecksheetImport
 
         foreach ($rows as $rowData) {
             $row = $rowData['row'];
-
+            
             $batchData = $this->extractBatchData($sheet, $row, $columnMap, $productionDate);
-            if (! $this->isValidBatch($batchData)) {
+            if (!$this->isValidBatch($batchData)) {
                 continue;
             }
 
             // Create unique key for this batch
-            $batchKey = $productionDate.'|'.$batchData['material_lot_number'].'|'.$batchData['qr_code'];
+            $batchKey = $productionDate . '|' . $batchData['material_lot_number'] . '|' . $batchData['qr_code'];
             if (isset($seenBatches[$batchKey])) {
                 continue;
             }
@@ -721,7 +692,7 @@ class MagnetismChecksheetImport
             try {
                 // Get letter code for this material lot
                 $letterCode = $batchData['letter_code'];
-                if (empty($letterCode) && ! empty($batchData['material_lot_number'])) {
+                if (empty($letterCode) && !empty($batchData['material_lot_number'])) {
                     $letterCode = MagnetismBatch::getLetterForMaterialLot($checksheet->id, $batchData['material_lot_number']);
                 }
 
@@ -786,7 +757,7 @@ class MagnetismChecksheetImport
             $seenCheckpoints[$checkpointNum] = true;
 
             $checkpointData = $this->extractCheckpointDataFromRow($sheet, $row, $columnMap);
-            if (! $this->hasCheckpointData($checkpointData)) {
+            if (!$this->hasCheckpointData($checkpointData)) {
                 continue;
             }
 
@@ -838,21 +809,21 @@ class MagnetismChecksheetImport
         $checkedByCol = $columnMap['checked_by_col'] ?? null;
 
         return [
-            'sample1_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex).$row)),
-            'sample2_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 1).$row)),
-            'sample3_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 2).$row)),
-            'sample4_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 3).$row)),
-            'sample5_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 4).$row)),
-            'operator_first' => $operatorFirstCol ? $this->getCellValue($sheet, $operatorFirstCol.$row) : null,
-            'judgment_first' => $this->getCellValue($sheet, $judgmentFirstCol.$row),
-            'sample1_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex).$row)),
-            'sample2_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 1).$row)),
-            'sample3_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 2).$row)),
-            'sample4_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 3).$row)),
-            'sample5_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 4).$row)),
-            'operator_last' => $operatorLastCol ? $this->getCellValue($sheet, $operatorLastCol.$row) : null,
-            'judgment_last' => $this->getCellValue($sheet, $judgmentLastCol.$row),
-            'checked_by' => $checkedByCol ? $this->getCellValue($sheet, $checkedByCol.$row) : null,
+            'sample1_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex) . $row)),
+            'sample2_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 1) . $row)),
+            'sample3_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 2) . $row)),
+            'sample4_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 3) . $row)),
+            'sample5_first' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($firstStartIndex + 4) . $row)),
+            'operator_first' => $operatorFirstCol ? $this->getCellValue($sheet, $operatorFirstCol . $row) : null,
+            'judgment_first' => $this->getCellValue($sheet, $judgmentFirstCol . $row),
+            'sample1_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex) . $row)),
+            'sample2_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 1) . $row)),
+            'sample3_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 2) . $row)),
+            'sample4_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 3) . $row)),
+            'sample5_last' => $this->parseDecimal($this->getCellValue($sheet, Coordinate::stringFromColumnIndex($lastStartIndex + 4) . $row)),
+            'operator_last' => $operatorLastCol ? $this->getCellValue($sheet, $operatorLastCol . $row) : null,
+            'judgment_last' => $this->getCellValue($sheet, $judgmentLastCol . $row),
+            'checked_by' => $checkedByCol ? $this->getCellValue($sheet, $checkedByCol . $row) : null,
         ];
     }
 
@@ -863,12 +834,12 @@ class MagnetismChecksheetImport
     {
         return [
             'production_date' => $productionDate,
-            'letter_code' => $this->getCellValue($sheet, ($columnMap['letter_col'] ?? 'I').$row),
-            'material_lot_number' => $this->getCellValue($sheet, ($columnMap['material_lot_col'] ?? 'J').$row),
-            'qr_code' => $this->getCellValue($sheet, ($columnMap['qr_code_col'] ?? 'K').$row),
-            'produce_qty' => $this->parseInteger($this->getCellValue($sheet, ($columnMap['produce_qty_col'] ?? 'L').$row)),
-            'job_number' => $this->getCellValue($sheet, ($columnMap['job_number_col'] ?? 'M').$row),
-            'remarks' => $this->getCellValue($sheet, ($columnMap['remarks_col'] ?? null) ? $columnMap['remarks_col'].$row : null),
+            'letter_code' => $this->getCellValue($sheet, ($columnMap['letter_col'] ?? 'I') . $row),
+            'material_lot_number' => $this->getCellValue($sheet, ($columnMap['material_lot_col'] ?? 'J') . $row),
+            'qr_code' => $this->getCellValue($sheet, ($columnMap['qr_code_col'] ?? 'K') . $row),
+            'produce_qty' => $this->parseInteger($this->getCellValue($sheet, ($columnMap['produce_qty_col'] ?? 'L') . $row)),
+            'job_number' => $this->getCellValue($sheet, ($columnMap['job_number_col'] ?? 'M') . $row),
+            'remarks' => $this->getCellValue($sheet, ($columnMap['remarks_col'] ?? null) ? $columnMap['remarks_col'] . $row : null),
         ];
     }
 
@@ -877,7 +848,7 @@ class MagnetismChecksheetImport
      */
     protected function isValidBatch(array $data): bool
     {
-        return ! empty($data['material_lot_number']) || ! empty($data['qr_code']);
+        return !empty($data['material_lot_number']) || !empty($data['qr_code']);
     }
 
     /**
@@ -887,8 +858,8 @@ class MagnetismChecksheetImport
     {
         return $data['sample1_first'] !== null
             || $data['sample1_last'] !== null
-            || ! empty($data['operator_first'])
-            || ! empty($data['operator_last']);
+            || !empty($data['operator_first'])
+            || !empty($data['operator_last']);
     }
 
     /**
@@ -933,9 +904,7 @@ class MagnetismChecksheetImport
      */
     protected function parseDate($value): ?string
     {
-        if ($value === null || $value === '') {
-            return null;
-        }
+        if ($value === null || $value === '') return null;
 
         // Handle Excel numeric date
         if (is_numeric($value)) {
@@ -973,10 +942,7 @@ class MagnetismChecksheetImport
      */
     protected function parseInteger($value): int
     {
-        if ($value === null || $value === '') {
-            return 0;
-        }
-
+        if ($value === null || $value === '') return 0;
         return is_numeric($value) ? (int) $value : 0;
     }
 
@@ -985,11 +951,8 @@ class MagnetismChecksheetImport
      */
     protected function parseDecimal($value): ?float
     {
-        if ($value === null || $value === '') {
-            return null;
-        }
+        if ($value === null || $value === '') return null;
         $cleaned = preg_replace('/[^0-9.-]/', '', (string) $value);
-
         return is_numeric($cleaned) ? round((float) $cleaned, 1) : null;
     }
 

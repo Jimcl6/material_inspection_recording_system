@@ -15,7 +15,6 @@ declare module '@inertiajs/core' {
             error?: string;
             warning?: string;
             info?: string;
-            new_batch_id?: number;
         };
         errors: Record<string, string>;
         users?: Array<{

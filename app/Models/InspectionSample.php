@@ -8,9 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class InspectionSample extends Model
 {
     protected $table = 'inspection_samples';
-
     protected $primaryKey = 'SampleID';
-
     public $timestamps = false;
 
     protected $fillable = [

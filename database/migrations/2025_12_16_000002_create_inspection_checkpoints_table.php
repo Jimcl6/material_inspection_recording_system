@@ -8,6 +8,8 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     *
+     * @return void
      */
     public function up(): void
     {
@@ -20,7 +22,7 @@ return new class extends Migration
             $table->string('InspectorName_Last', 255)->nullable();
             $table->string('Judgement_Last', 255)->nullable();
             // Remove timestamps since model doesn't use them
-
+            
             // Remove foreign key constraint for now
             // $table->foreign('BatchID')->references('BatchID')->on('productionbatches')->onDelete('cascade');
         });
@@ -28,6 +30,8 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
+     *
+     * @return void
      */
     public function down(): void
     {

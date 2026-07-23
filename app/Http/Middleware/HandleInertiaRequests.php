@@ -34,7 +34,6 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => function () use ($request) {
                     $user = $request->user();
-
                     return $user ? $user->load(['role', 'position']) : null;
                 },
                 'permissions' => function () use ($request) {
@@ -63,7 +62,7 @@ class HandleInertiaRequests extends Middleware
      */
     protected function getUserPermissions($user): array
     {
-        if (! $user) {
+        if (!$user) {
             return [];
         }
 

@@ -89,7 +89,7 @@ class RoleController extends Controller
         ]);
 
         // Sync permissions if provided
-        if (! empty($validated['permissions'])) {
+        if (!empty($validated['permissions'])) {
             $role->syncPermissions($validated['permissions']);
         }
 
@@ -131,7 +131,7 @@ class RoleController extends Controller
             'permissions.*' => 'exists:user_permissions,id',
         ];
 
-        if (! $role->isSystem()) {
+        if (!$role->isSystem()) {
             $rules['name'] = ['required', 'string', 'max:100', Rule::unique('roles')->ignore($role->id)];
             $rules['slug'] = ['required', 'string', 'max:100', 'regex:/^[a-z_]+$/', Rule::unique('roles')->ignore($role->id)];
             $rules['description'] = 'nullable|string|max:500';
@@ -144,7 +144,7 @@ class RoleController extends Controller
         $oldPermissions = $role->permissions->pluck('id')->toArray();
 
         // Update role properties only if not a system role
-        if (! $role->isSystem()) {
+        if (!$role->isSystem()) {
             $role->update([
                 'name' => $validated['name'],
                 'slug' => $validated['slug'],
@@ -189,7 +189,7 @@ class RoleController extends Controller
 
         $roleData = $role->toArray();
         $roleName = $role->name;
-
+        
         // Detach permissions before deleting
         $role->permissions()->detach();
         $role->delete();
@@ -217,10 +217,10 @@ class RoleController extends Controller
         }
 
         $before = ActivityService::snapshot($role);
-        $role->update(['is_active' => ! $role->is_active]);
+        $role->update(['is_active' => !$role->is_active]);
 
         $status = $role->is_active ? 'activated' : 'deactivated';
-
+        
         ActivityService::logSnapshotUpdate(
             $role,
             $before,

@@ -56,12 +56,11 @@ class DiaphragmItemCode extends Model
      */
     public function validateMeasurement1($value): bool
     {
-        if (! $this->hasMeasurement1Validation()) {
+        if (!$this->hasMeasurement1Validation()) {
             return true;
         }
 
         $numValue = (float) $value;
-
         return $numValue >= $this->measurement_1_min && $numValue <= $this->measurement_1_max;
     }
 
@@ -71,12 +70,11 @@ class DiaphragmItemCode extends Model
      */
     public function validateCircumferenceDiff($measurementN, $measurement1): bool
     {
-        if (! $this->hasCircumferenceDiffValidation()) {
+        if (!$this->hasCircumferenceDiffValidation()) {
             return true;
         }
 
-        $diff = abs((float) $measurementN - (float) $measurement1) / 2;
-
+        $diff = abs((float)$measurementN - (float)$measurement1) / 2;
         return $diff <= $this->circumference_diff_max;
     }
 
@@ -85,6 +83,6 @@ class DiaphragmItemCode extends Model
      */
     public function validateStrength($value): bool
     {
-        return (float) $value >= $this->strength_min;
+        return (float)$value >= $this->strength_min;
     }
 }

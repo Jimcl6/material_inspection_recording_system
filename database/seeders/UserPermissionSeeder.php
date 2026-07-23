@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\UserPermission;
 use Illuminate\Database\Seeder;
+use App\Models\UserPermission;
 
 class UserPermissionSeeder extends Seeder
 {
@@ -36,10 +36,10 @@ class UserPermissionSeeder extends Seeder
         foreach ($modules as $module => $actions) {
             foreach ($actions as $action) {
                 UserPermission::createOrUpdate(
-                    ucfirst($action).' '.ucfirst($module),
+                    ucfirst($action) . ' ' . ucfirst($module),
                     $module,
                     $action,
-                    'Permission to '.$action.' '.$module.' module'
+                    'Permission to ' . $action . ' ' . $module . ' module'
                 );
             }
         }

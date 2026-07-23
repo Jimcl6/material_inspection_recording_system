@@ -73,11 +73,11 @@ class Activity extends Model
     {
         $name = $this->user->name ?? '';
         $words = explode(' ', $name);
-
+        
         if (count($words) >= 2) {
-            return strtoupper(substr($words[0], 0, 1).substr($words[1], 0, 1));
+            return strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1));
         }
-
+        
         return strtoupper(substr($name, 0, 2));
     }
 }

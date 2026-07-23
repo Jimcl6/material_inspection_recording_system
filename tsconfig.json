@@ -31,7 +31,7 @@
     "resources/js/**/*.d.ts",
     "resources/js/**/*.tsx",
     "resources/js/**/*.vue"
-  ],
+, "temp_backup/Edit.vue"  ],
   "exclude": [
     "node_modules",
     "vendor",

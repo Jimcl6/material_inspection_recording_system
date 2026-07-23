@@ -18,6 +18,9 @@ class AnnealingChecksExport implements FromCollection, WithHeadings, WithMapping
         return AnnealingCheck::with(['pic', 'checkedBy', 'verifiedBy'])->get();
     }
 
+    /**
+     * @return array
+     */
     public function headings(): array
     {
         return [
@@ -43,7 +46,9 @@ class AnnealingChecksExport implements FromCollection, WithHeadings, WithMapping
     }
 
     /**
-     * @param  mixed  $annealingCheck
+     * @param mixed $annealingCheck
+     *
+     * @return array
      */
     public function map($annealingCheck): array
     {
@@ -69,6 +74,9 @@ class AnnealingChecksExport implements FromCollection, WithHeadings, WithMapping
         ];
     }
 
+    /**
+     * @return string
+     */
     public function title(): string
     {
         return 'Annealing Checks';

@@ -2,14 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WeldingChecksheetSample extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'checksheet_id',
         'check_item_key',
