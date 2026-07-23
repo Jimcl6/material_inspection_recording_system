@@ -22,7 +22,7 @@ class QrCodeService
             'email' => $user->email,
             'status' => $employmentStatus,
             'generated_at' => now()->toISOString(),
-            'signature' => hash_hmac('sha256', $user->id . $employeeId, config('app.key'))
+            'signature' => hash_hmac('sha256', $user->id.$employeeId, config('app.key')),
         ];
 
         return Crypt::encrypt(json_encode($qrData));
@@ -37,21 +37,24 @@ class QrCodeService
             $decrypted = Crypt::decrypt($qrData);
             $data = json_decode($decrypted, true);
 
-            if (!$data || !isset($data['id'], $data['employee_id'], $data['signature'])) {
+            if (! $data || ! isset($data['id'], $data['employee_id'], $data['signature'])) {
                 Log::warning('Invalid QR data structure');
+
                 return null;
             }
 
             // Verify signature
-            $expectedSignature = hash_hmac('sha256', $data['id'] . $data['employee_id'], config('app.key'));
-            if (!hash_equals($expectedSignature, $data['signature'])) {
+            $expectedSignature = hash_hmac('sha256', $data['id'].$data['employee_id'], config('app.key'));
+            if (! hash_equals($expectedSignature, $data['signature'])) {
                 Log::warning('QR data signature mismatch', ['user_id' => $data['id'] ?? 'unknown']);
+
                 return null;
             }
 
             return $data;
         } catch (\Throwable $e) {
             Log::warning('Failed to decode QR data', ['exception' => $e::class]);
+
             return null;
         }
     }
@@ -62,14 +65,14 @@ class QrCodeService
     public function findUserByQrData(string $qrData): ?User
     {
         $data = $this->validateQrData($qrData);
-        
-        if (!$data) {
+
+        if (! $data) {
             return null;
         }
 
         $user = User::find($data['id']);
-        
-        if (!$user || !$user->isActive()) {
+
+        if (! $user || ! $user->isActive()) {
             return null;
         }
 
@@ -78,8 +81,9 @@ class QrCodeService
             Log::warning('Employee ID mismatch', [
                 'user_id' => $user->id,
                 'stored_id' => $user->qrCode->employee_id,
-                'scanned_id' => $data['employee_id']
+                'scanned_id' => $data['employee_id'],
             ]);
+
             return null;
         }
 
@@ -138,8 +142,8 @@ class QrCodeService
     public function deactivateQrCode(User $user): bool
     {
         $qrCode = $user->qrCode;
-        
-        if (!$qrCode) {
+
+        if (! $qrCode) {
             return false;
         }
 
@@ -168,13 +172,13 @@ class QrCodeService
 
         if ($qrCode->employment_status === 'contractual' && $qrCode->contract_end_date) {
             $daysUntil = now()->diffInDays($qrCode->contract_end_date, false);
-            
+
             if ($daysUntil < 0) {
                 $status['is_expired'] = true;
             } elseif ($daysUntil <= 30) {
                 $status['is_expiring_soon'] = true;
             }
-            
+
             $status['days_until_expiry'] = $daysUntil;
         }
 
@@ -191,11 +195,12 @@ class QrCodeService
         try {
             // Split by comma and trim whitespace
             $parts = array_map('trim', explode(',', $qrData));
-            
+
             if (count($parts) !== 3) {
                 Log::warning('Invalid employee badge QR format - expected 3 parts', [
-                    'parts_count' => count($parts)
+                    'parts_count' => count($parts),
                 ]);
+
                 return null;
             }
 
@@ -206,21 +211,24 @@ class QrCodeService
             // Validate employee ID format (e.g., "25-431")
             if (empty($employeeId)) {
                 Log::warning('Empty employee ID in badge QR');
+
                 return null;
             }
 
             // Validate name
             if (empty($fullName)) {
                 Log::warning('Empty name in badge QR');
+
                 return null;
             }
 
             // Normalize employment status
             $validStatuses = ['regular', 'contractual', 'probationary'];
-            if (!in_array($employmentStatus, $validStatuses)) {
+            if (! in_array($employmentStatus, $validStatuses)) {
                 Log::warning('Invalid employment status in badge QR', [
-                    'status' => $employmentStatus
+                    'status' => $employmentStatus,
                 ]);
+
                 return null;
             }
 
@@ -233,6 +241,7 @@ class QrCodeService
             Log::error('Failed to parse employee badge QR', [
                 'exception' => $e::class,
             ]);
+
             return null;
         }
     }

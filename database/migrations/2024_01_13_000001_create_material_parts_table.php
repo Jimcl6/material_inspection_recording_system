@@ -23,14 +23,14 @@ return new class extends Migration
             $table->string('operator', 100)->nullable();
             $table->string('job_number', 100)->nullable();
             $table->timestamps();
-            
+
             // Indexes for performance
             $table->index('material_type');
             $table->index('date');
             $table->index('item_block_code');
             $table->index('main_lot_number');
             $table->index(['material_type', 'date', 'item_block_code']);
-            
+
             // Unique constraint to prevent duplicates
             $table->unique(['material_type', 'date', 'item_block_code', 'letter_code', 'main_lot_number'], 'unique_material_record');
         });

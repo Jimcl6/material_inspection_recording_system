@@ -1,34 +1,20 @@
 import './bootstrap';
 import '../css/app.css';
 
-import { createApp, h } from 'vue';
+import { createApp, h, type DefineComponent } from 'vue';
 import { createInertiaApp, router } from '@inertiajs/vue3';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue, route as ziggyRoute } from 'ziggy-js';
 import type { Page } from '@inertiajs/core';
-import type { Config, RouteParam, RouteParamsWithQueryOverload, Router as ZiggyRouter } from 'ziggy-js';
+import type { Config } from 'ziggy-js';
 import { createPinia } from 'pinia';
 
 declare global {
     interface Window {
         Ziggy: Config;
-        route: typeof route;
+        route: typeof ziggyRoute;
+        flatpickr?: (element: Element, options: Record<string, unknown>) => unknown;
     }
 }
-
-declare function route(
-    name?: string,
-    params?: RouteParamsWithQueryOverload | RouteParam,
-    absolute?: boolean,
-    customZiggy?: Config
-): string;
-
-declare function route(
-    name: undefined,
-    params?: RouteParamsWithQueryOverload | RouteParam,
-    absolute?: boolean,
-    customZiggy?: Config
-): typeof ZiggyRouter;
 
 // Import your global components here
 // import SomeComponent from '@/Components/SomeComponent.vue';
@@ -60,8 +46,14 @@ const syncCsrfToken = (page: Page): void => {
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => {
-        const pages = import.meta.glob('./Pages/**/*.vue', { eager: true });
-        return pages[`./Pages/${name}.vue`];
+        const pages = import.meta.glob<{ default: DefineComponent }>('./Pages/**/*.vue', { eager: true });
+        const page = pages[`./Pages/${name}.vue`];
+
+        if (!page) {
+            throw new Error(`Unable to resolve Inertia page: ${name}`);
+        }
+
+        return page.default;
     },
     setup({ el, App, props, plugin }) {
         const pinia = createPinia();
@@ -76,17 +68,16 @@ createInertiaApp({
         };
 
         window.Ziggy = ziggy;
-        window.route = ((name?: string, params?: RouteParamsWithQueryOverload | RouteParam, absolute?: boolean, customZiggy?: Config) => {
-            return ziggyRoute(name as any, params as any, absolute, customZiggy ?? ziggy) as any;
-        }) as typeof route;
-        
-        return createApp({ render: () => h(App, props) })
+        window.route = ziggyRoute;
+
+        const app = createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(pinia)
-            .use(ZiggyVue, ziggy)
-            // Register global components here
-            // .component('some-component', SomeComponent)
-            .mount(el);
+            .use(ZiggyVue, ziggy);
+
+        app.mount(el);
+
+        return app;
     },
     progress: {
         color: '#4B5563',

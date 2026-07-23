@@ -1,26 +1,24 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ApprovalNotificationController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\PendingApprovalController;
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AnnealingCheckController;
+use App\Http\Controllers\ApprovalNotificationController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\MagnetismController;
+use App\Http\Controllers\MaterialPartController;
+use App\Http\Controllers\ModificationLogController;
+use App\Http\Controllers\PendingApprovalController;
+use App\Http\Controllers\PositionController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TempRecordController;
 use App\Http\Controllers\TorqueRecordController;
-use App\Http\Controllers\ProductionBatchController;
-use App\Http\Controllers\MagnetismController;
-use App\Http\Controllers\ModificationLogController;
-use App\Http\Controllers\MaterialPartController;
-use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\UserBadgeController;
-use App\Http\Controllers\DepartmentController;
-use App\Http\Controllers\PositionController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\ActivityLogController;
-use App\Http\Controllers\DiaphragmWeldingController;
+use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\WeldingChecksheetController;
 use App\Models\WeldingChecksheet;
+use Illuminate\Support\Facades\Route;
 
 // Public routes
 Route::get('/', function () {
@@ -71,7 +69,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('magnetism-checksheet/import/execute', [MagnetismController::class, 'importExecute'])
         ->middleware('module.permission:magnetism,import')
         ->name('magnetism-checksheet.import.execute');
-    
+
     // Main CRUD routes
     Route::get('magnetism-checksheet', [MagnetismController::class, 'index'])
         ->middleware('module.permission:magnetism,view')
@@ -97,7 +95,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('magnetism-checksheet/{magnetism_checksheet}/export', [MagnetismController::class, 'export'])
         ->middleware('module.permission:magnetism,export')
         ->name('magnetism-checksheet.export');
-    
+
     // Batch routes (nested under checksheet)
     Route::post('magnetism-checksheet/{magnetism_checksheet}/batches', [MagnetismController::class, 'storeBatch'])
         ->middleware('module.permission:magnetism,create')
@@ -112,7 +110,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('magnetism-checksheet.next-letter');
     Route::get('magnetism-checksheet/{magnetism_checksheet}/letter-for-lot', [MagnetismController::class, 'getLetterForLot'])
         ->name('magnetism-checksheet.letter-for-lot');
-    
+
     // Checkpoint routes (bulk save for a production date)
     Route::put('magnetism-checksheet/{magnetism_checksheet}/checkpoints', [MagnetismController::class, 'updateCheckpoints'])
         ->middleware('module.permission:magnetism,update')
@@ -167,7 +165,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('annealing-checks/bulk-reject', [AnnealingCheckController::class, 'bulkReject'])
             ->name('annealing-checks.bulk-reject');
     });
-    
+
     // Annealing Checks Resource Routes with permission middleware
     Route::get('annealing-checks', [AnnealingCheckController::class, 'index'])
         ->middleware('module.permission:annealing,view')
@@ -196,7 +194,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('module.permission:annealing,delete')
         ->whereNumber('annealing_check')
         ->name('annealing-checks.destroy');
-    
+
     // Temperature Records with permission middleware
     Route::get('temp-records', [TempRecordController::class, 'index'])
         ->middleware('module.permission:temperature,view')
@@ -405,7 +403,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('users.badges.reissue');
         Route::post('users/{user}/regenerate-qr', [UserManagementController::class, 'regenerateQr'])
             ->name('users.regenerate-qr');
-        
+
         Route::resource('users', UserManagementController::class)->names([
             'index' => 'users.index',
             'create' => 'users.create',

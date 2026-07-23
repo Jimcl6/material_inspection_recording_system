@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\MaterialSubLotTitle;
-use Illuminate\Http\Request;
 
 class MaterialSubLotTitleController extends Controller
 {

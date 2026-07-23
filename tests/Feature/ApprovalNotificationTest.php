@@ -216,7 +216,7 @@ class ApprovalNotificationTest extends TestCase
 
         foreach ($permissions as [$module, $action]) {
             $permission = UserPermission::createOrUpdate(
-                ucfirst($action) . ' ' . ucfirst($module),
+                ucfirst($action).' '.ucfirst($module),
                 $module,
                 $action,
                 'Permission for approval notification tests'
@@ -227,7 +227,7 @@ class ApprovalNotificationTest extends TestCase
 
         $user = User::create([
             'name' => ucwords(str_replace('-', ' ', $slug)),
-            'email' => $slug . '-' . uniqid() . '@example.test',
+            'email' => $slug.'-'.uniqid().'@example.test',
             'password' => bcrypt('password'),
             'role_id' => $role->id,
             'status' => 'active',
