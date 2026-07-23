@@ -22,7 +22,7 @@ class ActivityLogController extends Controller
     public function index(Request $request): Response
     {
         $filters = $request->only(['search', 'user_id', 'module', 'type', 'date_from', 'date_to']);
-        
+
         $activities = ActivityService::getAllActivities($filters, 20);
 
         // Transform activities for display

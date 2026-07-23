@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Role;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -18,14 +17,6 @@ class UserFactory extends Factory
      */
     public function definition()
     {
-        $role = Role::firstOrCreate(
-            ['slug' => 'user'],
-            [
-                'name' => 'User',
-                'description' => 'Standard user account',
-            ]
-        );
-
         return [
             'name' => $this->faker->name(),
             'email' => $this->faker->unique()->safeEmail(),
@@ -33,7 +24,7 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => bcrypt('password'),
             'remember_token' => Str::random(10),
-            'role_id' => $role->id,
+            'role_id' => RoleFactory::new(),
             'status' => 'active',
         ];
     }
@@ -47,6 +38,42 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the account is active.
+     *
+     * @return static
+     */
+    public function active()
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'active',
+        ]);
+    }
+
+    /**
+     * Indicate that the account is inactive.
+     *
+     * @return static
+     */
+    public function inactive()
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'inactive',
+        ]);
+    }
+
+    /**
+     * Indicate that the account is suspended.
+     *
+     * @return static
+     */
+    public function suspended()
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'suspended',
         ]);
     }
 }

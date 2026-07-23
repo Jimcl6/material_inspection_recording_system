@@ -2,21 +2,22 @@
 
 namespace App\Mail;
 
+use App\Models\AnnealingCheck;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use App\Models\AnnealingCheck;
-use App\Models\User;
 
 class AnnealingCheckNotification extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $annealingCheck;
+
     public $user;
+
     public $type;
 
     /**
@@ -38,8 +39,8 @@ class AnnealingCheckNotification extends Mailable
      */
     public function envelope()
     {
-        $subject = $this->type === 'new_submission' 
-            ? 'New Annealing Check Submitted' 
+        $subject = $this->type === 'new_submission'
+            ? 'New Annealing Check Submitted'
             : 'Annealing Check Updated';
 
         return new Envelope(

@@ -2,11 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property string $status
+ */
 class TorqueRecord extends Model
 {
+    use HasFactory;
+
     protected $table = 'torque_records';
 
     protected $primaryKey = 'id';

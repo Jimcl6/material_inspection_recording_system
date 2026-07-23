@@ -147,10 +147,10 @@ class DepartmentController extends Controller
     public function toggleStatus(Department $department)
     {
         $before = ActivityService::snapshot($department);
-        $department->update(['is_active' => !$department->is_active]);
+        $department->update(['is_active' => ! $department->is_active]);
 
         $status = $department->is_active ? 'activated' : 'deactivated';
-        
+
         ActivityService::logSnapshotUpdate(
             $department,
             $before,

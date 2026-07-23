@@ -21,7 +21,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'read', 'acted'])->default('pending');
             $table->text('message')->nullable();
             $table->timestamps();
-            
+
             $table->index(['user_id', 'status']);
         });
     }

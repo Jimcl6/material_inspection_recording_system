@@ -1,4 +1,5 @@
 <?php
+
 // Material Type Sub-Lot Fields Configuration
 // Column titles from row 8 of each Excel file
 
@@ -10,12 +11,12 @@ return [
         'SPRING STOPPER',
         'CYLINDER',
         'Y-GASKET',
-        'PISTON'
+        'PISTON',
     ],
     'CASING' => [
         'CASING',
         'VALVE COVER',
-        'AIRVALVE'
+        'AIRVALVE',
     ],
     'FILTER COVER' => [
         'SERIAL NUMBER',
@@ -23,17 +24,17 @@ return [
         'GASKET',
         'HOUSING',
         'MANUAL',
-        'ACCESSORIES'
+        'ACCESSORIES',
     ],
     'FRAME' => [
         'SCREW',
         'FRAME',
-        'QR CODE'
+        'QR CODE',
     ],
     'L-HOSE' => [
         'L-HOSE',
         'HOSE CLIP',
-        'HOSE BAND'
+        'HOSE BAND',
     ],
     'MOTOR BLOCK' => [
         'MOTOR CASE',
@@ -44,7 +45,7 @@ return [
         'TANK TUBE',
         'NOZZLE TUBE',
         'SCREW (M3X8)',
-        'SCREW (M4X12)'
+        'SCREW (M4X12)',
     ],
     'POWERCORD' => [
         'POWERCORD',
@@ -54,7 +55,7 @@ return [
         'FILTER COVER',
         'TANK',
         'HP-LOWER HOUSING',
-        'SCREW (M4X6)'
+        'SCREW (M4X6)',
     ],
     'SALESPARTS' => [
         'DF',
@@ -66,7 +67,7 @@ return [
         'FRAME',
         'WASHER',
         'NUT',
-        'OTHERS'
+        'OTHERS',
     ],
     'SWITCH BLOCK' => [
         'SWITCH BEAM',
@@ -74,12 +75,12 @@ return [
         'L-TYPE LEVER/ SWITCH SLIDE',
         'SPRING ELECTRODE',
         'LOCKING COLLAR',
-        'LOWER HOUSING'
+        'LOWER HOUSING',
     ],
     'TANK COVER' => [
         'TANK COVER',
         'CP BUILT IN TUBE',
         'KP BUILT IN TUBE',
-        'VP BALL CUSHION'
+        'VP BALL CUSHION',
     ],
 ];

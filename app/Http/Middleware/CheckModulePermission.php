@@ -19,19 +19,20 @@ class CheckModulePermission
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Unauthenticated.'], 401);
             }
+
             return redirect()->route('login');
         }
 
         // Check if user has the required permission
-        if (!$user->hasPermission($module, $action)) {
+        if (! $user->hasPermission($module, $action)) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'You do not have permission to perform this action.',
-                    'required_permission' => "{$module}.{$action}"
+                    'required_permission' => "{$module}.{$action}",
                 ], 403);
             }
 
