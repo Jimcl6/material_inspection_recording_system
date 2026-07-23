@@ -459,8 +459,8 @@ const deleteBatch = (): void => {
             }));
         },
         preserveScroll: true,
-        onError: (error: Error): void => {
-            console.error('Error deleting checksheet:', error);
+        onError: (errors: Record<string, string>): void => {
+            console.error('Error deleting checksheet:', errors);
             showDeleteModal.value = false;
             batchToDelete.value = null;
             

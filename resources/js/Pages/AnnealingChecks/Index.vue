@@ -124,8 +124,8 @@ const deleteCheck = (): void => {
             checkToDelete.value = null;
         },
         preserveScroll: true,
-        onError: (error: Error): void => {
-            console.error('Error deleting check:', error);
+        onError: (errors: Record<string, string>): void => {
+            console.error('Error deleting check:', errors);
             showDeleteModal.value = false;
             checkToDelete.value = null;
             

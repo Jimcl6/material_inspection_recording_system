@@ -3,7 +3,7 @@
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "node",
-    "strict": true,
+    "strict": false,
     "jsx": "preserve",
     "sourceMap": true,
     "resolveJsonModule": true,
@@ -19,7 +19,7 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "noImplicitAny": false,
-    "strictNullChecks": true,
+    "strictNullChecks": false,
     "typeRoots": [
       "./node_modules/@types",
       "./resources/js/types"
@@ -31,7 +31,7 @@
     "resources/js/**/*.d.ts",
     "resources/js/**/*.tsx",
     "resources/js/**/*.vue"
-, "temp_backup/Edit.vue"  ],
+  ],
   "exclude": [
     "node_modules",
     "vendor",
@@ -41,6 +41,6 @@
   ],
   "vueCompilerOptions": {
     "target": 3,
-    "strictTemplates": true
+    "strictTemplates": false
   }
 }

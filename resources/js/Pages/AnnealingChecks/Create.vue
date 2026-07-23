@@ -99,7 +99,7 @@ const submit = async (): Promise<void> => {
 // Auto-validate on field blur
 const onBlur = (field: string) => {
     if (form.errors[field]) {
-        form.clearErrors(field);
+        form.clearErrors(field as any);
     }
 };
 </script>

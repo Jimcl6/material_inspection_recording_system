@@ -19,6 +19,7 @@ interface Checksheet {
     letter_code: string | null;
     job_number: string | null;
     prod_qty: number | null;
+    quantity: number | null;
     status: string;
     type?: { id: number; name: string };
     operator?: { id: number; name: string };
