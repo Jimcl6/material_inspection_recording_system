@@ -160,6 +160,6 @@ class MagnetismCheckpoint extends Model
      */
     public function getFormattedDateAttribute(): string
     {
-        return $this->production_date ? $this->production_date->format('Y-m-d') : '';
+        return $this->production_date->format('Y-m-d');
     }
 }

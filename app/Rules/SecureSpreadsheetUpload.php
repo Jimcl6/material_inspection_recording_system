@@ -57,7 +57,14 @@ class SecureSpreadsheetUpload implements Rule
 
             $reader = IOFactory::createReader($type);
             $reader->setReadDataOnly(true);
-            $worksheets = $reader->listWorksheetInfo($path);
+            if (! is_callable([$reader, 'listWorksheetInfo'])) {
+                return false;
+            }
+
+            $worksheets = call_user_func([$reader, 'listWorksheetInfo'], $path);
+            if (! is_array($worksheets)) {
+                return false;
+            }
 
             return count($worksheets) > 0
                 && collect($worksheets)->contains(fn (array $sheet) => ($sheet['totalRows'] ?? 0) > 0 && ($sheet['totalColumns'] ?? 0) > 0

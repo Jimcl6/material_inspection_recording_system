@@ -352,7 +352,7 @@ class DiaphragmWeldingImport
                         $this->previewResults['duplicate_records'][] = [
                             'existing_id' => $existing->id,
                             'existing_data' => [
-                                'production_date' => $existing->production_date ? $existing->production_date->format('Y-m-d') : null,
+                                'production_date' => $existing->production_date->format('Y-m-d'),
                                 'lasermark_lot_number' => $existing->lasermark_lot_number,
                                 'machine_no' => $existing->machine_no,
                                 'jo_number' => $existing->jo_number,

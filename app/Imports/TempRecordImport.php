@@ -473,7 +473,7 @@ class TempRecordImport
 
         // Handle Excel numeric time (0.0 - 1.0)
         if (is_numeric($value) && $value >= 0 && $value < 1) {
-            $totalMinutes = round((float) $value * 24 * 60);
+            $totalMinutes = (int) round((float) $value * 24 * 60);
             $hours = intdiv($totalMinutes, 60);
             $minutes = $totalMinutes % 60;
 

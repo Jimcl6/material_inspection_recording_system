@@ -27,7 +27,7 @@ class TempRecordPolicy
      */
     public function view(User $user, TempRecord $tempRecord)
     {
-        //
+        return false;
     }
 
     /**
@@ -47,7 +47,7 @@ class TempRecordPolicy
      */
     public function update(User $user, TempRecord $tempRecord)
     {
-        //
+        return false;
     }
 
     /**
@@ -57,7 +57,7 @@ class TempRecordPolicy
      */
     public function delete(User $user, TempRecord $tempRecord)
     {
-        //
+        return false;
     }
 
     /**
@@ -67,7 +67,7 @@ class TempRecordPolicy
      */
     public function restore(User $user, TempRecord $tempRecord)
     {
-        //
+        return false;
     }
 
     /**
@@ -77,6 +77,6 @@ class TempRecordPolicy
      */
     public function forceDelete(User $user, TempRecord $tempRecord)
     {
-        //
+        return false;
     }
 }

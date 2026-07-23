@@ -99,7 +99,7 @@ class ActivityService
 
         if ($subject) {
             $activity['subject_type'] = get_class($subject);
-            $activity['subject_id'] = $subject->id;
+            $activity['subject_id'] = $subject->getKey();
         } else {
             // For activities without a subject (like login)
             $activity['subject_type'] = '';
@@ -211,7 +211,7 @@ class ActivityService
         $modelName = class_basename($subject);
         self::log(
             'create',
-            "Created {$modelName}: {$subject->getIdentifierAttribute()}",
+            "Created {$modelName}: ".self::subjectIdentifier($subject),
             $subject,
             $properties
         );
@@ -236,7 +236,7 @@ class ActivityService
 
         self::log(
             'update',
-            "Updated {$modelName}: {$subject->getIdentifierAttribute()}{$changeText}",
+            "Updated {$modelName}: ".self::subjectIdentifier($subject).$changeText,
             $subject,
             array_merge(['changes' => $changeRows], $properties)
         );
@@ -250,7 +250,7 @@ class ActivityService
         $modelName = class_basename($subject);
         self::log(
             'delete',
-            "Deleted {$modelName}: {$subject->getIdentifierAttribute()}",
+            "Deleted {$modelName}: ".self::subjectIdentifier($subject),
             null,
             array_merge(['subject_data' => $subject->toArray()], $properties)
         );
@@ -451,9 +451,7 @@ class ActivityService
     public static function logApprove(Model $subject, array $properties = [])
     {
         $modelName = class_basename($subject);
-        $identifier = method_exists($subject, 'getIdentifierAttribute')
-            ? $subject->getIdentifierAttribute()
-            : $subject->id;
+        $identifier = self::subjectIdentifier($subject);
         self::log(
             'approve',
             "Approved {$modelName}: {$identifier}",
@@ -468,9 +466,7 @@ class ActivityService
     public static function logReject(Model $subject, string $reason = '', array $properties = [])
     {
         $modelName = class_basename($subject);
-        $identifier = method_exists($subject, 'getIdentifierAttribute')
-            ? $subject->getIdentifierAttribute()
-            : $subject->id;
+        $identifier = self::subjectIdentifier($subject);
         self::log(
             'reject',
             "Rejected {$modelName}: {$identifier}".($reason ? " - Reason: {$reason}" : ''),
@@ -761,6 +757,18 @@ class ActivityService
     private static function valuesAreEqual($before, $after): bool
     {
         return json_encode($before) === json_encode($after);
+    }
+
+    private static function subjectIdentifier(Model $subject): string
+    {
+        $identifier = $subject->getAttribute('identifier');
+        if (is_scalar($identifier) && (string) $identifier !== '') {
+            return (string) $identifier;
+        }
+
+        $key = $subject->getKey();
+
+        return $key === null ? 'Record' : '# '.$key;
     }
 
     private static function arrayIsList(array $value): bool
