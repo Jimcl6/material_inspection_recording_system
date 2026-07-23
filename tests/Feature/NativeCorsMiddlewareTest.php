@@ -13,13 +13,16 @@ class NativeCorsMiddlewareTest extends TestCase
     {
         parent::setUp();
 
-        Route::get('/_tests/native-cors', fn () => response()->json(['ok' => true]));
+        config()->set('cors.allowed_origins', [self::ORIGIN]);
+        config()->set('cors.supports_credentials', true);
+
+        Route::get('/api/_tests/native-cors', fn () => response()->json(['ok' => true]));
     }
 
     public function test_framework_native_middleware_handles_cors_request(): void
     {
         $response = $this->withHeader('Origin', self::ORIGIN)
-            ->get('/_tests/native-cors');
+            ->get('/api/_tests/native-cors');
 
         $response->assertOk()
             ->assertHeader('Access-Control-Allow-Origin', self::ORIGIN)
@@ -30,9 +33,9 @@ class NativeCorsMiddlewareTest extends TestCase
     {
         $response = $this->withHeaders([
             'Origin' => self::ORIGIN,
-            'Access-Control-Request-Method' => 'POST',
+            'Access-Control-Request-Method' => 'GET',
             'Access-Control-Request-Headers' => 'Content-Type, X-Requested-With',
-        ])->options('/_tests/native-cors');
+        ])->options('/api/_tests/native-cors');
 
         $response->assertNoContent()
             ->assertHeader('Access-Control-Allow-Origin', self::ORIGIN)

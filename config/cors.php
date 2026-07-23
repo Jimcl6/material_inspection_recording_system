@@ -1,5 +1,9 @@
 <?php
 
+use App\Support\CorsConfiguration;
+
+$allowedOrigins = CorsConfiguration::allowedOrigins(env('CORS_ALLOWED_ORIGINS'));
+
 return [
 
     /*
@@ -15,29 +19,21 @@ return [
     |
     */
 
-    // 'paths' => ['api/*', 'sanctum/csrf-cookie'],
-
-    // 'allowed_methods' => ['*'],
-
-    // 'allowed_origins' => ['*'],
-
-    // 'allowed_origins_patterns' => [],
-
-    // 'allowed_headers' => ['*'],
-
-    // 'exposed_headers' => [],
-
-    // 'max_age' => 0,
-
-    // 'supports_credentials' => false,
-
-    'paths' => ['*', 'sanctum/csrf-cookie'],
-    'allowed_methods' => ['*'],
-    'allowed_origins' => ['*'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'allowed_methods' => ['GET', 'HEAD', 'OPTIONS'],
+    'allowed_origins' => $allowedOrigins,
     'allowed_origins_patterns' => [],
-    'allowed_headers' => ['*'],
+    'allowed_headers' => [
+        'Accept',
+        'Authorization',
+        'Content-Type',
+        'Origin',
+        'X-Requested-With',
+        'X-CSRF-TOKEN',
+        'X-XSRF-TOKEN',
+    ],
     'exposed_headers' => [],
-    'max_age' => 0,
-    'supports_credentials' => true,
+    'max_age' => 600,
+    'supports_credentials' => CorsConfiguration::supportsCredentials($allowedOrigins),
 
 ];
