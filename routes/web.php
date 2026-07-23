@@ -158,8 +158,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('annealing-checks/export', [AnnealingCheckController::class, 'export'])
         ->middleware('module.permission:annealing,export')
         ->name('annealing-checks.export');
-    Route::get('annealing-checks/debug', [AnnealingCheckController::class, 'debug']);
-    
     // Approval routes (admin/inspector only)
     Route::middleware(['auth', 'feature:approvals', 'module.permission:annealing,approve'])->group(function () {
         Route::get('annealing-checks/approval', [AnnealingCheckController::class, 'approval'])
@@ -182,17 +180,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('annealing-checks.store');
     Route::get('annealing-checks/{annealing_check}', [AnnealingCheckController::class, 'show'])
         ->middleware('module.permission:annealing,view')
+        ->whereNumber('annealing_check')
         ->name('annealing-checks.show');
     Route::get('annealing-checks/{annealing_check}/edit', [AnnealingCheckController::class, 'edit'])
         ->middleware('module.permission:annealing,update')
         ->name('annealing-checks.edit');
     Route::put('annealing-checks/{annealing_check}', [AnnealingCheckController::class, 'update'])
         ->middleware('module.permission:annealing,update')
+        ->whereNumber('annealing_check')
         ->name('annealing-checks.update');
     Route::patch('annealing-checks/{annealing_check}', [AnnealingCheckController::class, 'update'])
-        ->middleware('module.permission:annealing,update');
+        ->middleware('module.permission:annealing,update')
+        ->whereNumber('annealing_check');
     Route::delete('annealing-checks/{annealing_check}', [AnnealingCheckController::class, 'destroy'])
         ->middleware('module.permission:annealing,delete')
+        ->whereNumber('annealing_check')
         ->name('annealing-checks.destroy');
     
     // Temperature Records with permission middleware
@@ -292,24 +294,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('material-monitoring-checksheets/create', [MaterialPartController::class, 'create'])
         ->middleware('module.permission:material,create')
         ->name('material-monitoring-checksheets.create');
-    Route::get('material-monitoring-checksheets/for-ai', [MaterialPartController::class, 'getForAI'])
-        ->name('material-monitoring-checksheets.for-ai');
     Route::post('material-monitoring-checksheets', [MaterialPartController::class, 'store'])
         ->middleware('module.permission:material,create')
         ->name('material-monitoring-checksheets.store');
     Route::get('material-monitoring-checksheets/{material_monitoring_checksheet}', [MaterialPartController::class, 'show'])
         ->middleware('module.permission:material,view')
+        ->whereNumber('material_monitoring_checksheet')
         ->name('material-monitoring-checksheets.show');
     Route::get('material-monitoring-checksheets/{material_monitoring_checksheet}/edit', [MaterialPartController::class, 'edit'])
         ->middleware('module.permission:material,update')
         ->name('material-monitoring-checksheets.edit');
     Route::put('material-monitoring-checksheets/{material_monitoring_checksheet}', [MaterialPartController::class, 'update'])
         ->middleware('module.permission:material,update')
+        ->whereNumber('material_monitoring_checksheet')
         ->name('material-monitoring-checksheets.update');
     Route::patch('material-monitoring-checksheets/{material_monitoring_checksheet}', [MaterialPartController::class, 'update'])
-        ->middleware('module.permission:material,update');
+        ->middleware('module.permission:material,update')
+        ->whereNumber('material_monitoring_checksheet');
     Route::delete('material-monitoring-checksheets/{material_monitoring_checksheet}', [MaterialPartController::class, 'destroy'])
         ->middleware('module.permission:material,delete')
+        ->whereNumber('material_monitoring_checksheet')
         ->name('material-monitoring-checksheets.destroy');
 
     // Welding Checksheet
@@ -326,9 +330,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('welding-checksheets/export', [WeldingChecksheetController::class, 'export'])
         ->middleware('module.permission:welding,export')
         ->name('welding-checksheets.export');
-    Route::get('welding-checksheets/item-code-rules', [WeldingChecksheetController::class, 'itemCodeRules'])
-        ->name('welding-checksheets.item-code-rules');
-
     Route::middleware(['auth', 'feature:approvals', 'module.permission:welding,approve'])->group(function () {
         Route::get('welding-checksheets/approval', [WeldingChecksheetController::class, 'approval'])
             ->name('welding-checksheets.approval');
@@ -349,17 +350,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('welding-checksheets.store');
     Route::get('welding-checksheets/{welding_checksheet}', [WeldingChecksheetController::class, 'show'])
         ->middleware('module.permission:welding,view')
+        ->whereNumber('welding_checksheet')
         ->name('welding-checksheets.show');
     Route::get('welding-checksheets/{welding_checksheet}/edit', [WeldingChecksheetController::class, 'edit'])
         ->middleware('module.permission:welding,update')
         ->name('welding-checksheets.edit');
     Route::put('welding-checksheets/{welding_checksheet}', [WeldingChecksheetController::class, 'update'])
         ->middleware('module.permission:welding,update')
+        ->whereNumber('welding_checksheet')
         ->name('welding-checksheets.update');
     Route::patch('welding-checksheets/{welding_checksheet}', [WeldingChecksheetController::class, 'update'])
-        ->middleware('module.permission:welding,update');
+        ->middleware('module.permission:welding,update')
+        ->whereNumber('welding_checksheet');
     Route::delete('welding-checksheets/{welding_checksheet}', [WeldingChecksheetController::class, 'destroy'])
         ->middleware('module.permission:welding,delete')
+        ->whereNumber('welding_checksheet')
         ->name('welding-checksheets.destroy');
 
     // Legacy Diaphragm Welding links redirect to the new Welding Checksheet module.

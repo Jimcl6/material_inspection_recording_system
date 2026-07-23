@@ -16,12 +16,18 @@ use App\Http\Controllers\Api\MaterialTypeController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware(['auth:sanctum', 'account.active'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/material-types/{materialType}/sub-lot-titles', [MaterialSubLotTitleController::class, 'index']);
-
-// Material Type API routes
-Route::get('/material-types/{materialType}/sub-lot-fields', [MaterialTypeController::class, 'getSubLotFields']);
-Route::get('/material-types', [MaterialTypeController::class, 'getAllMaterialTypes']);
+Route::middleware([
+    'auth:sanctum',
+    'account.active',
+    'verified',
+    'module.permission:material,view',
+    'throttle:material-api',
+])->group(function (): void {
+    Route::get('/material-types/{materialType}/sub-lot-titles', [MaterialSubLotTitleController::class, 'index']);
+    Route::get('/material-types/{materialType}/sub-lot-fields', [MaterialTypeController::class, 'getSubLotFields']);
+    Route::get('/material-types', [MaterialTypeController::class, 'getAllMaterialTypes']);
+});
