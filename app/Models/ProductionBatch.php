@@ -5,6 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $BatchID
+ * @property string|null $QRCode
+ * @property string|null $ProductionDate
+ * @property string|null $LetterCode
+ */
 class ProductionBatch extends Model
 {
     protected $table = 'productionbatches';

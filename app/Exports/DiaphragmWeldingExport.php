@@ -67,7 +67,7 @@ class DiaphragmWeldingExport implements FromCollection, WithHeadings, WithMappin
     {
         $row = [
             $checksheet->id,
-            $checksheet->production_date?->format('Y-m-d'),
+            $checksheet->production_date->format('Y-m-d'),
             $checksheet->lasermark_lot_number,
             $checksheet->machine_no,
             $checksheet->letter_code,

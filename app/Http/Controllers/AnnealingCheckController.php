@@ -95,7 +95,7 @@ class AnnealingCheckController extends Controller
         // Log activity
         ActivityService::log(
             'create',
-            "Created annealing check for {$annealingCheck->item_name}",
+            "Created annealing check for {$annealingCheck->item_code}",
             $annealingCheck,
             ['item_code' => $annealingCheck->item_code],
             'annealing'
@@ -202,7 +202,7 @@ class AnnealingCheckController extends Controller
             $annealingCheck,
             $before,
             ActivityService::snapshot($annealingCheck),
-            "Updated annealing check for {$annealingCheck->item_name}",
+            "Updated annealing check for {$annealingCheck->item_code}",
             'annealing',
             ['item_code' => $annealingCheck->item_code]
         );
@@ -219,7 +219,7 @@ class AnnealingCheckController extends Controller
      */
     public function destroy(AnnealingCheck $annealingCheck)
     {
-        $itemName = $annealingCheck->item_name;
+        $itemName = $annealingCheck->item_code;
         $itemCode = $annealingCheck->item_code;
         
         $annealingCheck->delete();
