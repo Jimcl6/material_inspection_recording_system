@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class UserQrCode extends Model
 {
@@ -56,7 +56,7 @@ class UserQrCode extends Model
      */
     public function isContractExpiringSoon(): bool
     {
-        if ($this->employment_status !== 'contractual' || !$this->contract_end_date) {
+        if ($this->employment_status !== 'contractual' || ! $this->contract_end_date) {
             return false;
         }
 
@@ -68,7 +68,7 @@ class UserQrCode extends Model
      */
     public function isContractExpired(): bool
     {
-        if ($this->employment_status !== 'contractual' || !$this->contract_end_date) {
+        if ($this->employment_status !== 'contractual' || ! $this->contract_end_date) {
             return false;
         }
 

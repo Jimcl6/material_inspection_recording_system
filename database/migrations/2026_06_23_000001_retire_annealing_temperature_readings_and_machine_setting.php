@@ -27,7 +27,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (!Schema::hasColumn('annealing_checks', 'machine_setting')) {
+        if (! Schema::hasColumn('annealing_checks', 'machine_setting')) {
             Schema::table('annealing_checks', function (Blueprint $table) {
                 $table->string('machine_setting', 100)
                     ->nullable()
@@ -35,7 +35,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('temperature_readings')) {
+        if (! Schema::hasTable('temperature_readings')) {
             Schema::create('temperature_readings', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('annealing_check_id')

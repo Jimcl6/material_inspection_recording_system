@@ -99,7 +99,7 @@ class ActivityService
 
         if ($subject) {
             $activity['subject_type'] = get_class($subject);
-            $activity['subject_id'] = $subject->id;
+            $activity['subject_id'] = $subject->getKey();
         } else {
             // For activities without a subject (like login)
             $activity['subject_type'] = '';
@@ -117,14 +117,14 @@ class ActivityService
         $properties = $activity->properties ?? [];
         $changes = self::extractDisplayChanges($activity, $properties);
         $details = self::extractDisplayDetails($activity, $properties);
-        $recordedDetails = self::extractRecordedDetails($activity, $properties, !empty($changes));
+        $recordedDetails = self::extractRecordedDetails($activity, $properties, ! empty($changes));
 
         return [
             'summary' => $activity->description,
             'details' => $details,
             'changes' => $changes,
             'recorded_details' => $recordedDetails,
-            'has_before_after' => !empty($changes),
+            'has_before_after' => ! empty($changes),
             'recorded_details_title' => $activity->type === 'update' && empty($changes)
                 ? 'Saved Details'
                 : 'Recorded Details',
@@ -172,7 +172,7 @@ class ActivityService
      */
     private static function getModuleFromSubject(?Model $subject): ?string
     {
-        if (!$subject) {
+        if (! $subject) {
             return null;
         }
 
@@ -199,6 +199,7 @@ class ActivityService
         ];
 
         $className = get_class($subject);
+
         return $moduleMap[$className] ?? strtolower(class_basename($subject));
     }
 
@@ -210,7 +211,7 @@ class ActivityService
         $modelName = class_basename($subject);
         self::log(
             'create',
-            "Created {$modelName}: {$subject->getIdentifierAttribute()}",
+            "Created {$modelName}: ".self::subjectIdentifier($subject),
             $subject,
             $properties
         );
@@ -222,7 +223,7 @@ class ActivityService
     public static function logUpdate(Model $subject, array $changes = [], array $properties = [])
     {
         $modelName = class_basename($subject);
-        $changeText = !empty($changes) ? ' - Updated: ' . implode(', ', array_keys($changes)) : '';
+        $changeText = ! empty($changes) ? ' - Updated: '.implode(', ', array_keys($changes)) : '';
         $changeRows = [];
 
         foreach ($changes as $field => $after) {
@@ -235,7 +236,7 @@ class ActivityService
 
         self::log(
             'update',
-            "Updated {$modelName}: {$subject->getIdentifierAttribute()}{$changeText}",
+            "Updated {$modelName}: ".self::subjectIdentifier($subject).$changeText,
             $subject,
             array_merge(['changes' => $changeRows], $properties)
         );
@@ -249,7 +250,7 @@ class ActivityService
         $modelName = class_basename($subject);
         self::log(
             'delete',
-            "Deleted {$modelName}: {$subject->getIdentifierAttribute()}",
+            "Deleted {$modelName}: ".self::subjectIdentifier($subject),
             null,
             array_merge(['subject_data' => $subject->toArray()], $properties)
         );
@@ -324,17 +325,19 @@ class ActivityService
     {
         switch ($activity->type) {
             case 'create':
-                return "Created new record";
+                return 'Created new record';
             case 'update':
                 $changes = $activity->properties['changes'] ?? [];
-                if (!empty($changes)) {
-                    return "Modified: " . implode(', ', array_keys($changes));
+                if (! empty($changes)) {
+                    return 'Modified: '.implode(', ', array_keys($changes));
                 }
-                return "Updated record";
+
+                return 'Updated record';
             case 'delete':
-                return "Deleted record";
+                return 'Deleted record';
             case 'login':
                 $ip = $activity->properties['ip'] ?? 'Unknown';
+
                 return "Login from IP: {$ip}";
             default:
                 return $activity->description;
@@ -349,31 +352,31 @@ class ActivityService
         $query = Activity::with('user');
 
         // Filter by user
-        if (!empty($filters['user_id'])) {
+        if (! empty($filters['user_id'])) {
             $query->where('user_id', $filters['user_id']);
         }
 
         // Filter by module
-        if (!empty($filters['module'])) {
+        if (! empty($filters['module'])) {
             $query->where('module', $filters['module']);
         }
 
         // Filter by type (action)
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $query->where('type', $filters['type']);
         }
 
         // Filter by date range
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->whereDate('created_at', '>=', $filters['date_from']);
         }
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->whereDate('created_at', '<=', $filters['date_to']);
         }
 
         // Search in description
-        if (!empty($filters['search'])) {
-            $query->where('description', 'like', '%' . $filters['search'] . '%');
+        if (! empty($filters['search'])) {
+            $query->where('description', 'like', '%'.$filters['search'].'%');
         }
 
         return $query->latest()->paginate($perPage)->withQueryString();
@@ -430,6 +433,7 @@ class ActivityService
         if ($activity) {
             return $activity->delete();
         }
+
         return false;
     }
 
@@ -447,9 +451,7 @@ class ActivityService
     public static function logApprove(Model $subject, array $properties = [])
     {
         $modelName = class_basename($subject);
-        $identifier = method_exists($subject, 'getIdentifierAttribute') 
-            ? $subject->getIdentifierAttribute() 
-            : $subject->id;
+        $identifier = self::subjectIdentifier($subject);
         self::log(
             'approve',
             "Approved {$modelName}: {$identifier}",
@@ -464,12 +466,10 @@ class ActivityService
     public static function logReject(Model $subject, string $reason = '', array $properties = [])
     {
         $modelName = class_basename($subject);
-        $identifier = method_exists($subject, 'getIdentifierAttribute') 
-            ? $subject->getIdentifierAttribute() 
-            : $subject->id;
+        $identifier = self::subjectIdentifier($subject);
         self::log(
             'reject',
-            "Rejected {$modelName}: {$identifier}" . ($reason ? " - Reason: {$reason}" : ''),
+            "Rejected {$modelName}: {$identifier}".($reason ? " - Reason: {$reason}" : ''),
             $subject,
             array_merge(['rejection_reason' => $reason], $properties)
         );
@@ -570,7 +570,7 @@ class ActivityService
 
         $changes = $properties['changes'] ?? [];
 
-        if (!is_array($changes) || empty($changes)) {
+        if (! is_array($changes) || empty($changes)) {
             return [];
         }
 
@@ -711,12 +711,12 @@ class ActivityService
             if (self::arrayIsList($value)) {
                 $preview = array_slice($value, 0, 5);
                 $formatted = array_map(fn ($item) => is_scalar($item) ? (string) $item : 'Recorded item', $preview);
-                $suffix = count($value) > 5 ? ' +' . (count($value) - 5) . ' more' : '';
+                $suffix = count($value) > 5 ? ' +'.(count($value) - 5).' more' : '';
 
-                return implode(', ', $formatted) . $suffix;
+                return implode(', ', $formatted).$suffix;
             }
 
-            return count($value) . ' details recorded';
+            return count($value).' details recorded';
         }
 
         if ($value instanceof \DateTimeInterface) {
@@ -747,7 +747,7 @@ class ActivityService
 
     private static function looksLikeDate(string $field, string $value): bool
     {
-        if (!preg_match('/date|_at$/', $field)) {
+        if (! preg_match('/date|_at$/', $field)) {
             return false;
         }
 
@@ -757,6 +757,18 @@ class ActivityService
     private static function valuesAreEqual($before, $after): bool
     {
         return json_encode($before) === json_encode($after);
+    }
+
+    private static function subjectIdentifier(Model $subject): string
+    {
+        $identifier = $subject->getAttribute('identifier');
+        if (is_scalar($identifier) && (string) $identifier !== '') {
+            return (string) $identifier;
+        }
+
+        $key = $subject->getKey();
+
+        return $key === null ? 'Record' : '# '.$key;
     }
 
     private static function arrayIsList(array $value): bool

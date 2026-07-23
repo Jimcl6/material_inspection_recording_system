@@ -12,14 +12,14 @@ class InspectionSampleController extends Controller
     public function store(Request $request, InspectionCheckpoint $checkpoint)
     {
         $data = $request->validate([
-            'Phase' => ['required', Rule::in(['FIRST','LAST'])],
+            'Phase' => ['required', Rule::in(['FIRST', 'LAST'])],
             'SampleOrder' => [
-                'required','integer','min:1',
+                'required', 'integer', 'min:1',
                 Rule::unique('InspectionSamples', 'SampleOrder')
                     ->where('CheckpointID', $checkpoint->CheckpointID)
                     ->where('Phase', $request->input('Phase')),
             ],
-            'Value' => ['required','string','max:50'],
+            'Value' => ['required', 'string', 'max:50'],
         ]);
 
         $data['CheckpointID'] = $checkpoint->CheckpointID;
@@ -32,19 +32,23 @@ class InspectionSampleController extends Controller
     {
         $phase = $request->input('Phase', $sample->Phase);
         $data = $request->validate([
-            'Phase' => [Rule::in(['FIRST','LAST'])],
+            'Phase' => [Rule::in(['FIRST', 'LAST'])],
             'SampleOrder' => [
-                'nullable','integer','min:1',
+                'nullable', 'integer', 'min:1',
                 Rule::unique('InspectionSamples', 'SampleOrder')
                     ->where('CheckpointID', $sample->CheckpointID)
                     ->where('Phase', $phase)
                     ->ignore($sample->SampleID, 'SampleID'),
             ],
-            'Value' => ['nullable','string','max:50'],
+            'Value' => ['nullable', 'string', 'max:50'],
         ]);
 
-        if (!array_key_exists('Phase', $data)) { $data['Phase'] = $phase; }
-        if (empty($data)) { return back(); }
+        if (! array_key_exists('Phase', $data)) {
+            $data['Phase'] = $phase;
+        }
+        if (empty($data)) {
+            return back();
+        }
 
         $sample->update($data);
 
@@ -54,6 +58,7 @@ class InspectionSampleController extends Controller
     public function destroy(InspectionSample $sample)
     {
         $sample->delete();
+
         return back()->with('success', 'Sample deleted.');
     }
 }

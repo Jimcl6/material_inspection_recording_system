@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MagnetismChecksheet;
+use App\Http\Requests\MagnetismBatchRequest;
+use App\Http\Requests\MagnetismCheckSheetRequest;
+use App\Imports\MagnetismChecksheetImport;
 use App\Models\MagnetismBatch;
 use App\Models\MagnetismCheckpoint;
-use App\Http\Requests\MagnetismCheckSheetRequest;
-use App\Http\Requests\MagnetismBatchRequest;
-use App\Imports\MagnetismChecksheetImport;
+use App\Models\MagnetismChecksheet;
 use App\Services\ActivityService;
 use App\Services\DuplicateRecordGuard;
 use App\Support\SpreadsheetImportSecurity;
@@ -26,10 +26,10 @@ class MagnetismController extends Controller
 
         // Filters
         if ($request->filled('item_code')) {
-            $query->where('item_code', 'like', '%' . $request->input('item_code') . '%');
+            $query->where('item_code', 'like', '%'.$request->input('item_code').'%');
         }
         if ($request->filled('machine_no')) {
-            $query->where('machine_no', 'like', '%' . $request->input('machine_no') . '%');
+            $query->where('machine_no', 'like', '%'.$request->input('machine_no').'%');
         }
         if ($request->filled('month')) {
             $query->where('month', $request->input('month'));
@@ -94,14 +94,14 @@ class MagnetismController extends Controller
     public function show(Request $request, MagnetismChecksheet $magnetism_checksheet)
     {
         $checksheet = $magnetism_checksheet;
-        
+
         // Get all unique production dates
         $productionDates = $checksheet->batches()
             ->select('production_date')
             ->distinct()
             ->orderByDesc('production_date')
             ->pluck('production_date')
-            ->map(fn($date) => $date->format('Y-m-d'))
+            ->map(fn ($date) => $date->format('Y-m-d'))
             ->toArray();
 
         // Get selected date (default to most recent)
@@ -117,7 +117,7 @@ class MagnetismController extends Controller
                 ->where('production_date', $selectedDate)
                 ->orderBy('letter_code')
                 ->get()
-                ->map(fn($batch) => [
+                ->map(fn ($batch) => [
                     'id' => $batch->id,
                     'letter_code' => $batch->letter_code,
                     'material_lot_number' => $batch->material_lot_number,
@@ -221,7 +221,7 @@ class MagnetismController extends Controller
     {
         $recordData = $magnetism_checksheet->toArray();
         $itemCode = $magnetism_checksheet->item_code;
-        
+
         $magnetism_checksheet->delete();
 
         ActivityService::log(
@@ -243,8 +243,7 @@ class MagnetismController extends Controller
         MagnetismBatchRequest $request,
         MagnetismChecksheet $magnetism_checksheet,
         DuplicateRecordGuard $duplicateRecordGuard
-    )
-    {
+    ) {
         $data = $request->validated();
         $data['checksheet_id'] = $magnetism_checksheet->id;
 
@@ -304,7 +303,7 @@ class MagnetismController extends Controller
         $date = $batch->production_date->format('Y-m-d');
         $batchData = $batch->toArray();
         $letterCode = $batch->letter_code;
-        
+
         $batch->delete();
 
         ActivityService::log(
@@ -403,7 +402,7 @@ class MagnetismController extends Controller
     public function getLetterForLot(Request $request, MagnetismChecksheet $magnetism_checksheet)
     {
         $request->validate(['material_lot_number' => ['required', 'string', 'max:50']]);
-        
+
         $materialLotNumber = $request->input('material_lot_number');
         $letter = MagnetismBatch::getLetterForMaterialLot(
             $magnetism_checksheet->id,
@@ -486,7 +485,6 @@ class MagnetismController extends Controller
                 'detected_format' => $preview['detected_format'],
                 'available_formats' => MagnetismChecksheetImport::getAvailableFormats(),
             ]);
-
         } catch (\Throwable $e) {
             SpreadsheetImportSecurity::delete($tempPath);
             $correlationId = SpreadsheetImportSecurity::reportFailure('magnetism.preview', $e);
@@ -554,8 +552,12 @@ class MagnetismController extends Controller
             $totalSkipped = $results['batches_skipped'] + $results['checkpoints_skipped'];
 
             $message = "Import completed: {$totalImported} created";
-            if ($totalUpdated > 0) $message .= ", {$totalUpdated} updated";
-            if ($totalSkipped > 0) $message .= ", {$totalSkipped} skipped";
+            if ($totalUpdated > 0) {
+                $message .= ", {$totalUpdated} updated";
+            }
+            if ($totalSkipped > 0) {
+                $message .= ", {$totalSkipped} skipped";
+            }
 
             ActivityService::logImport('magnetism', $totalImported + $totalUpdated, [
                 'batches_imported' => $results['batches_imported'],
@@ -566,7 +568,7 @@ class MagnetismController extends Controller
 
             // Get first checksheet ID for redirect
             $redirectId = null;
-            if (!empty($results['checksheets_created'])) {
+            if (! empty($results['checksheets_created'])) {
                 $redirectId = $results['checksheets_created'][0]['id'];
             } else {
                 // Find existing checksheet
@@ -582,7 +584,6 @@ class MagnetismController extends Controller
                 'results' => $results,
                 'redirect_id' => $redirectId,
             ]);
-
         } catch (\Throwable $e) {
             $correlationId = SpreadsheetImportSecurity::reportFailure('magnetism.execute', $e);
 

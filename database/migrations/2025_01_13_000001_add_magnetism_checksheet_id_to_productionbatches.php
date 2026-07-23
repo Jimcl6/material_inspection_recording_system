@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('productionbatches')) {
+        if (! Schema::hasTable('productionbatches')) {
             return;
         }
 
         Schema::table('productionbatches', function (Blueprint $table) {
             // Add magnetism_checksheet_id column if it doesn't exist
-            if (!Schema::hasColumn('productionbatches', 'magnetism_checksheet_id')) {
+            if (! Schema::hasColumn('productionbatches', 'magnetism_checksheet_id')) {
                 $table->unsignedBigInteger('magnetism_checksheet_id')->nullable();
             }
         });
@@ -28,7 +28,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (!Schema::hasTable('productionbatches') || !Schema::hasColumn('productionbatches', 'magnetism_checksheet_id')) {
+        if (! Schema::hasTable('productionbatches') || ! Schema::hasColumn('productionbatches', 'magnetism_checksheet_id')) {
             return;
         }
 

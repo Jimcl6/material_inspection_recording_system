@@ -13,10 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        if (!Schema::hasTable('annealing_checks')
-            || !Schema::hasColumn('annealing_checks', 'pic_id')
-            || !Schema::hasColumn('annealing_checks', 'checked_by_id')
-            || !Schema::hasColumn('annealing_checks', 'verified_by_id')) {
+        if (! Schema::hasTable('annealing_checks')
+            || ! Schema::hasColumn('annealing_checks', 'pic_id')
+            || ! Schema::hasColumn('annealing_checks', 'checked_by_id')
+            || ! Schema::hasColumn('annealing_checks', 'verified_by_id')) {
             return;
         }
 
@@ -35,10 +35,10 @@ return new class extends Migration
      */
     public function down()
     {
-        if (!Schema::hasTable('annealing_checks')
-            || !Schema::hasColumn('annealing_checks', 'pic_id')
-            || !Schema::hasColumn('annealing_checks', 'checked_by_id')
-            || !Schema::hasColumn('annealing_checks', 'verified_by_id')) {
+        if (! Schema::hasTable('annealing_checks')
+            || ! Schema::hasColumn('annealing_checks', 'pic_id')
+            || ! Schema::hasColumn('annealing_checks', 'checked_by_id')
+            || ! Schema::hasColumn('annealing_checks', 'verified_by_id')) {
             return;
         }
 

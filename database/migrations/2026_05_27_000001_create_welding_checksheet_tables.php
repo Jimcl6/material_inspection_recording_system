@@ -197,7 +197,7 @@ return new class extends Migration
 
     private function seedPermissions(): void
     {
-        if (!Schema::hasTable('user_permissions')) {
+        if (! Schema::hasTable('user_permissions')) {
             return;
         }
 
@@ -213,11 +213,12 @@ return new class extends Migration
 
             if ($existing) {
                 $permissionMap[$action] = $existing->id;
+
                 continue;
             }
 
             $permissionMap[$action] = DB::table('user_permissions')->insertGetId([
-                'name' => ucfirst($action) . ' Welding',
+                'name' => ucfirst($action).' Welding',
                 'slug' => "welding.{$action}",
                 'description' => "Permission to {$action} welding checksheet module",
                 'module' => 'welding',
@@ -236,7 +237,7 @@ return new class extends Migration
         if (Schema::hasTable('role_permissions')) {
             foreach ($oldPermissions as $action => $oldPermission) {
                 $newPermissionId = $permissionMap[$action] ?? null;
-                if (!$newPermissionId) {
+                if (! $newPermissionId) {
                     continue;
                 }
 
@@ -256,7 +257,7 @@ return new class extends Migration
         if (Schema::hasTable('position_permissions')) {
             foreach ($oldPermissions as $action => $oldPermission) {
                 $newPermissionId = $permissionMap[$action] ?? null;
-                if (!$newPermissionId) {
+                if (! $newPermissionId) {
                     continue;
                 }
 
@@ -276,12 +277,12 @@ return new class extends Migration
 
     private function backfillDiaphragmData(): void
     {
-        if (!Schema::hasTable('diaphragm_welding_checksheets') || !Schema::hasTable('diaphragm_welding_samples')) {
+        if (! Schema::hasTable('diaphragm_welding_checksheets') || ! Schema::hasTable('diaphragm_welding_samples')) {
             return;
         }
 
         $typeId = DB::table('welding_checksheet_types')->where('key', 'diaphragm')->value('id');
-        if (!$typeId) {
+        if (! $typeId) {
             return;
         }
 

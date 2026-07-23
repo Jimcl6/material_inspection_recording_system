@@ -163,7 +163,7 @@ class ApprovalActivityLoggingTest extends TestCase
 
         $user = User::create([
             'name' => 'Approval Activity Tester',
-            'email' => 'approval-activity-' . uniqid() . '@example.test',
+            'email' => 'approval-activity-'.uniqid().'@example.test',
             'password' => bcrypt('password'),
             'role_id' => $role->id,
             'status' => 'active',

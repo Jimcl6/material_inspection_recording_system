@@ -43,7 +43,7 @@ class StoreDiaphragmWeldingRequest extends FormRequest
             'technician_id' => ['nullable', 'exists:users,id'],
             'checked_by_id' => ['nullable', 'exists:users,id'],
             'remarks' => ['nullable', 'string'],
-            
+
             // Samples validation
             'samples' => ['required', 'array'],
             'samples.*.check_item' => ['required', 'string', 'in:collapse_depth,collapse_time,strength,appearance,welding_condition,measurement_1,measurement_2,measurement_3,measurement_4,measurement_5'],
@@ -73,13 +73,13 @@ class StoreDiaphragmWeldingRequest extends FormRequest
         $itemCode = $this->input('item_code');
         $samples = $this->input('samples', []);
 
-        if (!$itemCode) {
+        if (! $itemCode) {
             return;
         }
 
         $itemCodeConfig = DiaphragmItemCode::where('item_code', $itemCode)->first();
-        
-        if (!$itemCodeConfig) {
+
+        if (! $itemCodeConfig) {
             // No config found - apply default rules (strength >= 0.30)
             $itemCodeConfig = new DiaphragmItemCode([
                 'strength_min' => 0.30,
@@ -103,7 +103,7 @@ class StoreDiaphragmWeldingRequest extends FormRequest
                     if ($value === 'F') {
                         $validator->errors()->add(
                             "samples.appearance.sample_{$i}",
-                            "Appearance FAIL detected. All samples must be reset and redone."
+                            'Appearance FAIL detected. All samples must be reset and redone.'
                         );
                     } else {
                         $validator->errors()->add(
@@ -121,7 +121,7 @@ class StoreDiaphragmWeldingRequest extends FormRequest
             for ($i = 1; $i <= 5; $i++) {
                 $value = $strength["sample_{$i}"] ?? '';
                 if ($value !== '' && $value !== '/' && is_numeric($value)) {
-                    if ((float)$value < $itemCodeConfig->strength_min) {
+                    if ((float) $value < $itemCodeConfig->strength_min) {
                         $validator->errors()->add(
                             "samples.strength.sample_{$i}",
                             "Strength must be >= {$itemCodeConfig->strength_min} kN. Got: {$value}"
@@ -137,7 +137,7 @@ class StoreDiaphragmWeldingRequest extends FormRequest
             for ($i = 1; $i <= 5; $i++) {
                 $value = $measurement1["sample_{$i}"] ?? '';
                 if ($value !== '' && $value !== '/' && is_numeric($value)) {
-                    if (!$itemCodeConfig->validateMeasurement1($value)) {
+                    if (! $itemCodeConfig->validateMeasurement1($value)) {
                         $validator->errors()->add(
                             "samples.measurement_1.sample_{$i}",
                             "Measurement 1 (Center) must be between {$itemCodeConfig->measurement_1_min} and {$itemCodeConfig->measurement_1_max}. Got: {$value}"
@@ -150,29 +150,28 @@ class StoreDiaphragmWeldingRequest extends FormRequest
         // Validate Measurements 2-5 (Circumference difference) - if max_limit type
         if ($itemCodeConfig->hasCircumferenceDiffValidation() && isset($samplesIndexed['measurement_1'])) {
             $measurement1 = $samplesIndexed['measurement_1'];
-            
+
             for ($m = 2; $m <= 5; $m++) {
                 $measurementKey = "measurement_{$m}";
-                if (!isset($samplesIndexed[$measurementKey])) {
+                if (! isset($samplesIndexed[$measurementKey])) {
                     continue;
                 }
-                
+
                 $measurementN = $samplesIndexed[$measurementKey];
-                
+
                 for ($i = 1; $i <= 5; $i++) {
                     $centerValue = $measurement1["sample_{$i}"] ?? '';
                     $circumValue = $measurementN["sample_{$i}"] ?? '';
-                    
-                    if ($centerValue !== '' && $circumValue !== '' && 
+
+                    if ($centerValue !== '' && $circumValue !== '' &&
                         $centerValue !== '/' && $circumValue !== '/' &&
                         is_numeric($centerValue) && is_numeric($circumValue)) {
-                        
-                        if (!$itemCodeConfig->validateCircumferenceDiff($circumValue, $centerValue)) {
-                            $diff = abs((float)$circumValue - (float)$centerValue) / 2;
+                        if (! $itemCodeConfig->validateCircumferenceDiff($circumValue, $centerValue)) {
+                            $diff = abs((float) $circumValue - (float) $centerValue) / 2;
                             $validator->errors()->add(
                                 "samples.{$measurementKey}.sample_{$i}",
-                                "Circumference difference exceeds limit. Formula: (|{$circumValue} - {$centerValue}|) / 2 = " . 
-                                number_format($diff, 3) . ". Must be <= {$itemCodeConfig->circumference_diff_max}"
+                                "Circumference difference exceeds limit. Formula: (|{$circumValue} - {$centerValue}|) / 2 = ".
+                                number_format($diff, 3).". Must be <= {$itemCodeConfig->circumference_diff_max}"
                             );
                         }
                     }

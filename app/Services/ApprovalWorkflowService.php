@@ -30,7 +30,7 @@ class ApprovalWorkflowService
 
     public function modulesForUser(User $user, bool $includeRecords = false, int $recordLimit = 5): Collection
     {
-        if (!config('features.approvals', false)) {
+        if (! config('features.approvals', false)) {
             return collect();
         }
 
@@ -79,10 +79,10 @@ class ApprovalWorkflowService
                     ->where('status', 'pending'),
                 'normalize' => fn (AnnealingCheck $check) => [
                     'id' => $check->id,
-                    'title' => $check->item_code ?: 'Annealing Check #' . $check->id,
+                    'title' => $check->item_code ?: 'Annealing Check #'.$check->id,
                     'subtitle' => $check->supplier_lot_number
-                        ? 'Supplier Lot: ' . $check->supplier_lot_number
-                        : 'Quantity: ' . $check->quantity,
+                        ? 'Supplier Lot: '.$check->supplier_lot_number
+                        : 'Quantity: '.$check->quantity,
                     'date' => optional($check->annealing_date)->toDateString(),
                     'submittedBy' => $check->createdBy?->name ?? 'System',
                     'showRouteName' => 'annealing-checks.show',
@@ -97,11 +97,11 @@ class ApprovalWorkflowService
                     ->where('status', 'pending'),
                 'normalize' => fn (TempRecord $record) => [
                     'id' => $record->id,
-                    'title' => $record->model_series ?: 'Temperature Record #' . $record->id,
+                    'title' => $record->model_series ?: 'Temperature Record #'.$record->id,
                     'subtitle' => collect([
                         $record->equipment_type,
-                        $record->control_no ? 'Control: ' . $record->control_no : null,
-                        $record->line_assigned ? 'Line: ' . $record->line_assigned : null,
+                        $record->control_no ? 'Control: '.$record->control_no : null,
+                        $record->line_assigned ? 'Line: '.$record->line_assigned : null,
                     ])->filter()->implode(' | '),
                     'date' => optional($record->date)->toDateString(),
                     'submittedBy' => $record->person_in_charge ?: 'System',
@@ -117,11 +117,11 @@ class ApprovalWorkflowService
                     ->where('status', 'pending'),
                 'normalize' => fn (TorqueRecord $record) => [
                     'id' => $record->id,
-                    'title' => $record->model_series ?: 'Torque Record #' . $record->id,
+                    'title' => $record->model_series ?: 'Torque Record #'.$record->id,
                     'subtitle' => collect([
                         $record->driver_model,
-                        $record->screw_type ? 'Screw: ' . $record->screw_type : null,
-                        $record->line_assigned ? 'Line: ' . $record->line_assigned : null,
+                        $record->screw_type ? 'Screw: '.$record->screw_type : null,
+                        $record->line_assigned ? 'Line: '.$record->line_assigned : null,
                     ])->filter()->implode(' | '),
                     'date' => optional($record->date)->toDateString(),
                     'submittedBy' => $record->person_in_charge ?: 'System',
@@ -137,11 +137,11 @@ class ApprovalWorkflowService
                     ->where('status', 'pending'),
                 'normalize' => fn (WeldingChecksheet $checksheet) => [
                     'id' => $checksheet->id,
-                    'title' => $checksheet->item_code ?: 'Welding Checksheet #' . $checksheet->id,
+                    'title' => $checksheet->item_code ?: 'Welding Checksheet #'.$checksheet->id,
                     'subtitle' => collect([
                         $checksheet->type?->name,
-                        $checksheet->job_number ? 'Job: ' . $checksheet->job_number : null,
-                        $checksheet->machine_no ? 'Machine: ' . $checksheet->machine_no : null,
+                        $checksheet->job_number ? 'Job: '.$checksheet->job_number : null,
+                        $checksheet->machine_no ? 'Machine: '.$checksheet->machine_no : null,
                     ])->filter()->implode(' | '),
                     'date' => optional($checksheet->production_date)->toDateString(),
                     'submittedBy' => $checksheet->createdBy?->name ?? 'System',
