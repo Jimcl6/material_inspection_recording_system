@@ -288,7 +288,7 @@ class AnnealingChecksWithHeadersImport
             return null;
         }
         if (is_numeric($value) && $value >= 0 && $value <= 1) {
-            $totalMinutes = round($value * 24 * 60);
+            $totalMinutes = (int) round($value * 24 * 60);
             $hours = intdiv($totalMinutes, 60);
             $minutes = $totalMinutes % 60;
 
@@ -492,8 +492,8 @@ class AnnealingChecksWithHeadersImport
                         'existing_id' => $existing->id,
                         'existing_data' => [
                             'item_code' => $existing->item_code,
-                            'annealing_date' => $existing->annealing_date ? $existing->annealing_date->format('Y-m-d') : null,
-                            'receiving_date' => $existing->receiving_date ? $existing->receiving_date->format('Y-m-d') : null,
+                            'annealing_date' => $existing->annealing_date->format('Y-m-d'),
+                            'receiving_date' => $existing->receiving_date->format('Y-m-d'),
                             'supplier_lot_number' => $existing->supplier_lot_number,
                             'quantity' => $existing->quantity,
                             'machine_number' => $existing->machine_number,

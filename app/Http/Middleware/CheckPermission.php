@@ -16,7 +16,7 @@ class CheckPermission
      * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
      * @param  string  $module  The module name (e.g., 'annealing', 'users')
      * @param  string  $action  The action name (e.g., 'view', 'create', 'update', 'delete')
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function handle(Request $request, Closure $next, string $module, string $action)
     {

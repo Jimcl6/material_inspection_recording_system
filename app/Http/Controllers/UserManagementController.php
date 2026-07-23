@@ -419,6 +419,8 @@ class UserManagementController extends Controller
         $action = $request->get('action');
 
         try {
+            $message = '';
+
             switch ($action) {
                 case 'activate':
                     User::whereIn('id', $userIds)->update(['status' => 'active']);
