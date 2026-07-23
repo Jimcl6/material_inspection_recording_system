@@ -54,6 +54,18 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
+        ],
+        "test:reset": "@php scripts/ci/reset-test-database.php",
+        "test:unit": "phpunit --testsuite Unit",
+        "test:feature": "phpunit --testsuite Feature",
+        "format:check": "pint --test",
+        "analyse": "phpstan analyse --no-progress",
+        "ci:backend": [
+            "@test:reset",
+            "@format:check",
+            "@analyse",
+            "@test:unit",
+            "@test:feature"
         ]
     },
     "extra": {

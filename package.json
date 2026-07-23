@@ -4,7 +4,8 @@
         "dev": "vite",
         "build": "vite build",
         "lint": "node scripts/ci/run-eslint.cjs",
-        "typecheck": "vue-tsc --noEmit"
+        "typecheck": "vue-tsc --noEmit",
+        "check": "npm run lint && npm run typecheck && npm run build"
     },
     "devDependencies": {
         "@casl/ability": "^6.8.1",
