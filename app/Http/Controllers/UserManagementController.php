@@ -64,7 +64,7 @@ class UserManagementController extends Controller
             });
         }
 
-        $users = $query->latest()->paginate(10)->withQueryString(); // @phpstan-ignore-line - withQueryString() is valid in Laravel 9
+        $users = $query->latest()->paginate(10)->withQueryString();
 
         // Ensure relationships are loaded and serialized properly
         $users->getCollection()->each(function ($user) {

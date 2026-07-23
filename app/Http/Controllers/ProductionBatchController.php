@@ -63,7 +63,7 @@ class ProductionBatchController extends Controller
             $batch->load(['checkpoints.samples']);
         } catch (\Exception $e) {
             // If checkpoints relationship fails, continue without checkpoints
-            $batch->checkpoints = collect();
+            $batch->setRelation('checkpoints', collect());
         }
 
         // Build checkpoints with samples organized by phase
