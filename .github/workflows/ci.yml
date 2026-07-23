@@ -91,7 +91,7 @@ jobs:
 
       - name: Generate ephemeral application key
         shell: bash
-        run: php -r '$key = "base64:".base64_encode(random_bytes(32)); file_put_contents(getenv("GITHUB_ENV"), "APP_KEY={$key}\n", FILE_APPEND);'
+        run: php -r '$key = "base64:".base64_encode(random_bytes(32)); fwrite(STDOUT, "::add-mask::{$key}\n"); file_put_contents(getenv("GITHUB_ENV"), "APP_KEY={$key}\n", FILE_APPEND);'
 
       - name: Prove unsafe database configuration is rejected
         shell: bash
