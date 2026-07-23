@@ -93,8 +93,17 @@ jobs:
         shell: bash
         run: php -r '$key = "base64:".base64_encode(random_bytes(32)); file_put_contents(getenv("GITHUB_ENV"), "APP_KEY={$key}\n", FILE_APPEND);'
 
+      - name: Prove unsafe database configuration is rejected
+        shell: bash
+        run: |
+          if DB_DATABASE=mirs php -r 'require "vendor/autoload.php"; Tests\Support\TestDatabaseGuard::assertSafe(Tests\Support\TestDatabaseGuard::environment());' >/dev/null 2>&1; then
+            echo "The test database guard accepted an unsafe database name."
+            exit 1
+          fi
+          echo "Unsafe database configuration was rejected before Laravel booted."
+
       - name: Reset disposable MySQL database
-        run: php artisan migrate:fresh --force --no-interaction
+        run: composer test:reset
 
       - name: Check PHP formatting
         id: pint
@@ -190,3 +199,18 @@ jobs:
           test "${{ steps.eslint.outcome }}" = "success"
           test "${{ steps.vue-tsc.outcome }}" = "success"
           test "${{ steps.vite-build.outcome }}" = "success"
+
+  docker:
+    name: Production Docker build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs:
+      - backend
+      - frontend
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Build production application target
+        run: docker build --target app --tag mirs-ci:${{ github.sha }} .
