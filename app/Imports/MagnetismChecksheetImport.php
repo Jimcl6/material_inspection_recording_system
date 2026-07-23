@@ -80,6 +80,18 @@ class MagnetismChecksheetImport
         'detected_format' => null,
     ];
 
+    /**
+     * @var array{
+     *     batches_imported: int,
+     *     batches_updated: int,
+     *     batches_skipped: int,
+     *     checkpoints_imported: int,
+     *     checkpoints_updated: int,
+     *     checkpoints_skipped: int,
+     *     checksheets_created: list<array{id: mixed, month: int, year: int}>,
+     *     errors: list<string>
+     * }
+     */
     protected $executeResults = [
         'batches_imported' => 0,
         'batches_updated' => 0,
@@ -172,6 +184,16 @@ class MagnetismChecksheetImport
      * @param  string  $machineNo Machine number
      * @param  bool  $updateDuplicates Whether to update duplicate records
      * @param  string|null  $format Format type (HPI-PR03-01 or HPI-PR05-03)
+     * @return array{
+     *     batches_imported: int,
+     *     batches_updated: int,
+     *     batches_skipped: int,
+     *     checkpoints_imported: int,
+     *     checkpoints_updated: int,
+     *     checkpoints_skipped: int,
+     *     checksheets_created: list<array{id: mixed, month: int, year: int}>,
+     *     errors: list<string>
+     * }
      */
     public function execute(string $filePath, string $itemCode, string $itemName, string $machineNo, bool $updateDuplicates = false, ?string $format = null): array
     {

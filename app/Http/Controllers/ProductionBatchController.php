@@ -56,6 +56,7 @@ class ProductionBatchController extends Controller
 
     public function show($magnetism_checksheet)
     {
+        /** @var ProductionBatch $batch */
         $batch = ProductionBatch::findOrFail($magnetism_checksheet);
 
         try {
@@ -204,7 +205,7 @@ class ProductionBatchController extends Controller
                 $checkpointsData[] = [
                     'CheckpointID' => $cp->CheckpointID,
                     'CheckpointNumber' => $i,
-                    'label' => InspectionCheckpoint::POSITION_LABELS[$i] ?? "Checkpoint {$i}",
+                    'label' => InspectionCheckpoint::POSITION_LABELS[$i],
                     'Judgement_First' => $cp->Judgement_First ?? '',
                     'Judgement_Last' => $cp->Judgement_Last ?? '',
                     'samples_first' => array_pad($samplesFirst, 5, ''),
@@ -215,7 +216,7 @@ class ProductionBatchController extends Controller
                 $checkpointsData[] = [
                     'CheckpointID' => null,
                     'CheckpointNumber' => $i,
-                    'label' => InspectionCheckpoint::POSITION_LABELS[$i] ?? "Checkpoint {$i}",
+                    'label' => InspectionCheckpoint::POSITION_LABELS[$i],
                     'Judgement_First' => '',
                     'Judgement_Last' => '',
                     'samples_first' => ['', '', '', '', ''],

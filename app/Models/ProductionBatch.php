@@ -10,6 +10,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $QRCode
  * @property string|null $ProductionDate
  * @property string|null $LetterCode
+ * @property string|null $MaterialLotNumber
+ * @property int|float|string|null $ProduceQty
+ * @property string|null $JobNumber
+ * @property int|float|string|null $TotalQty
+ * @property string|null $Remarks
+ * @property string|null $ItemName
+ * @property string|null $ItemCode
  */
 class ProductionBatch extends Model
 {
