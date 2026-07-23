@@ -49,7 +49,7 @@ class WeldingChecksheetController extends Controller
         }
 
         if ($request->filled('machine_no')) {
-            $query->where('machine_no', 'like', '%' . $request->input('machine_no') . '%');
+            $query->where('machine_no', 'like', '%'.$request->input('machine_no').'%');
         }
 
         if ($request->filled('date_from')) {
@@ -82,8 +82,7 @@ class WeldingChecksheetController extends Controller
         ApprovalWorkflowService $approvalWorkflowService,
         ApprovalNotificationService $approvalNotificationService,
         DuplicateRecordGuard $duplicateRecordGuard
-    )
-    {
+    ) {
         $data = $this->prepareChecksheetData($request->validated());
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
@@ -214,7 +213,7 @@ class WeldingChecksheetController extends Controller
                     ->find($request->integer('item_config_id'))
                 : null;
 
-            if (!$type || ($request->filled('item_config_id') && !$itemConfig)) {
+            if (! $type || ($request->filled('item_config_id') && ! $itemConfig)) {
                 return response()->json([
                     'success' => false,
                     'error' => 'The selected checksheet type or item code is no longer active. Refresh the page and try again.',
@@ -261,7 +260,7 @@ class WeldingChecksheetController extends Controller
         ]);
 
         $payload = session('welding_import');
-        if (!$payload) {
+        if (! $payload) {
             return response()->json(['success' => false, 'error' => 'No file to import. Please upload a file first.'], 400);
         }
 
@@ -270,6 +269,7 @@ class WeldingChecksheetController extends Controller
         if ($fullPath === null) {
             SpreadsheetImportSecurity::delete($tempPath);
             session()->forget('welding_import');
+
             return response()->json(['success' => false, 'error' => 'Import file expired. Please upload again.'], 400);
         }
 
@@ -277,14 +277,14 @@ class WeldingChecksheetController extends Controller
             $type = WeldingChecksheetType::query()
                 ->active()
                 ->find($payload['checksheet_type_id']);
-            $itemConfig = !empty($payload['item_config_id']) && $type
+            $itemConfig = ! empty($payload['item_config_id']) && $type
                 ? WeldingItemConfig::query()
                     ->active()
                     ->where('checksheet_type_id', $type->id)
                     ->find($payload['item_config_id'])
                 : null;
 
-            if (!$type || (!empty($payload['item_config_id']) && !$itemConfig)) {
+            if (! $type || (! empty($payload['item_config_id']) && ! $itemConfig)) {
                 return response()->json([
                     'success' => false,
                     'error' => 'The selected checksheet type or item code is no longer active. Preview the file again.',
@@ -333,7 +333,7 @@ class WeldingChecksheetController extends Controller
 
         return Excel::download(
             new WeldingChecksheetsExport(),
-            'welding-checksheets-' . now()->format('Y-m-d') . '.xlsx'
+            'welding-checksheets-'.now()->format('Y-m-d').'.xlsx'
         );
     }
 
@@ -378,7 +378,7 @@ class WeldingChecksheetController extends Controller
         $approvalNotificationService->markRecordsActed($checksheets, 'welding');
 
         return redirect()->route('welding-checksheets.approval')
-            ->with('success', count($checksheets) . ' checksheet(s) approved successfully.');
+            ->with('success', count($checksheets).' checksheet(s) approved successfully.');
     }
 
     public function bulkReject(Request $request, ApprovalNotificationService $approvalNotificationService)
@@ -411,7 +411,7 @@ class WeldingChecksheetController extends Controller
         $approvalNotificationService->markRecordsActed($checksheets, 'welding');
 
         return redirect()->route('welding-checksheets.approval')
-            ->with('success', count($checksheets) . ' checksheet(s) rejected successfully.');
+            ->with('success', count($checksheets).' checksheet(s) rejected successfully.');
     }
 
     protected function typesForForms()
@@ -435,9 +435,9 @@ class WeldingChecksheetController extends Controller
     protected function prepareChecksheetData(array $data): array
     {
         $itemConfig = null;
-        if (!empty($data['item_config_id'])) {
+        if (! empty($data['item_config_id'])) {
             $itemConfig = WeldingItemConfig::find($data['item_config_id']);
-        } elseif (!empty($data['item_code'])) {
+        } elseif (! empty($data['item_code'])) {
             $itemConfig = WeldingItemConfig::where('checksheet_type_id', $data['checksheet_type_id'])
                 ->where('item_code', $data['item_code'])
                 ->first();
@@ -479,7 +479,7 @@ class WeldingChecksheetController extends Controller
             $message .= ", {$results['skipped']} skipped";
         }
         if (count($results['errors'] ?? []) > 0) {
-            $message .= ', ' . count($results['errors']) . ' errors';
+            $message .= ', '.count($results['errors']).' errors';
         }
 
         return $message;

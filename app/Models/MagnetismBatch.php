@@ -77,7 +77,7 @@ class MagnetismBatch extends Model
             ->orderBy('letter_code', 'desc')
             ->value('letter_code');
 
-        if (!$maxLetter) {
+        if (! $maxLetter) {
             return 'A';
         }
 
@@ -91,6 +91,7 @@ class MagnetismBatch extends Model
 
     /**
      * Get the next available letter code for a given checksheet and date.
+     *
      * @deprecated Use getLetterForMaterialLot() instead
      */
     public static function getNextLetterCode(int $checksheetId, string $date): ?string

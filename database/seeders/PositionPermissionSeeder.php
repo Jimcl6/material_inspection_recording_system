@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Position;
 use App\Models\UserPermission;
+use Illuminate\Database\Seeder;
 
 class PositionPermissionSeeder extends Seeder
 {
@@ -18,7 +18,7 @@ class PositionPermissionSeeder extends Seeder
     {
         // Production Operator - view and create only for inspection modules
         $productionOperator = Position::where('name', 'Production Operator')->first();
-        
+
         if ($productionOperator) {
             $this->assignProductionOperatorPermissions($productionOperator);
             $this->command->info('Production Operator permissions assigned.');
@@ -39,7 +39,7 @@ class PositionPermissionSeeder extends Seeder
         // Inspection modules that production operators can access
         $inspectionModules = [
             'annealing',
-            'temperature', 
+            'temperature',
             'torque',
             'magnetism',
             'diaphragm',
@@ -68,6 +68,6 @@ class PositionPermissionSeeder extends Seeder
         // Sync permissions (this will remove any existing and set only these)
         $position->permissions()->sync($permissionIds);
 
-        $this->command->info("Assigned " . count($permissionIds) . " permissions to Production Operator.");
+        $this->command->info('Assigned '.count($permissionIds).' permissions to Production Operator.');
     }
 }

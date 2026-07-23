@@ -28,7 +28,7 @@ class DuplicateRecordGuard
     ) {
         ksort($criteria);
 
-        $lockKey = 'duplicate-record:' . sha1($modelClass . json_encode($criteria));
+        $lockKey = 'duplicate-record:'.sha1($modelClass.json_encode($criteria));
 
         return Cache::lock($lockKey, 10)->block(5, function () use (
             $modelClass,
@@ -42,7 +42,7 @@ class DuplicateRecordGuard
                 if ($existing) {
                     throw ValidationException::withMessages([
                         'duplicate' => "A matching {$recordLabel} already exists (Record #{$existing->getKey()}). "
-                            . 'The duplicate was not saved, and the existing record was kept unchanged.',
+                            .'The duplicate was not saved, and the existing record was kept unchanged.',
                     ]);
                 }
 

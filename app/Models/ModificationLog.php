@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class ModificationLog extends Model
 {
     protected $table = 'modification_logs';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true; // created_at, updated_at
 
     protected $fillable = [

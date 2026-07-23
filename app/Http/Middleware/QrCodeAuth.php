@@ -29,7 +29,7 @@ class QrCodeAuth
             if ($user && $user->isActive()) {
                 // Log the user in
                 Auth::login($user, true);
-                
+
                 // Record the login
                 $user->recordLogin(
                     $request->ip(),

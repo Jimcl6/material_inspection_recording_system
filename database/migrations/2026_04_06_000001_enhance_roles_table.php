@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -22,8 +22,8 @@ return new class extends Migration
 
         // Create super_admin role if it doesn't exist
         $superAdminExists = DB::table('roles')->where('slug', 'super_admin')->exists();
-        
-        if (!$superAdminExists) {
+
+        if (! $superAdminExists) {
             DB::table('roles')->insert([
                 'name' => 'Super Admin',
                 'slug' => 'super_admin',
