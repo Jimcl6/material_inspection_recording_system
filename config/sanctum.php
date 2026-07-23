@@ -15,10 +15,12 @@ return [
     |
     */
 
-    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-        '%s%s',
-        '192.168.2.243,192.168.2.243:8080,127.0.0.1,127.0.0.1:8080,::1',
-        Sanctum::currentApplicationUrlWithPort()
+    'stateful' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
+            'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1,%s',
+            Sanctum::currentApplicationUrlWithPort()
+        )))
     ))),
 
     /*

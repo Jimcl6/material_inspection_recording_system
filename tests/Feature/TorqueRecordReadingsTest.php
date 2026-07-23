@@ -232,12 +232,16 @@ class TorqueRecordReadingsTest extends TestCase
             ]
         );
 
-        return User::create([
+        $user = User::create([
             'name' => 'Torque Test Admin',
             'email' => 'torque-test-'.uniqid().'@example.test',
             'password' => bcrypt('password'),
             'role_id' => $role->id,
             'status' => 'active',
         ]);
+
+        $user->forceFill(['email_verified_at' => now()])->save();
+
+        return $user;
     }
 }

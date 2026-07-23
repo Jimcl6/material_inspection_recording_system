@@ -9,6 +9,7 @@ use App\Models\Position;
 use App\Models\UserQrCode;
 use App\Services\QrCodeService;
 use App\Services\ActivityService;
+use App\Services\AccountAccessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +21,10 @@ class UserManagementController extends Controller
 {
     protected QrCodeService $qrCodeService;
 
-    public function __construct(QrCodeService $qrCodeService)
+    public function __construct(
+        QrCodeService $qrCodeService,
+        private AccountAccessService $accountAccess
+    )
     {
         $this->qrCodeService = $qrCodeService;
         $this->middleware(['auth', 'role:admin,super_admin']);
@@ -242,7 +246,12 @@ class UserManagementController extends Controller
             }
 
             $before = ActivityService::snapshot($user);
+            $previousStatus = $user->status;
             $user->update($updateData);
+
+            if ($previousStatus === 'active' && ! $user->isActive()) {
+                $this->accountAccess->revoke($user, 'user_management_update');
+            }
 
             // Update or regenerate QR code
             if ($request->boolean('regenerate_qr') || $user->qrCode) {
@@ -286,6 +295,7 @@ class UserManagementController extends Controller
             
             // Soft delete by deactivating
             $user->update(['status' => 'inactive']);
+            $this->accountAccess->revoke($user, 'user_management_delete');
             
             // Deactivate QR code
             if ($user->qrCode) {
@@ -413,13 +423,19 @@ class UserManagementController extends Controller
                     $message = 'Users activated successfully.';
                     break;
                 case 'deactivate':
-                    User::whereIn('id', $userIds)->update(['status' => 'inactive']);
+                    User::whereIn('id', $userIds)->get()->each(function (User $user): void {
+                        $user->update(['status' => 'inactive']);
+                        $this->accountAccess->revoke($user, 'user_management_bulk_deactivate');
+                    });
                     UserQrCode::whereIn('user_id', $userIds)->update(['is_active' => false]);
                     $message = 'Users deactivated successfully.';
                     break;
                 case 'delete':
                     // Soft delete
-                    User::whereIn('id', $userIds)->update(['status' => 'inactive']);
+                    User::whereIn('id', $userIds)->get()->each(function (User $user): void {
+                        $user->update(['status' => 'inactive']);
+                        $this->accountAccess->revoke($user, 'user_management_bulk_delete');
+                    });
                     UserQrCode::whereIn('user_id', $userIds)->update(['is_active' => false]);
                     $message = 'Users deleted successfully.';
                     break;
