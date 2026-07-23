@@ -16,7 +16,7 @@ use App\Http\Controllers\Api\MaterialTypeController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware(['auth:sanctum', 'account.active'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
