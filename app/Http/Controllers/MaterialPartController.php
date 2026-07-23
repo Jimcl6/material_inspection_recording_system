@@ -218,4 +218,27 @@ class MaterialPartController extends Controller
             ->with('success', 'Material part deleted successfully.');
     }
 
+    /**
+     * Get material parts data for AI model
+     */
+    public function getForAI(Request $request)
+    {
+        $query = MaterialPart::query();
+
+        // Apply filters
+        if ($request->filled('material_types')) {
+            $query->whereIn('material_type', $request->material_types);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->byDateRange($request->date_from, $request->date_to);
+        }
+
+        $materialParts = $query->get();
+
+        return response()->json([
+            'data' => $materialParts,
+            'total' => $materialParts->count(),
+        ]);
+    }
 }

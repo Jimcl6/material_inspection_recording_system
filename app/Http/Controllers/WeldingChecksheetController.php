@@ -414,6 +414,22 @@ class WeldingChecksheetController extends Controller
             ->with('success', count($checksheets) . ' checksheet(s) rejected successfully.');
     }
 
+    public function itemCodeRules(Request $request)
+    {
+        $query = WeldingItemConfig::query()->active();
+
+        if ($request->filled('checksheet_type_id')) {
+            $query->where('checksheet_type_id', $request->integer('checksheet_type_id'));
+        }
+
+        $config = $query->where('item_code', $request->input('item_code'))->first();
+
+        return response()->json($config ?: [
+            'item_code' => $request->input('item_code'),
+            'validation_rules' => [],
+        ]);
+    }
+
     protected function typesForForms()
     {
         return WeldingChecksheetType::with([
