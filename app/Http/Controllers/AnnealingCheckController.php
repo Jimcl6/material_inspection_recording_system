@@ -404,27 +404,6 @@ class AnnealingCheckController extends Controller
     }
 
     /**
-     * Debug route to check annealing checks data
-     */
-    public function debug()
-    {
-        $checks = AnnealingCheck::with(['pic', 'checkedBy', 'verifiedBy'])
-            ->latest()
-            ->take(5)
-            ->get(['id', 'item_code', 'pic_id', 'status', 'created_at']);
-        
-        return response()->json([
-            'count' => AnnealingCheck::count(),
-            'latest' => $checks->toArray(),
-            'auth_user' => [
-                'id' => Auth::id(),
-                'name' => Auth::user()->name,
-                'role' => Auth::user()->role?->slug ?? 'no role'
-            ]
-        ]);
-    }
-
-    /**
      * Show the approval page for users with annealing approval permission.
      */
     public function approval(): \Inertia\Response
