@@ -282,6 +282,10 @@ const normalizeDateForInput = (value) => {
   return /^\d{4}-\d{2}-\d{2}$/.test(normalizedDate) ? normalizedDate : ''
 }
 
+const normalizeTimeForInput = (value) => (
+  value ? String(value).slice(0, 5) : ''
+)
+
 const maximumDate = ref(formatLocalDate(new Date()))
 
 const readingsFor = (record, period) => {
@@ -311,8 +315,8 @@ const form = useForm({
   screw_type: props.record?.screw_type || '',
   process_assigned: props.record?.process_assigned || '',
   person_in_charge: props.record?.person_in_charge || '',
-  time_am: props.record?.time_am || '',
-  time_pm: props.record?.time_pm || '',
+  time_am: normalizeTimeForInput(props.record?.time_am),
+  time_pm: normalizeTimeForInput(props.record?.time_pm),
   readings: {
     am: readingsFor(props.record, 'AM'),
     pm: readingsFor(props.record, 'PM'),
@@ -364,8 +368,8 @@ const loadRecord = (record) => {
   form.screw_type = record.screw_type || ''
   form.process_assigned = record.process_assigned || ''
   form.person_in_charge = record.person_in_charge || ''
-  form.time_am = record.time_am || ''
-  form.time_pm = record.time_pm || ''
+  form.time_am = normalizeTimeForInput(record.time_am)
+  form.time_pm = normalizeTimeForInput(record.time_pm)
   form.readings = {
     am: readingsFor(record, 'AM'),
     pm: readingsFor(record, 'PM'),

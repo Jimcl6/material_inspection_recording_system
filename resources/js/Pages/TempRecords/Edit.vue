@@ -179,19 +179,18 @@
                           @input="updateTime('am', $event.target.value)"
                         />
                       </div>
-                      <div>
-                        <label for="temp_am" class="block text-sm font-medium text-gray-700">
-                          Temperature (AM)
-                        </label>
-                        <input
-                          id="temp_am"
-                          :value="form.temp_am"
-                          type="text"
-                          maxlength="20"
-                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                          @input="updateTemperature('am', $event.target.value)"
-                        />
-                      </div>
+                      <NumericKeypadField
+                        id="temp_am"
+                        label="Temperature (AM)"
+                        dialog-title="Morning (AM) Temperature"
+                        :model-value="form.temp_am"
+                        unit="°C"
+                        placeholder="0.0"
+                        :decimal-places="1"
+                        :max-integer-digits="18"
+                        :error="form.errors.temp_am"
+                        @update:model-value="updateTemperature('am', $event)"
+                      />
                     </div>
                   </div>
 
@@ -211,19 +210,18 @@
                           @input="updateTime('pm', $event.target.value)"
                         />
                       </div>
-                      <div>
-                        <label for="temp_pm" class="block text-sm font-medium text-gray-700">
-                          Temperature (PM)
-                        </label>
-                        <input
-                          id="temp_pm"
-                          :value="form.temp_pm"
-                          type="text"
-                          maxlength="20"
-                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                          @input="updateTemperature('pm', $event.target.value)"
-                        />
-                      </div>
+                      <NumericKeypadField
+                        id="temp_pm"
+                        label="Temperature (PM)"
+                        dialog-title="Afternoon (PM) Temperature"
+                        :model-value="form.temp_pm"
+                        unit="°C"
+                        placeholder="0.0"
+                        :decimal-places="1"
+                        :max-integer-digits="18"
+                        :error="form.errors.temp_pm"
+                        @update:model-value="updateTemperature('pm', $event)"
+                      />
                     </div>
                   </div>
                 </div>
@@ -284,6 +282,7 @@
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import NumericKeypadField from '@/Components/NumericKeypadField.vue'
 
 const props = defineProps({
   record: {
@@ -318,6 +317,10 @@ const normalizeDateForInput = (value) => {
   return /^\d{4}-\d{2}-\d{2}$/.test(normalizedDate) ? normalizedDate : ''
 }
 
+const normalizeTimeForInput = (value) => (
+  value ? String(value).slice(0, 5) : ''
+)
+
 const maximumDate = ref(formatLocalDate(new Date()))
 
 const hasReading = (value) => (
@@ -333,9 +336,9 @@ const form = useForm({
   equipment_type: props.record?.equipment_type || '',
   process_assigned: props.record?.process_assigned || '',
   person_in_charge: props.record?.person_in_charge || '',
-  time_am: props.record?.time_am || '',
+  time_am: normalizeTimeForInput(props.record?.time_am),
   temp_am: props.record?.temp_am || '',
-  time_pm: props.record?.time_pm || '',
+  time_pm: normalizeTimeForInput(props.record?.time_pm),
   temp_pm: props.record?.temp_pm || '',
   col_remarks: props.record?.col_remarks || '',
   checked_by: props.record?.checked_by || ''
@@ -391,9 +394,9 @@ const loadRecord = (record) => {
   form.equipment_type = record.equipment_type || ''
   form.process_assigned = record.process_assigned || ''
   form.person_in_charge = record.person_in_charge || ''
-  form.time_am = record.time_am || ''
+  form.time_am = normalizeTimeForInput(record.time_am)
   form.temp_am = record.temp_am || ''
-  form.time_pm = record.time_pm || ''
+  form.time_pm = normalizeTimeForInput(record.time_pm)
   form.temp_pm = record.temp_pm || ''
   form.col_remarks = record.col_remarks || ''
   form.checked_by = record.checked_by || ''

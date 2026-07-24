@@ -1,7 +1,8 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
+import NumericKeypadDialog from '@/Components/NumericKeypadDialog.vue';
 import TextInput from '@/Components/TextInput.vue';
 
 const props = defineProps({
@@ -18,6 +19,9 @@ const props = defineProps({
 
 const emit = defineEmits(['update:time', 'update:readings']);
 const maximumReadings = 8;
+const showKeypad = ref(false);
+const activeReadingIndex = ref(0);
+const readingTriggers = ref([]);
 
 const timeValue = computed({
     get: () => props.time,
@@ -27,6 +31,27 @@ const timeValue = computed({
 const timeError = computed(() => props.errors[`time_${props.period}`]);
 const groupError = computed(() => props.errors[`readings.${props.period}`] || props.errors.readings);
 const readingError = (index) => props.errors[`readings.${props.period}.${index}.torque_value`];
+const activeReading = computed(() => props.readings[activeReadingIndex.value] || { torque_value: '' });
+const activeReadingTitle = computed(() => `${props.title} — Torque Reading ${activeReadingIndex.value + 1}`);
+const showNextReading = computed(() => activeReadingIndex.value < maximumReadings - 1);
+
+const setReadingTrigger = (element, index) => {
+    if (element) readingTriggers.value[index] = element;
+};
+
+const openKeypad = (index) => {
+    activeReadingIndex.value = index;
+    showKeypad.value = true;
+};
+
+const closeKeypad = () => {
+    showKeypad.value = false;
+};
+
+const restoreKeypadFocus = () => {
+    const triggerIndex = activeReadingIndex.value;
+    nextTick(() => readingTriggers.value[triggerIndex]?.focus());
+};
 
 const updateReading = (index, value) => {
     const updated = props.readings.map((reading, readingIndex) => (
@@ -44,6 +69,25 @@ const addReading = () => {
 const removeReading = (index) => {
     const updated = props.readings.filter((_, readingIndex) => readingIndex !== index);
     emit('update:readings', updated.length ? updated : [{ torque_value: '' }]);
+};
+
+const confirmReading = (value) => {
+    updateReading(activeReadingIndex.value, value);
+    closeKeypad();
+};
+
+const confirmAndAdvance = (value) => {
+    const updated = props.readings.map((reading, readingIndex) => (
+        readingIndex === activeReadingIndex.value ? { ...reading, torque_value: value } : reading
+    ));
+    const nextIndex = activeReadingIndex.value + 1;
+
+    if (nextIndex >= updated.length && updated.length < maximumReadings) {
+        updated.push({ torque_value: '' });
+    }
+
+    emit('update:readings', updated);
+    activeReadingIndex.value = nextIndex;
 };
 </script>
 
@@ -85,19 +129,19 @@ const removeReading = (index) => {
                     </button>
                 </div>
                 <div class="relative mt-1 rounded-md shadow-sm">
-                    <TextInput
+                    <button
                         :id="`${period}_torque_${index}`"
-                        :model-value="reading.torque_value"
-                        type="number"
-                        min="0"
-                        max="99999999.99"
-                        step="0.01"
-                        inputmode="decimal"
-                        class="block w-full pr-14"
-                        :class="{ 'border-red-500': readingError(index) }"
-                        placeholder="0.00"
-                        @update:model-value="updateReading(index, $event)"
-                    />
+                        :ref="(element) => setReadingTrigger(element, index)"
+                        type="button"
+                        class="flex min-h-[3.5rem] w-full items-center rounded-md border bg-white px-3 pr-14 text-left shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                        :class="readingError(index) ? 'border-red-500' : 'border-gray-300'"
+                        aria-haspopup="dialog"
+                        @click="openKeypad(index)"
+                    >
+                        <span :class="reading.torque_value !== '' && reading.torque_value !== null ? 'text-gray-900' : 'text-gray-400'">
+                            {{ reading.torque_value !== '' && reading.torque_value !== null ? reading.torque_value : '0.00' }}
+                        </span>
+                    </button>
                     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                         <span class="text-gray-500 sm:text-sm">N·m</span>
                     </div>
@@ -117,5 +161,21 @@ const removeReading = (index) => {
             <span v-if="readings.length < maximumReadings">+ Add Torque Reading</span>
             <span v-else>Maximum of 8 readings reached</span>
         </button>
+
+        <NumericKeypadDialog
+            :show="showKeypad"
+            :model-value="activeReading.torque_value"
+            :title="activeReadingTitle"
+            unit="N·m"
+            :decimal-places="2"
+            :max-integer-digits="8"
+            :max-value="99999999.99"
+            :show-next="showNextReading"
+            :session-key="activeReadingIndex"
+            @close="closeKeypad"
+            @closed="restoreKeypadFocus"
+            @confirm="confirmReading"
+            @confirm-next="confirmAndAdvance"
+        />
     </div>
 </template>
