@@ -8,13 +8,14 @@ use App\Services\ApprovalWorkflowService;
 use App\Services\DashboardReportingService;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class DashboardController extends Controller
 {
     public function index(
         ApprovalWorkflowService $approvalWorkflowService,
         DashboardReportingService $dashboardReportingService
-    ): \Inertia\Response {
+    ): Response {
         /** @var User $user */
         $user = Auth::user();
         $report = $dashboardReportingService->reportFor($user);

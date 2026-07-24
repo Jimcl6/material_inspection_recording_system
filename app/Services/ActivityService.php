@@ -85,7 +85,7 @@ class ActivityService
     /**
      * Log an activity.
      */
-    public static function log(string $type, string $description, Model $subject = null, array $properties = [], string $module = null)
+    public static function log(string $type, string $description, ?Model $subject = null, array $properties = [], ?string $module = null)
     {
         $activity = [
             'user_id' => auth()->id(),
@@ -150,7 +150,7 @@ class ActivityService
         array $before,
         array $after,
         string $description,
-        string $module = null,
+        ?string $module = null,
         array $properties = []
     ): void {
         self::log(

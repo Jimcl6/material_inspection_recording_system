@@ -10,9 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureAccountIsActive
 {
-    public function __construct(private AccountAccessService $accountAccess)
-    {
-    }
+    public function __construct(private AccountAccessService $accountAccess) {}
 
     /**
      * Reject an authenticated request as soon as its account is no longer active.

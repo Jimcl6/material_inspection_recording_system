@@ -11,7 +11,7 @@ class CheckModulePermission
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      * @param  string  $module  The module name (e.g., 'annealing', 'temperature')
      * @param  string  $action  The action name (e.g., 'view', 'create', 'update', 'delete')
      */

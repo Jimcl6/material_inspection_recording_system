@@ -38,7 +38,7 @@ class ProductionBatchController extends Controller
         }
 
         $query->orderByDesc('ProductionDate')
-              ->orderByDesc('BatchID');
+            ->orderByDesc('BatchID');
 
         $batches = $query->paginate(10);
 

@@ -77,17 +77,7 @@ jobs:
         run: composer validate --strict
 
       - name: Audit Composer dependencies
-        shell: bash
-        run: |
-          set +e
-          composer audit --locked --format=json > "$RUNNER_TEMP/composer-audit.json"
-          audit_status=$?
-          set -e
-          php scripts/ci/check-composer-audit.php "$RUNNER_TEMP/composer-audit.json"
-          if [ "$audit_status" -gt 1 ]; then
-            echo "Composer audit could not complete."
-            exit "$audit_status"
-          fi
+        run: composer audit --locked --abandoned=fail
 
       - name: Generate ephemeral application key
         shell: bash
@@ -158,6 +148,9 @@ jobs:
           node-version: '24'
           cache: npm
 
+      - name: Standardize npm 11
+        run: npm install --global npm@11.16.0
+
       - name: Install frontend dependencies
         run: npm ci
 
@@ -165,17 +158,7 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
 
       - name: Review full frontend audit
-        shell: bash
-        run: |
-          set +e
-          npm audit --json > "$RUNNER_TEMP/npm-audit.json"
-          audit_status=$?
-          set -e
-          node scripts/ci/check-npm-audit.cjs "$RUNNER_TEMP/npm-audit.json"
-          if [ "$audit_status" -gt 1 ]; then
-            echo "npm audit could not complete."
-            exit "$audit_status"
-          fi
+        run: npm audit --audit-level=high
 
       - name: Run ESLint
         id: eslint

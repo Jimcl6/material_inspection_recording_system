@@ -9,14 +9,13 @@ use App\Models\WeldingItemConfig;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use App\Support\SpreadsheetImportSecurity;
+use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class WeldingChecksheetImport
 {
-    public function __construct(protected ?string $sourceFileName = null)
-    {
-    }
+    public function __construct(protected ?string $sourceFileName = null) {}
 
     protected array $previewResults = [
         'new_records' => [],
@@ -309,7 +308,7 @@ class WeldingChecksheetImport
         return [
             'checksheet_type_id' => $record['checksheet_type_id'] ?? null,
             'item_code' => $record['item_code'] ?? null,
-            'production_date' => isset($record['production_date']) && $record['production_date'] instanceof \Carbon\Carbon
+            'production_date' => isset($record['production_date']) && $record['production_date'] instanceof Carbon
                 ? $record['production_date']->format('Y-m-d')
                 : ($record['production_date'] ?? null),
             'machine_no' => $record['machine_no'] ?? null,

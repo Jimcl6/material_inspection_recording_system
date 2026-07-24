@@ -12,6 +12,7 @@ use App\Support\SpreadsheetImportSecurity;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class TempRecordController extends Controller
 {
@@ -24,10 +25,10 @@ class TempRecordController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('model_series', 'like', "%{$search}%")
-                  ->orWhere('solder_model', 'like', "%{$search}%")
-                  ->orWhere('control_no', 'like', "%{$search}%")
-                  ->orWhere('person_in_charge', 'like', "%{$search}%")
-                  ->orWhere('checked_by', 'like', "%{$search}%");
+                    ->orWhere('solder_model', 'like', "%{$search}%")
+                    ->orWhere('control_no', 'like', "%{$search}%")
+                    ->orWhere('person_in_charge', 'like', "%{$search}%")
+                    ->orWhere('checked_by', 'like', "%{$search}%");
             });
         }
 
@@ -230,7 +231,7 @@ class TempRecordController extends Controller
         return redirect()->route('temp-records.index')->with('success', 'Record deleted.');
     }
 
-    public function approval(): \Inertia\Response
+    public function approval(): Response
     {
         $pendingRecords = TempRecord::where('status', 'pending')
             ->orderByDesc('id')
@@ -328,6 +329,7 @@ class TempRecordController extends Controller
             } catch (\Exception $e) {
             }
         }
+
         // Fallback: let validator handle invalid format
         return null;
     }
@@ -359,7 +361,7 @@ class TempRecordController extends Controller
 
             $equipmentType = $request->input('equipment_type');
 
-            $import = new TempRecordImport();
+            $import = new TempRecordImport;
             $results = $import->preview($fullPath, $equipmentType);
 
             // Store the temp file path in session for execute phase
@@ -419,7 +421,7 @@ class TempRecordController extends Controller
             $processAssigned = $request->input('process_assigned');
             $updateDuplicates = $request->boolean('update_duplicates', false);
 
-            $import = new TempRecordImport();
+            $import = new TempRecordImport;
             $results = $import->execute($fullPath, $equipmentType, $lineAssigned, $processAssigned, $updateDuplicates);
 
             $message = "Import completed: {$results['imported']} created";

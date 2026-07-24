@@ -173,7 +173,7 @@ class SpreadsheetImportSecurityTest extends TestCase
     private function workbookUpload(string $clientName = 'valid.xlsx'): UploadedFile
     {
         $path = $this->temporaryPath();
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $spreadsheet->getActiveSheet()->setCellValue('A1', 'Test heading');
         (new Xlsx($spreadsheet))->save($path);
         $spreadsheet->disconnectWorksheets();
@@ -190,7 +190,7 @@ class SpreadsheetImportSecurityTest extends TestCase
     private function malformedZipUpload(): UploadedFile
     {
         $path = $this->temporaryPath();
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         $zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
         $zip->addFromString('not-a-workbook.txt', 'confidential-test-marker');
         $zip->close();

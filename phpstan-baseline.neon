@@ -1,0 +1,487 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/SetupAdmin.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Exports/DiaphragmWeldingExport.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sample_1\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Exports/DiaphragmWeldingExport.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sample_2\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Exports/DiaphragmWeldingExport.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sample_3\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Exports/DiaphragmWeldingExport.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sample_4\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Exports/DiaphragmWeldingExport.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sample_5\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Exports/DiaphragmWeldingExport.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>sample_values" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Exports/WeldingChecksheetsExport.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ActivityLogController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ActivityLogController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ActivityLogController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/DiaphragmWeldingController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$BatchID\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/InspectionCheckpointController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$LetterCode\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/InspectionCheckpointController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ProductionDate\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/InspectionCheckpointController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$QRCode\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/InspectionCheckpointController.php
+
+		-
+			message: '#^Variable \$data in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: app/Http/Controllers/InspectionSampleController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$checked_by\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MagnetismController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$first_samples\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MagnetismController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/MagnetismController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$job_number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MagnetismController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$judgment_first\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MagnetismController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$judgment_last\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MagnetismController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$last_samples\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MagnetismController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$letter_code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MagnetismController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$material_lot_number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MagnetismController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$operator_first\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MagnetismController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$operator_last\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MagnetismController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$produce_qty\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MagnetismController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$qr_code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MagnetismController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$remarks\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MagnetismController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/MagnetismController.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between Carbon\\Carbon\|null and false will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/ModificationLogController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$CheckpointID\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ProductionBatchController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$CheckpointNumber\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/ProductionBatchController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$InspectorName_First\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ProductionBatchController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$InspectorName_Last\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/ProductionBatchController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$Judgement_First\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ProductionBatchController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$Judgement_Last\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ProductionBatchController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$samples\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Controllers/ProductionBatchController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/ProductionBatchController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\TempRecord\:\:\$approved_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/TempRecordController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\TempRecord\:\:\$submitted_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/TempRecordController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\TempRecord\>\:\:through\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/TempRecordController.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between Carbon\\Carbon\|null and false will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/TempRecordController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\TorqueRecord\:\:\$approved_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/TorqueRecordController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\TorqueRecord\:\:\$submitted_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/TorqueRecordController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$period\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/TorqueRecordController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$reading_no\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/TorqueRecordController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$torque_value\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/TorqueRecordController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\TorqueRecord\>\:\:through\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/TorqueRecordController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$employment_status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/UserBadgeController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/UserBadgeController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/UserBadgeController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$qr_data\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/UserBadgeController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\User\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/UserBadgeController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$employment_status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/UserManagementController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Controllers/UserManagementController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$qr_data\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/UserManagementController.php
+
+		-
+			message: '#^Parameter \#1 \$qrCode of method App\\Services\\QrCodeService\:\:checkQrCodeStatus\(\) expects App\\Models\\UserQrCode, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/UserManagementController.php
+
+		-
+			message: '#^Parameter \#1 \$qrCode of method App\\Services\\QrCodeService\:\:recordScan\(\) expects App\\Models\\UserQrCode, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/UserManagementController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$key\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/WeldingChecksheetController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Middleware/CheckRole.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 3
+			path: app/Http/Requests/StoreWeldingChecksheetRequest.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>validation_rules" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Requests/StoreWeldingChecksheetRequest.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>item_code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Imports/WeldingChecksheetImport.php
+
+		-
+			message: '#^Method App\\Models\\DiaphragmWeldingChecksheet\:\:getSampleByType\(\) should return App\\Models\\DiaphragmWeldingSample\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/DiaphragmWeldingChecksheet.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Models/User.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:permissions\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Models/User.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:successful\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:recordLogin\(\) should return App\\Models\\UserLoginHistory but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/ActivityService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Activity\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 2
+			path: app/Services/ActivityService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/ApprovalWorkflowService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Services/ApprovalWorkflowService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$permissions\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/DashboardReportingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$employee_id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/QrCodeService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$employment_status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/QrCodeService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$qr_data\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/QrCodeService.php
+
+		-
+			message: '#^Method App\\Services\\QrCodeService\:\:regenerateStoredQrCode\(\) should return App\\Models\\UserQrCode but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/QrCodeService.php
+
+		-
+			message: '#^Trait App\\Traits\\LogsActivity is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: app/Traits/LogsActivity.php

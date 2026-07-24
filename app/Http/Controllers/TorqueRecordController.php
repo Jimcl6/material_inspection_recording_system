@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class TorqueRecordController extends Controller
 {
@@ -25,11 +26,11 @@ class TorqueRecordController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('model_series', 'like', "%{$search}%")
-                  ->orWhere('driver_model', 'like', "%{$search}%")
-                  ->orWhere('control_no', 'like', "%{$search}%")
-                  ->orWhere('screw_type', 'like', "%{$search}%")
-                  ->orWhere('person_in_charge', 'like', "%{$search}%")
-                  ->orWhere('checked_by', 'like', "%{$search}%");
+                    ->orWhere('driver_model', 'like', "%{$search}%")
+                    ->orWhere('control_no', 'like', "%{$search}%")
+                    ->orWhere('screw_type', 'like', "%{$search}%")
+                    ->orWhere('person_in_charge', 'like', "%{$search}%")
+                    ->orWhere('checked_by', 'like', "%{$search}%");
             });
         }
 
@@ -208,7 +209,7 @@ class TorqueRecordController extends Controller
         return redirect()->route('torque-records.index')->with('success', 'Record deleted.');
     }
 
-    public function approval(): \Inertia\Response
+    public function approval(): Response
     {
         $pendingRecords = TorqueRecord::with('readings')->where('status', 'pending')
             ->orderByDesc('id')
@@ -313,7 +314,7 @@ class TorqueRecordController extends Controller
             SpreadsheetImportSecurity::delete(session('torque_import_file'));
             [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'torque');
 
-            $import = new TorqueChecksheetImport();
+            $import = new TorqueChecksheetImport;
             $results = $import->preview($fullPath);
 
             // Store the temp file path in session for execute phase
@@ -367,7 +368,7 @@ class TorqueRecordController extends Controller
         try {
             $updateDuplicates = $request->boolean('update_duplicates', false);
 
-            $import = new TorqueChecksheetImport();
+            $import = new TorqueChecksheetImport;
             $results = $import->execute($fullPath, $updateDuplicates);
 
             $message = "Import completed: {$results['imported']} created";
@@ -424,7 +425,7 @@ class TorqueRecordController extends Controller
 
             $updateDuplicates = $request->boolean('update_duplicates', false);
 
-            $import = new TorqueChecksheetImport();
+            $import = new TorqueChecksheetImport;
             $results = $import->execute($fullPath, $updateDuplicates);
 
             $message = "Import completed: {$results['imported']} created";

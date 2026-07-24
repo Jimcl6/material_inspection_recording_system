@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\DiaphragmWeldingExport;
 use App\Http\Requests\ImportDiaphragmWeldingRequest;
 use App\Http\Requests\StoreDiaphragmWeldingRequest;
 use App\Http\Requests\UpdateDiaphragmWeldingRequest;
+use App\Imports\DiaphragmWeldingImport;
 use App\Models\DiaphragmItemCode;
 use App\Models\DiaphragmWeldingChecksheet;
 use App\Models\DiaphragmWeldingSample;
+use App\Models\User;
 use App\Services\ActivityService;
 use App\Support\SpreadsheetImportSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DiaphragmWeldingController extends Controller
 {
@@ -28,9 +32,9 @@ class DiaphragmWeldingController extends Controller
             $search = $request->string('search');
             $query->where(function ($q) use ($search) {
                 $q->where('item_code', 'like', "%{$search}%")
-                  ->orWhere('lasermark_lot_number', 'like', "%{$search}%")
-                  ->orWhere('jo_number', 'like', "%{$search}%")
-                  ->orWhere('machine_no', 'like', "%{$search}%");
+                    ->orWhere('lasermark_lot_number', 'like', "%{$search}%")
+                    ->orWhere('jo_number', 'like', "%{$search}%")
+                    ->orWhere('machine_no', 'like', "%{$search}%");
             });
         }
 
@@ -51,9 +55,9 @@ class DiaphragmWeldingController extends Controller
         }
 
         $checksheets = $query->orderByDesc('production_date')
-                             ->orderByDesc('id')
-                             ->paginate(15)
-                             ->withQueryString();
+            ->orderByDesc('id')
+            ->paginate(15)
+            ->withQueryString();
 
         // Get unique item codes for filter dropdown
         $itemCodes = DiaphragmItemCode::orderBy('item_code')->pluck('item_code');
@@ -70,7 +74,7 @@ class DiaphragmWeldingController extends Controller
      */
     public function create()
     {
-        $users = \App\Models\User::select('id', 'name')->orderBy('name')->get();
+        $users = User::select('id', 'name')->orderBy('name')->get();
         $itemCodes = DiaphragmItemCode::orderBy('item_code')->get();
         $checkItems = DiaphragmWeldingSample::CHECK_ITEM_LABELS;
 
@@ -139,7 +143,7 @@ class DiaphragmWeldingController extends Controller
     {
         $diaphragmWelding->load('samples');
 
-        $users = \App\Models\User::select('id', 'name')->orderBy('name')->get();
+        $users = User::select('id', 'name')->orderBy('name')->get();
         $itemCodes = DiaphragmItemCode::orderBy('item_code')->get();
         $checkItems = DiaphragmWeldingSample::CHECK_ITEM_LABELS;
 
@@ -243,7 +247,7 @@ class DiaphragmWeldingController extends Controller
                 DiaphragmWeldingChecksheet::truncate();
             }
 
-            $import = new \App\Imports\DiaphragmWeldingImport();
+            $import = new DiaphragmWeldingImport;
 
             [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'diaphragm-welding');
 
@@ -282,8 +286,8 @@ class DiaphragmWeldingController extends Controller
      */
     public function export()
     {
-        return \Maatwebsite\Excel\Facades\Excel::download(
-            new \App\Exports\DiaphragmWeldingExport,
+        return Excel::download(
+            new DiaphragmWeldingExport,
             'diaphragm-welding-'.now()->format('Y-m-d').'.xlsx'
         );
     }
@@ -304,7 +308,7 @@ class DiaphragmWeldingController extends Controller
             SpreadsheetImportSecurity::delete(session('diaphragm_welding_import_file'));
             [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'diaphragm-welding');
 
-            $import = new \App\Imports\DiaphragmWeldingImport();
+            $import = new DiaphragmWeldingImport;
             $results = $import->preview($fullPath);
 
             // Store the temp file path in session for execute phase
@@ -358,7 +362,7 @@ class DiaphragmWeldingController extends Controller
         try {
             $updateDuplicates = $request->boolean('update_duplicates', false);
 
-            $import = new \App\Imports\DiaphragmWeldingImport();
+            $import = new DiaphragmWeldingImport;
             $results = $import->execute($fullPath, $updateDuplicates);
 
             $message = "Import completed: {$results['imported']} created";

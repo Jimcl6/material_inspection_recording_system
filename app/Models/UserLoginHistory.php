@@ -45,7 +45,7 @@ class UserLoginHistory extends Model
             return null;
         }
 
-        return $this->login_at->diffInMinutes($this->logout_at);
+        return (int) $this->login_at->diffInMinutes($this->logout_at);
     }
 
     /**

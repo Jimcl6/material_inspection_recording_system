@@ -9,22 +9,26 @@ use App\Http\Requests\StoreAnnealingCheckRequest;
 use App\Http\Requests\UpdateAnnealingCheckRequest;
 use App\Imports\AnnealingChecksWithHeadersImport;
 use App\Models\AnnealingCheck;
+use App\Models\User;
 use App\Services\ActivityService;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use App\Services\DuplicateRecordGuard;
 use App\Support\SpreadsheetImportSecurity;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AnnealingCheckController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(IndexAnnealingCheckRequest $request): \Inertia\Response
+    public function index(IndexAnnealingCheckRequest $request): Response
     {
         $filters = $request->validated();
         $search = $filters['search'] ?? null;
@@ -66,10 +70,10 @@ class AnnealingCheckController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): \Inertia\Response
+    public function create(): Response
     {
         return Inertia::render('AnnealingChecks/Create', [
-            'users' => \App\Models\User::select('id', 'name')->orderBy('name')->get(),
+            'users' => User::select('id', 'name')->orderBy('name')->get(),
         ]);
     }
 
@@ -81,7 +85,7 @@ class AnnealingCheckController extends Controller
         ApprovalWorkflowService $approvalWorkflowService,
         ApprovalNotificationService $approvalNotificationService,
         DuplicateRecordGuard $duplicateRecordGuard
-    ): \Illuminate\Http\RedirectResponse {
+    ): RedirectResponse {
         $data = $request->validated();
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
@@ -127,7 +131,7 @@ class AnnealingCheckController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(IndexAnnealingCheckRequest $request, AnnealingCheck $annealingCheck): \Inertia\Response
+    public function show(IndexAnnealingCheckRequest $request, AnnealingCheck $annealingCheck): Response
     {
         $annealingCheck->load(['pic', 'checkedBy', 'verifiedBy']);
 
@@ -156,7 +160,7 @@ class AnnealingCheckController extends Controller
         $cleanName = trim(strtolower($name));
 
         // Try to find user by name (case-insensitive)
-        $user = \App\Models\User::whereRaw('LOWER(name) = ?', [$cleanName])->first();
+        $user = User::whereRaw('LOWER(name) = ?', [$cleanName])->first();
 
         // Return user ID if found, otherwise use current user for required fields or null for optional
         return $user ? $user->id : ($isRequired ? Auth::id() : null);
@@ -165,11 +169,11 @@ class AnnealingCheckController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(IndexAnnealingCheckRequest $request, AnnealingCheck $annealingCheck): \Inertia\Response
+    public function edit(IndexAnnealingCheckRequest $request, AnnealingCheck $annealingCheck): Response
     {
         return Inertia::render('AnnealingChecks/Edit', [
             'annealingCheck' => $annealingCheck,
-            'users' => \App\Models\User::select('id', 'name')->orderBy('name')->get(),
+            'users' => User::select('id', 'name')->orderBy('name')->get(),
             'filters' => $request->validated(),
         ]);
     }
@@ -177,7 +181,7 @@ class AnnealingCheckController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateAnnealingCheckRequest $request, AnnealingCheck $annealingCheck): \Illuminate\Http\RedirectResponse
+    public function update(UpdateAnnealingCheckRequest $request, AnnealingCheck $annealingCheck): RedirectResponse
     {
         $data = $request->validated();
         $data['updated_by'] = Auth::id();
@@ -220,7 +224,7 @@ class AnnealingCheckController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function destroy(AnnealingCheck $annealingCheck)
     {
@@ -245,7 +249,7 @@ class AnnealingCheckController extends Controller
     /**
      * Show the import form.
      */
-    public function importForm(): \Inertia\Response
+    public function importForm(): Response
     {
         return Inertia::render('AnnealingChecks/Import');
     }
@@ -253,7 +257,7 @@ class AnnealingCheckController extends Controller
     /**
      * Import annealing checks from Excel file.
      */
-    public function import(ImportAnnealingCheckRequest $request): \Inertia\Response
+    public function import(ImportAnnealingCheckRequest $request): Response
     {
         $file = $request->file('file');
         $overwrite = $request->boolean('overwrite', false);
@@ -265,7 +269,7 @@ class AnnealingCheckController extends Controller
                 AnnealingCheck::truncate();
             }
 
-            $import = new AnnealingChecksWithHeadersImport();
+            $import = new AnnealingChecksWithHeadersImport;
 
             [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'annealing');
             $import->import($fullPath);
@@ -315,7 +319,7 @@ class AnnealingCheckController extends Controller
             SpreadsheetImportSecurity::delete(session('annealing_import_file'));
             [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'annealing');
 
-            $import = new AnnealingChecksWithHeadersImport();
+            $import = new AnnealingChecksWithHeadersImport;
             $results = $import->preview($fullPath);
 
             // Store the temp file path in session for execute phase
@@ -369,7 +373,7 @@ class AnnealingCheckController extends Controller
         try {
             $updateDuplicates = $request->boolean('update_duplicates', false);
 
-            $import = new AnnealingChecksWithHeadersImport();
+            $import = new AnnealingChecksWithHeadersImport;
             $results = $import->execute($fullPath, $updateDuplicates);
 
             $message = "Import completed: {$results['imported']} created";
@@ -404,7 +408,7 @@ class AnnealingCheckController extends Controller
     /**
      * Export annealing checks to Excel file.
      */
-    public function export(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function export(): BinaryFileResponse
     {
         return Excel::download(new AnnealingChecksExport, 'annealing-checks-'.now()->format('Y-m-d').'.xlsx');
     }
@@ -412,7 +416,7 @@ class AnnealingCheckController extends Controller
     /**
      * Show the approval page for users with annealing approval permission.
      */
-    public function approval(): \Inertia\Response
+    public function approval(): Response
     {
         $user = Auth::user();
 
@@ -438,7 +442,7 @@ class AnnealingCheckController extends Controller
     public function bulkApprove(
         Request $request,
         ApprovalNotificationService $approvalNotificationService
-    ): \Illuminate\Http\RedirectResponse {
+    ): RedirectResponse {
         $request->validate([
             'check_ids' => 'required|array',
             'check_ids.*' => 'exists:annealing_checks,id',
@@ -477,7 +481,7 @@ class AnnealingCheckController extends Controller
     public function bulkReject(
         Request $request,
         ApprovalNotificationService $approvalNotificationService
-    ): \Illuminate\Http\RedirectResponse {
+    ): RedirectResponse {
         $request->validate([
             'check_ids' => 'required|array',
             'check_ids.*' => 'exists:annealing_checks,id',

@@ -12,7 +12,7 @@ class AnnealingCheckValidationTest extends TestCase
 {
     public function test_store_validation_accepts_an_annealing_check_without_retired_fields(): void
     {
-        $request = new StoreAnnealingCheckRequest();
+        $request = new StoreAnnealingCheckRequest;
         $rules = $request->rules();
         $validator = Validator::make($this->validPayload(), $rules);
 
@@ -24,7 +24,7 @@ class AnnealingCheckValidationTest extends TestCase
 
     public function test_update_validation_accepts_an_annealing_check_without_retired_fields(): void
     {
-        $request = new UpdateAnnealingCheckRequest();
+        $request = new UpdateAnnealingCheckRequest;
         $rules = $request->rules();
         $validator = Validator::make($this->validPayload(), $rules);
 
@@ -36,12 +36,12 @@ class AnnealingCheckValidationTest extends TestCase
 
     public function test_temperature_setting_remains_validated_and_exported(): void
     {
-        $request = new StoreAnnealingCheckRequest();
+        $request = new StoreAnnealingCheckRequest;
         $payload = $this->validPayload();
         $payload['temperature_setting'] = 2500;
 
         $validator = Validator::make($payload, $request->rules());
-        $headings = (new AnnealingChecksExport())->headings();
+        $headings = (new AnnealingChecksExport)->headings();
 
         $this->assertTrue($validator->fails());
         $this->assertTrue($validator->errors()->has('temperature_setting'));
