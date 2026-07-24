@@ -45,31 +45,25 @@ composer ci:backend
 
 `composer test:reset` is the only documented reset command. It invokes the guard before `migrate:fresh`. Tests may call `MirsTestingSeeder`; production seeders must never be called from automated tests.
 
-Run the Composer metadata and exact-advisory gate separately:
+Run the Composer metadata and blocking advisory gate separately:
 
 ```powershell
 composer validate --strict
-$report = Join-Path $env:TEMP 'mirs-composer-audit.json'
-composer audit --locked --format=json | Set-Content -Encoding utf8 $report
-php scripts/ci/check-composer-audit.php $report
-Remove-Item -LiteralPath $report
+composer audit --locked --abandoned=fail
 ```
 
-Composer can return a non-zero status for reviewed informational advisories, so the JSON gate determines whether the advisory set is allowed. Any unreviewed advisory is blocking.
+All Composer advisories and abandoned packages are blocking. Phase 6 removed the temporary Laravel advisory exceptions after upgrading to a patched Laravel 12 release.
 
 ## Frontend checks
 
 ```powershell
 npm ci
 npm audit --omit=dev --audit-level=high
-$report = Join-Path $env:TEMP 'mirs-npm-audit.json'
-npm audit --json | Set-Content -Encoding utf8 $report
-node scripts/ci/check-npm-audit.cjs $report
-Remove-Item -LiteralPath $report
+npm audit --audit-level=high
 npm run check
 ```
 
-Production dependency advisories are blocking. The full npm audit permits only the exact reviewed Vite 4 toolchain advisory sources already scheduled for a later tooling upgrade; any new source is blocking.
+High and critical npm advisories are blocking for both production and development dependencies. Phase 6 upgraded the Vite toolchain and removed the former advisory allow-list.
 
 ## Production Docker build
 
@@ -89,10 +83,12 @@ The complete local sequence is:
 
 ```powershell
 composer validate --strict
+composer audit --locked --abandoned=fail
 composer ci:backend
 npm ci
+npm audit --audit-level=high
 npm run check
 docker build --target app --tag mirs-ci:local .
 ```
 
-Run the two audit gates shown above as part of a release check.
+Run the complete sequence as a release check.
