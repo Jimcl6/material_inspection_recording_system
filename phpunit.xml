@@ -29,7 +29,7 @@
         <env name="DB_USERNAME" value="root"/>
         <env name="DB_PASSWORD" value=""/>
         <env name="TEST_ALLOWED_DATABASE_HOSTS" value="127.0.0.1,localhost,mysql,mariadb"/>
-        <env name="TEST_PROHIBITED_DATABASES" value="forge,laravel,mirs,production"/>
+        <env name="TEST_PROHIBITED_DATABASES" value="forge,laravel,mirs,production,fc_1_data_db_testing"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

@@ -32,7 +32,7 @@ composer install
 npm ci
 ```
 
-The guard requires `APP_ENV=testing`, MySQL, a database ending in `_test` or `_testing`, an empty `DATABASE_URL`, an explicitly allowed host, and a database name that is not prohibited. It throws before migrations or refresh operations when any condition fails.
+The guard requires `APP_ENV=testing`, MySQL, a database ending in `_test` or `_testing`, an empty `DATABASE_URL`, an explicitly allowed host, and a database name that is not prohibited. The historical live database name `fc_1_data_db_testing` is explicitly prohibited despite its testing-style suffix. The guard throws before migrations or refresh operations when any condition fails.
 
 ## Backend checks
 
