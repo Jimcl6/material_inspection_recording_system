@@ -27,7 +27,7 @@ class DepartmentController extends Controller
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%");
             });
         }
 
@@ -147,10 +147,10 @@ class DepartmentController extends Controller
     public function toggleStatus(Department $department)
     {
         $before = ActivityService::snapshot($department);
-        $department->update(['is_active' => !$department->is_active]);
+        $department->update(['is_active' => ! $department->is_active]);
 
         $status = $department->is_active ? 'activated' : 'deactivated';
-        
+
         ActivityService::logSnapshotUpdate(
             $department,
             $before,

@@ -13,11 +13,11 @@ class DatabaseSeeder extends Seeder
     {
         // Disable foreign key checks
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        
+
         // Clear existing data
         DB::table('users')->truncate();
         DB::table('roles')->truncate();
-        
+
         // Enable foreign key checks
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
@@ -25,19 +25,19 @@ class DatabaseSeeder extends Seeder
         $adminRole = Role::create([
             'name' => 'Administrator',
             'slug' => 'admin',
-            'description' => 'Has full access to all features'
+            'description' => 'Has full access to all features',
         ]);
 
         Role::create([
             'name' => 'User',
             'slug' => 'user',
-            'description' => 'Standard user with limited access'
+            'description' => 'Standard user with limited access',
         ]);
 
         Role::create([
             'name' => 'Inspector',
             'slug' => 'inspector',
-            'description' => 'Can perform inspections'
+            'description' => 'Can perform inspections',
         ]);
 
         // Create admin user

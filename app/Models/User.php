@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, Notifiable, HasFactory;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
@@ -89,7 +90,7 @@ class User extends Authenticatable
                 ->where('module', $module)
                 ->where('action', $action)
                 ->exists();
-            
+
             if ($hasRolePermission) {
                 return true;
             }
@@ -151,7 +152,7 @@ class User extends Authenticatable
      */
     public function getDisplayNameAttribute(): string
     {
-        return $this->employee_id 
+        return $this->employee_id
             ? "{$this->name} ({$this->employee_id})"
             : $this->name;
     }
@@ -159,7 +160,7 @@ class User extends Authenticatable
     /**
      * Record login history
      */
-    public function recordLogin(string $ipAddress, string $userAgent = null, string $loginType = 'password', bool $successful = true, string $failureReason = null): UserLoginHistory
+    public function recordLogin(string $ipAddress, ?string $userAgent = null, string $loginType = 'password', bool $successful = true, ?string $failureReason = null): UserLoginHistory
     {
         $this->update([
             'last_login_at' => now(),

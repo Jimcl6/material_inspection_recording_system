@@ -16,18 +16,18 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'Administrator',
                 'slug' => 'admin',
-                'description' => 'Has full access to all features'
+                'description' => 'Has full access to all features',
             ],
             [
                 'name' => 'User',
                 'slug' => 'user',
-                'description' => 'Standard user with limited access'
+                'description' => 'Standard user with limited access',
             ],
             [
                 'name' => 'Inspector',
                 'slug' => 'inspector',
-                'description' => 'Can perform inspections'
-            ]
+                'description' => 'Can perform inspections',
+            ],
         ];
 
         foreach ($roles as $role) {

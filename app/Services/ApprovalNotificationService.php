@@ -3,12 +3,12 @@
 namespace App\Services;
 
 use App\Events\ApprovalNotificationsChanged;
+use App\Mail\AnnealingCheckNotification;
 use App\Models\AnnealingCheck;
 use App\Models\ApprovalNotification;
 use App\Models\TempRecord;
 use App\Models\TorqueRecord;
 use App\Models\User;
-use App\Mail\AnnealingCheckNotification;
 use App\Models\WeldingChecksheet;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
@@ -22,7 +22,7 @@ class ApprovalNotificationService
      */
     public function notifyApprovers(Model $record, string $type = 'new_submission', ?string $module = null): void
     {
-        if (!config('features.approvals', false)) {
+        if (! config('features.approvals', false)) {
             return;
         }
 
@@ -58,7 +58,7 @@ class ApprovalNotificationService
                 try {
                     Mail::to($approver->email)->send(new AnnealingCheckNotification($record, $approver, $type));
                 } catch (\Exception $e) {
-                    \Log::warning("Failed to send email notification to {$approver->email}: " . $e->getMessage());
+                    \Log::warning("Failed to send email notification to {$approver->email}: ".$e->getMessage());
                 }
             }
         }
@@ -159,9 +159,9 @@ class ApprovalNotificationService
             case 'new_submission':
                 return "New {$label} submitted for {$title}";
             case 'update':
-                return ucfirst($label) . " updated for {$title}";
+                return ucfirst($label)." updated for {$title}";
             default:
-                return ucfirst($label) . " activity for {$title}";
+                return ucfirst($label)." activity for {$title}";
         }
     }
 
@@ -186,7 +186,7 @@ class ApprovalNotificationService
      */
     public function getPendingNotifications(User $user)
     {
-        if (!config('features.approvals', false)) {
+        if (! config('features.approvals', false)) {
             return collect();
         }
 
@@ -231,22 +231,22 @@ class ApprovalNotificationService
     private function recordTitle(Model $record): string
     {
         if ($record instanceof AnnealingCheck) {
-            return $record->item_code ?: 'Annealing Check #' . $record->id;
+            return $record->item_code ?: 'Annealing Check #'.$record->id;
         }
 
         if ($record instanceof TempRecord) {
-            return $record->model_series ?: 'Temperature Record #' . $record->id;
+            return $record->model_series ?: 'Temperature Record #'.$record->id;
         }
 
         if ($record instanceof TorqueRecord) {
-            return $record->model_series ?: 'Torque Record #' . $record->id;
+            return $record->model_series ?: 'Torque Record #'.$record->id;
         }
 
         if ($record instanceof WeldingChecksheet) {
-            return $record->item_code ?: 'Welding Checksheet #' . $record->id;
+            return $record->item_code ?: 'Welding Checksheet #'.$record->id;
         }
 
-        return 'Record #' . $record->getKey();
+        return 'Record #'.$record->getKey();
     }
 
     private function broadcastToUsers(array $userIds): void

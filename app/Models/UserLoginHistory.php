@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class UserLoginHistory extends Model
 {
     use HasFactory;
 
     protected $table = 'user_login_history';
-    
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -41,11 +41,11 @@ class UserLoginHistory extends Model
      */
     public function getSessionDurationAttribute(): ?int
     {
-        if (!$this->logout_at) {
+        if (! $this->logout_at) {
             return null;
         }
 
-        return $this->login_at->diffInMinutes($this->logout_at);
+        return (int) $this->login_at->diffInMinutes($this->logout_at);
     }
 
     /**
@@ -53,7 +53,7 @@ class UserLoginHistory extends Model
      */
     public function isSessionActive(): bool
     {
-        return $this->is_successful && !$this->logout_at;
+        return $this->is_successful && ! $this->logout_at;
     }
 
     /**

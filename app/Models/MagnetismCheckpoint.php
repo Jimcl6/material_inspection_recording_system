@@ -50,6 +50,7 @@ class MagnetismCheckpoint extends Model
 
     // Tesla standard range for validation
     public const TESLA_MIN = 120;
+
     public const TESLA_MAX = 150;
 
     // Checkpoint position labels
@@ -110,7 +111,7 @@ class MagnetismCheckpoint extends Model
     public function setFirstSamplesFromArray(array $samples): void
     {
         for ($i = 0; $i < 5; $i++) {
-            $field = 'sample' . ($i + 1) . '_first';
+            $field = 'sample'.($i + 1).'_first';
             $this->$field = $samples[$i] ?? null;
         }
     }
@@ -121,7 +122,7 @@ class MagnetismCheckpoint extends Model
     public function setLastSamplesFromArray(array $samples): void
     {
         for ($i = 0; $i < 5; $i++) {
-            $field = 'sample' . ($i + 1) . '_last';
+            $field = 'sample'.($i + 1).'_last';
             $this->$field = $samples[$i] ?? null;
         }
     }
@@ -136,6 +137,7 @@ class MagnetismCheckpoint extends Model
                 return false;
             }
         }
+
         return true;
     }
 
@@ -149,6 +151,7 @@ class MagnetismCheckpoint extends Model
                 return false;
             }
         }
+
         return true;
     }
 
@@ -157,6 +160,6 @@ class MagnetismCheckpoint extends Model
      */
     public function getFormattedDateAttribute(): string
     {
-        return $this->production_date ? $this->production_date->format('Y-m-d') : '';
+        return $this->production_date->format('Y-m-d');
     }
 }

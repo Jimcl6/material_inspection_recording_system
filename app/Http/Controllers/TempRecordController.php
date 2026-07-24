@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TempRecord;
 use App\Imports\TempRecordImport;
+use App\Models\TempRecord;
 use App\Services\ActivityService;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use App\Services\DuplicateRecordGuard;
 use App\Support\SpreadsheetImportSecurity;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Inertia\Response;
 
 class TempRecordController extends Controller
 {
@@ -25,10 +25,10 @@ class TempRecordController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('model_series', 'like', "%{$search}%")
-                  ->orWhere('solder_model', 'like', "%{$search}%")
-                  ->orWhere('control_no', 'like', "%{$search}%")
-                  ->orWhere('person_in_charge', 'like', "%{$search}%")
-                  ->orWhere('checked_by', 'like', "%{$search}%");
+                    ->orWhere('solder_model', 'like', "%{$search}%")
+                    ->orWhere('control_no', 'like', "%{$search}%")
+                    ->orWhere('person_in_charge', 'like', "%{$search}%")
+                    ->orWhere('checked_by', 'like', "%{$search}%");
             });
         }
 
@@ -94,6 +94,7 @@ class TempRecordController extends Controller
     public function create()
     {
         $equipmentTypes = TempRecord::query()->select('equipment_type')->whereNotNull('equipment_type')->distinct()->orderBy('equipment_type')->pluck('equipment_type');
+
         return Inertia::render('TempRecords/Create', [
             'equipmentTypes' => $equipmentTypes,
         ]);
@@ -104,25 +105,26 @@ class TempRecordController extends Controller
         DuplicateRecordGuard $duplicateRecordGuard,
         ApprovalWorkflowService $approvalWorkflowService,
         ApprovalNotificationService $approvalNotificationService
-    )
-    {
+    ) {
         $date = $this->parseDateInput($request->input('date'));
-        if ($date !== null) { $request->merge(['date' => $date]); }
+        if ($date !== null) {
+            $request->merge(['date' => $date]);
+        }
         $data = $request->validate([
-            'date' => ['nullable','date'],
-            'model_series' => ['required','string','max:100'],
-            'solder_model' => ['nullable','string','max:100'],
-            'line_assigned' => ['nullable','string','max:100'],
-            'control_no' => ['nullable','string','max:50'],
-            'equipment_type' => ['required','string','max:100'],
-            'process_assigned' => ['nullable','string','max:100'],
-            'person_in_charge' => ['nullable','string','max:100'],
-            'time_am' => ['nullable','regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
-            'temp_am' => ['nullable','string','max:20'],
-            'time_pm' => ['nullable','regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
-            'temp_pm' => ['nullable','string','max:20'],
-            'col_remarks' => ['nullable','string','max:100'],
-            'checked_by' => ['nullable','string','max:100'],
+            'date' => ['nullable', 'date'],
+            'model_series' => ['required', 'string', 'max:100'],
+            'solder_model' => ['nullable', 'string', 'max:100'],
+            'line_assigned' => ['nullable', 'string', 'max:100'],
+            'control_no' => ['nullable', 'string', 'max:50'],
+            'equipment_type' => ['required', 'string', 'max:100'],
+            'process_assigned' => ['nullable', 'string', 'max:100'],
+            'person_in_charge' => ['nullable', 'string', 'max:100'],
+            'time_am' => ['nullable', 'regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
+            'temp_am' => ['nullable', 'string', 'max:20'],
+            'time_pm' => ['nullable', 'regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
+            'temp_pm' => ['nullable', 'string', 'max:20'],
+            'col_remarks' => ['nullable', 'string', 'max:100'],
+            'checked_by' => ['nullable', 'string', 'max:100'],
         ]);
 
         $data = array_merge($data, $approvalWorkflowService->initialState());
@@ -167,6 +169,7 @@ class TempRecordController extends Controller
     public function edit(TempRecord $temp_record)
     {
         $equipmentTypes = TempRecord::query()->select('equipment_type')->whereNotNull('equipment_type')->distinct()->orderBy('equipment_type')->pluck('equipment_type');
+
         return Inertia::render('TempRecords/Edit', [
             'record' => $temp_record,
             'equipmentTypes' => $equipmentTypes,
@@ -176,22 +179,24 @@ class TempRecordController extends Controller
     public function update(Request $request, TempRecord $temp_record)
     {
         $date = $this->parseDateInput($request->input('date'));
-        if ($date !== null) { $request->merge(['date' => $date]); }
+        if ($date !== null) {
+            $request->merge(['date' => $date]);
+        }
         $data = $request->validate([
-            'date' => ['nullable','date'],
-            'model_series' => ['required','string','max:100'],
-            'solder_model' => ['nullable','string','max:100'],
-            'line_assigned' => ['nullable','string','max:100'],
-            'control_no' => ['nullable','string','max:50'],
-            'equipment_type' => ['required','string','max:100'],
-            'process_assigned' => ['nullable','string','max:100'],
-            'person_in_charge' => ['nullable','string','max:100'],
-            'time_am' => ['nullable','regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
-            'temp_am' => ['nullable','string','max:20'],
-            'time_pm' => ['nullable','regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
-            'temp_pm' => ['nullable','string','max:20'],
-            'col_remarks' => ['nullable','string','max:100'],
-            'checked_by' => ['nullable','string','max:100'],
+            'date' => ['nullable', 'date'],
+            'model_series' => ['required', 'string', 'max:100'],
+            'solder_model' => ['nullable', 'string', 'max:100'],
+            'line_assigned' => ['nullable', 'string', 'max:100'],
+            'control_no' => ['nullable', 'string', 'max:50'],
+            'equipment_type' => ['required', 'string', 'max:100'],
+            'process_assigned' => ['nullable', 'string', 'max:100'],
+            'person_in_charge' => ['nullable', 'string', 'max:100'],
+            'time_am' => ['nullable', 'regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
+            'temp_am' => ['nullable', 'string', 'max:20'],
+            'time_pm' => ['nullable', 'regex:/^(?:[01]?\\d|2[0-3]):[0-5]\\d$/'],
+            'temp_pm' => ['nullable', 'string', 'max:20'],
+            'col_remarks' => ['nullable', 'string', 'max:100'],
+            'checked_by' => ['nullable', 'string', 'max:100'],
         ]);
 
         $before = ActivityService::snapshot($temp_record);
@@ -212,7 +217,7 @@ class TempRecordController extends Controller
     {
         $recordData = $temp_record->toArray();
         $modelSeries = $temp_record->model_series;
-        
+
         $temp_record->delete();
 
         ActivityService::log(
@@ -226,7 +231,7 @@ class TempRecordController extends Controller
         return redirect()->route('temp-records.index')->with('success', 'Record deleted.');
     }
 
-    public function approval(): \Inertia\Response
+    public function approval(): Response
     {
         $pendingRecords = TempRecord::where('status', 'pending')
             ->orderByDesc('id')
@@ -269,7 +274,7 @@ class TempRecordController extends Controller
         $approvalNotificationService->markRecordsActed($records, 'temperature');
 
         return redirect()->route('temp-records.approval')
-            ->with('success', $records->count() . ' temperature record(s) approved successfully.');
+            ->with('success', $records->count().' temperature record(s) approved successfully.');
     }
 
     public function bulkReject(Request $request, ApprovalNotificationService $approvalNotificationService)
@@ -304,21 +309,27 @@ class TempRecordController extends Controller
         $approvalNotificationService->markRecordsActed($records, 'temperature');
 
         return redirect()->route('temp-records.approval')
-            ->with('success', $records->count() . ' temperature record(s) rejected successfully.');
+            ->with('success', $records->count().' temperature record(s) rejected successfully.');
     }
 
     protected function parseDateInput(?string $value): ?string
     {
-        if (!$value) return null;
+        if (! $value) {
+            return null;
+        }
         $formats = [
             'd/m/Y H:i', 'd/m/Y', 'Y-m-d\TH:i', 'Y-m-d H:i', 'Y-m-d',
         ];
         foreach ($formats as $fmt) {
             try {
                 $dt = Carbon::createFromFormat($fmt, $value);
-                if ($dt !== false) return $dt->format('Y-m-d H:i:s');
-            } catch (\Exception $e) {}
+                if ($dt !== false) {
+                    return $dt->format('Y-m-d H:i:s');
+                }
+            } catch (\Exception $e) {
+            }
         }
+
         // Fallback: let validator handle invalid format
         return null;
     }
@@ -350,7 +361,7 @@ class TempRecordController extends Controller
 
             $equipmentType = $request->input('equipment_type');
 
-            $import = new TempRecordImport();
+            $import = new TempRecordImport;
             $results = $import->preview($fullPath, $equipmentType);
 
             // Store the temp file path in session for execute phase
@@ -360,7 +371,6 @@ class TempRecordController extends Controller
                 'success' => true,
                 'preview' => $results,
             ]);
-
         } catch (\Throwable $e) {
             SpreadsheetImportSecurity::delete($tempPath);
             $correlationId = SpreadsheetImportSecurity::reportFailure('temperature.preview', $e);
@@ -386,7 +396,7 @@ class TempRecordController extends Controller
 
         $tempPath = session('temp_record_import_file');
 
-        if (!$tempPath) {
+        if (! $tempPath) {
             return response()->json([
                 'success' => false,
                 'error' => 'No file to import. Please upload a file first.',
@@ -398,6 +408,7 @@ class TempRecordController extends Controller
         if ($fullPath === null) {
             SpreadsheetImportSecurity::delete($tempPath);
             session()->forget('temp_record_import_file');
+
             return response()->json([
                 'success' => false,
                 'error' => 'Import file expired. Please upload again.',
@@ -410,13 +421,19 @@ class TempRecordController extends Controller
             $processAssigned = $request->input('process_assigned');
             $updateDuplicates = $request->boolean('update_duplicates', false);
 
-            $import = new TempRecordImport();
+            $import = new TempRecordImport;
             $results = $import->execute($fullPath, $equipmentType, $lineAssigned, $processAssigned, $updateDuplicates);
 
             $message = "Import completed: {$results['imported']} created";
-            if ($results['updated'] > 0) $message .= ", {$results['updated']} updated";
-            if ($results['skipped'] > 0) $message .= ", {$results['skipped']} skipped";
-            if (count($results['errors']) > 0) $message .= ", " . count($results['errors']) . " errors";
+            if ($results['updated'] > 0) {
+                $message .= ", {$results['updated']} updated";
+            }
+            if ($results['skipped'] > 0) {
+                $message .= ", {$results['skipped']} skipped";
+            }
+            if (count($results['errors']) > 0) {
+                $message .= ', '.count($results['errors']).' errors';
+            }
 
             ActivityService::logImport('temperature', $results['imported'] + $results['updated'], [
                 'imported' => $results['imported'],
@@ -431,7 +448,6 @@ class TempRecordController extends Controller
                 'results' => $results,
                 'message' => $message,
             ]);
-
         } catch (\Throwable $e) {
             $correlationId = SpreadsheetImportSecurity::reportFailure('temperature.execute', $e);
 

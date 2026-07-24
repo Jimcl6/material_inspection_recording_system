@@ -8,22 +8,50 @@
 
         <div class="py-8">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Stats Overview -->
-                <!-- <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div v-for="stat in stats" :key="stat.name" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div class="p-6">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full" :class="stat.bgColorClass + ' bg-opacity-20'">
-                                    <component :is="stat.icon" class="h-6 w-6" :class="stat.textColorClass" />
-                                </div>
-                                <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-500">{{ stat.name }}</p>
-                                    <p class="text-2xl font-semibold text-gray-900">{{ stat.value }}</p>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Permission-scoped reporting summary -->
+                <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="rounded-lg bg-white p-5 shadow-sm">
+                        <p class="text-sm font-medium text-gray-500">Visible records</p>
+                        <p class="mt-2 text-2xl font-semibold text-gray-900">{{ dashboardSummary.totalRecords }}</p>
                     </div>
-                </div> -->
+                    <div class="rounded-lg bg-white p-5 shadow-sm">
+                        <p class="text-sm font-medium text-gray-500">Current calendar month</p>
+                        <p class="mt-2 text-2xl font-semibold text-gray-900">{{ dashboardSummary.currentMonthTotal }}</p>
+                    </div>
+                    <div class="rounded-lg bg-white p-5 shadow-sm">
+                        <p class="text-sm font-medium text-gray-500">Previous calendar month</p>
+                        <p class="mt-2 text-2xl font-semibold text-gray-900">{{ dashboardSummary.previousMonthTotal }}</p>
+                    </div>
+                    <div class="rounded-lg bg-white p-5 shadow-sm">
+                        <p class="text-sm font-medium text-gray-500">Month-over-month trend</p>
+                        <p
+                            class="mt-2 text-2xl font-semibold"
+                            :class="dashboardSummary.trendPercentage === null
+                                ? 'text-gray-500'
+                                : dashboardSummary.trendPercentage >= 0 ? 'text-green-600' : 'text-red-600'"
+                        >
+                            {{ formatTrend(dashboardSummary.trendPercentage) }}
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    v-if="dashboardSummary.approvals"
+                    class="mb-6 grid grid-cols-3 divide-x divide-gray-200 rounded-lg bg-white px-4 py-3 text-center shadow-sm"
+                >
+                    <div>
+                        <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Approved</p>
+                        <p class="mt-1 text-lg font-semibold text-green-700">{{ dashboardSummary.approvals.approved }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Pending</p>
+                        <p class="mt-1 text-lg font-semibold text-yellow-700">{{ dashboardSummary.approvals.pending }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Rejected</p>
+                        <p class="mt-1 text-lg font-semibold text-red-700">{{ dashboardSummary.approvals.rejected }}</p>
+                    </div>
+                </div>
 
                 <div v-if="approvalModules.length > 0" class="mb-6">
                     <Link
@@ -66,6 +94,7 @@
                                     <p class="text-sm text-gray-500">Manage and track annealing processes</p>
                                 </div>
                             </div>
+                            <DashboardModuleStats :stats="moduleStats.annealing" />
                             <div class="mt-4 flex justify-end">
                                 <Link :href="route('annealing-checks.index')" class="text-sm font-medium text-blue-600 hover:text-blue-500">
                                     View All <span aria-hidden="true">&rarr;</span>
@@ -88,6 +117,7 @@
                                     <p class="text-sm text-gray-500">Track and analyze temperature data</p>
                                 </div>
                             </div>
+                            <DashboardModuleStats :stats="moduleStats.temperature" />
                             <div class="mt-4 flex justify-end">
                                 <Link :href="route('temp-records.index')" class="text-sm font-medium text-green-600 hover:text-green-500">
                                     View All <span aria-hidden="true">&rarr;</span>
@@ -111,6 +141,7 @@
                                     <p class="text-sm text-gray-500">Manage torque measurement data</p>
                                 </div>
                             </div>
+                            <DashboardModuleStats :stats="moduleStats.torque" />
                             <div class="mt-4 flex justify-end">
                                 <Link :href="route('torque-records.index')" class="text-sm font-medium text-yellow-600 hover:text-yellow-500">
                                     View All <span aria-hidden="true">&rarr;</span>
@@ -133,6 +164,7 @@
                                     <p class="text-sm text-gray-500">Track and manage magnetism checksheets</p>
                                 </div>
                             </div>
+                            <DashboardModuleStats :stats="moduleStats.magnetism" />
                             <div class="mt-4 flex justify-end">
                                 <Link :href="route('magnetism-checksheet.index')" class="text-sm font-medium text-purple-600 hover:text-purple-500">
                                     View All <span aria-hidden="true">&rarr;</span>
@@ -177,6 +209,7 @@
                                     <p class="text-sm text-gray-500">View welding checksheets</p>
                                 </div>
                             </div>
+                            <DashboardModuleStats :stats="moduleStats.material" />
                             <div class="mt-4 flex justify-end">
                                 <Link :href="route('material-monitoring-checksheets.index')" class="text-sm font-medium text-orange-600 hover:text-red-500">
                                     View All <span aria-hidden="true">&rarr;</span>
@@ -199,6 +232,7 @@
                                     <p class="text-sm text-gray-500">View material monitor checksheets</p>
                                 </div>
                             </div>
+                            <DashboardModuleStats :stats="moduleStats.welding" />
                             <div class="mt-4 flex justify-end">
                                 <Link :href="route('welding-checksheets.index')" class="text-sm font-medium text-orange-600 hover:text-red-500">
                                     View All <span aria-hidden="true">&rarr;</span>
@@ -248,6 +282,7 @@ import { computed, defineProps } from 'vue';
 import { Link } from '@inertiajs/vue3';
 // import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import DashboardModuleStats from '@/Components/DashboardModuleStats.vue';
 import { usePermissions } from '@/Composables/usePermissions';
 
 const dashboardModuleKeys = [
@@ -264,8 +299,12 @@ const { canView } = usePermissions();
 const hasVisibleDashboardModules = computed(() => dashboardModuleKeys.some((module) => canView(module)));
 
 const props = defineProps({
-    stats: {
-        type: Array,
+    dashboardSummary: {
+        type: Object,
+        required: true,
+    },
+    moduleStats: {
+        type: Object,
         required: true,
     },
     recentActivity: {
@@ -281,4 +320,12 @@ const props = defineProps({
         default: () => [],
     },
 });
+
+const formatTrend = (value) => {
+    if (value === null) {
+        return 'N/A';
+    }
+
+    return `${value > 0 ? '+' : ''}${value}%`;
+};
 </script>

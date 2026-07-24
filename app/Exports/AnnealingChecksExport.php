@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\AnnealingCheck;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -11,16 +12,13 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 class AnnealingChecksExport implements FromCollection, WithHeadings, WithMapping, WithTitle
 {
     /**
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function collection()
     {
         return AnnealingCheck::with(['pic', 'checkedBy', 'verifiedBy'])->get();
     }
 
-    /**
-     * @return array
-     */
     public function headings(): array
     {
         return [
@@ -46,9 +44,7 @@ class AnnealingChecksExport implements FromCollection, WithHeadings, WithMapping
     }
 
     /**
-     * @param mixed $annealingCheck
-     *
-     * @return array
+     * @param  mixed  $annealingCheck
      */
     public function map($annealingCheck): array
     {
@@ -74,9 +70,6 @@ class AnnealingChecksExport implements FromCollection, WithHeadings, WithMapping
         ];
     }
 
-    /**
-     * @return string
-     */
     public function title(): string
     {
         return 'Annealing Checks';

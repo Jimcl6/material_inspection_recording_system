@@ -9,6 +9,7 @@
 .env.*
 !.env.example
 !.env.docker.example
+!.env.testing.example
 *.pem
 *.key
 *.p12

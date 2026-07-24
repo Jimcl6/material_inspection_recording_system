@@ -4,17 +4,19 @@ namespace App\Exports;
 
 use App\Models\DiaphragmWeldingChecksheet;
 use App\Models\DiaphragmWeldingSample;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class DiaphragmWeldingExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths
+class DiaphragmWeldingExport implements FromCollection, WithColumnWidths, WithHeadings, WithMapping, WithStyles
 {
     /**
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function collection()
     {
@@ -23,9 +25,6 @@ class DiaphragmWeldingExport implements FromCollection, WithHeadings, WithMappin
             ->get();
     }
 
-    /**
-     * @return array
-     */
     public function headings(): array
     {
         $headers = [
@@ -60,14 +59,13 @@ class DiaphragmWeldingExport implements FromCollection, WithHeadings, WithMappin
     }
 
     /**
-     * @param DiaphragmWeldingChecksheet $checksheet
-     * @return array
+     * @param  DiaphragmWeldingChecksheet  $checksheet
      */
     public function map($checksheet): array
     {
         $row = [
             $checksheet->id,
-            $checksheet->production_date?->format('Y-m-d'),
+            $checksheet->production_date->format('Y-m-d'),
             $checksheet->lasermark_lot_number,
             $checksheet->machine_no,
             $checksheet->letter_code,
@@ -85,7 +83,7 @@ class DiaphragmWeldingExport implements FromCollection, WithHeadings, WithMappin
 
         // Add sample values
         $samplesIndexed = $checksheet->samples->keyBy('check_item');
-        
+
         foreach (array_keys(DiaphragmWeldingSample::CHECK_ITEM_LABELS) as $checkItem) {
             $sample = $samplesIndexed[$checkItem] ?? null;
             for ($i = 1; $i <= 5; $i++) {
@@ -99,26 +97,19 @@ class DiaphragmWeldingExport implements FromCollection, WithHeadings, WithMappin
         return $row;
     }
 
-    /**
-     * @param Worksheet $sheet
-     * @return array
-     */
     public function styles(Worksheet $sheet): array
     {
         return [
             1 => [
                 'font' => ['bold' => true],
                 'fill' => [
-                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'fillType' => Fill::FILL_SOLID,
                     'startColor' => ['rgb' => 'E2E8F0'],
                 ],
             ],
         ];
     }
 
-    /**
-     * @return array
-     */
     public function columnWidths(): array
     {
         return [

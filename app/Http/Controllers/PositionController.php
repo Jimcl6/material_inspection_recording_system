@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Position;
 use App\Models\Department;
+use App\Models\Position;
 use App\Models\UserPermission;
 use App\Services\ActivityService;
 use Illuminate\Http\Request;
@@ -29,7 +29,7 @@ class PositionController extends Controller
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%");
             });
         }
 
@@ -86,7 +86,7 @@ class PositionController extends Controller
         ]);
 
         // Sync permissions if provided
-        if (!empty($validated['permissions'])) {
+        if (! empty($validated['permissions'])) {
             $position->syncPermissions($validated['permissions']);
         }
 
@@ -175,7 +175,7 @@ class PositionController extends Controller
 
         $positionData = $position->toArray();
         $positionName = $position->name;
-        
+
         // Detach permissions before deleting
         $position->permissions()->detach();
         $position->delete();
@@ -198,10 +198,10 @@ class PositionController extends Controller
     public function toggleStatus(Position $position)
     {
         $before = ActivityService::snapshot($position);
-        $position->update(['is_active' => !$position->is_active]);
+        $position->update(['is_active' => ! $position->is_active]);
 
         $status = $position->is_active ? 'activated' : 'deactivated';
-        
+
         ActivityService::logSnapshotUpdate(
             $position,
             $before,

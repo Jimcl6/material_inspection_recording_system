@@ -3,7 +3,6 @@
 namespace App\Imports;
 
 use App\Models\DiaphragmWeldingChecksheet;
-use App\Models\DiaphragmWeldingSample;
 use App\Support\SpreadsheetImportSecurity;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
@@ -40,14 +39,14 @@ class DiaphragmWeldingImport
     public function import(string $filePath)
     {
         $spreadsheet = IOFactory::load($filePath);
-        
+
         // Process all sheets except Master/template sheets
         foreach ($spreadsheet->getSheetNames() as $sheetName) {
             $lowerName = strtolower($sheetName);
             if (str_contains($lowerName, 'master') || str_contains($lowerName, 'template') || str_contains($lowerName, 'item code')) {
                 continue;
             }
-            
+
             $sheet = $spreadsheet->getSheetByName($sheetName);
             $this->processSheet($sheet, $sheetName);
         }
@@ -65,24 +64,24 @@ class DiaphragmWeldingImport
 
         while ($currentRow <= $highestRow) {
             // Check if this row starts a new record (has date in column A)
-            $dateValue = $sheet->getCell('A' . $currentRow)->getValue();
-            
+            $dateValue = $sheet->getCell('A'.$currentRow)->getValue();
+
             if (empty($dateValue)) {
                 $currentRow++;
+
                 continue;
             }
 
             try {
                 $record = $this->parseRecord($sheet, $currentRow);
-                
+
                 if ($record) {
                     $this->createChecksheet($record);
                     $this->results['imported']++;
                 }
-                
+
                 // Each record spans 10 rows
                 $currentRow += 10;
-                
             } catch (\Throwable $e) {
                 $this->results['errors'][] = SpreadsheetImportSecurity::safeFailure(
                     'diaphragm-welding.importer.row',
@@ -100,34 +99,34 @@ class DiaphragmWeldingImport
     protected function parseRecord($sheet, $startRow)
     {
         // Parse date
-        $dateValue = $sheet->getCell('A' . $startRow)->getValue();
+        $dateValue = $sheet->getCell('A'.$startRow)->getValue();
         $productionDate = $this->parseDate($dateValue);
-        
-        if (!$productionDate) {
+
+        if (! $productionDate) {
             return null;
         }
 
         // Material Monitoring data (Row 1 of record)
         $record = [
             'production_date' => $productionDate,
-            'lasermark_lot_number' => $this->getCellValue($sheet, 'I' . $startRow),
-            'machine_no' => $this->getCellValue($sheet, 'J' . $startRow),
-            'letter_code' => $this->getCellValue($sheet, 'L' . $startRow),
-            'df_rubber_lot' => $this->getCellValue($sheet, 'M' . $startRow),
-            'center_plate_a_lot' => $this->getCellValue($sheet, 'N' . $startRow),
-            'center_plate_b_lot' => $this->getCellValue($sheet, 'O' . $startRow),
-            'prod_qty' => $this->getNumericValue($sheet, 'P' . $startRow),
-            'jo_number' => $this->getCellValue($sheet, 'Q' . $startRow),
+            'lasermark_lot_number' => $this->getCellValue($sheet, 'I'.$startRow),
+            'machine_no' => $this->getCellValue($sheet, 'J'.$startRow),
+            'letter_code' => $this->getCellValue($sheet, 'L'.$startRow),
+            'df_rubber_lot' => $this->getCellValue($sheet, 'M'.$startRow),
+            'center_plate_a_lot' => $this->getCellValue($sheet, 'N'.$startRow),
+            'center_plate_b_lot' => $this->getCellValue($sheet, 'O'.$startRow),
+            'prod_qty' => $this->getNumericValue($sheet, 'P'.$startRow),
+            'jo_number' => $this->getCellValue($sheet, 'Q'.$startRow),
             'temperature' => null, // Will be parsed from column AA
-            'operator_name' => $this->getCellValue($sheet, 'AB' . $startRow),
-            'technician_name' => $this->getCellValue($sheet, 'AC' . $startRow),
-            'checked_by_name' => $this->getCellValue($sheet, 'AD' . $startRow),
-            'remarks' => $this->getCellValue($sheet, 'AE' . $startRow),
+            'operator_name' => $this->getCellValue($sheet, 'AB'.$startRow),
+            'technician_name' => $this->getCellValue($sheet, 'AC'.$startRow),
+            'checked_by_name' => $this->getCellValue($sheet, 'AD'.$startRow),
+            'remarks' => $this->getCellValue($sheet, 'AE'.$startRow),
         ];
 
         // Parse samples (10 check items, each with 5 samples in columns V-Z)
         $samples = [];
-        
+
         // Row offsets for each check item relative to startRow
         $checkItemRows = [
             'collapse_depth' => 0,
@@ -146,11 +145,11 @@ class DiaphragmWeldingImport
             $row = $startRow + $rowOffset;
             $samples[] = [
                 'check_item' => $checkItem,
-                'sample_1' => $this->getCellValue($sheet, 'V' . $row),
-                'sample_2' => $this->getCellValue($sheet, 'W' . $row),
-                'sample_3' => $this->getCellValue($sheet, 'X' . $row),
-                'sample_4' => $this->getCellValue($sheet, 'Y' . $row),
-                'sample_5' => $this->getCellValue($sheet, 'Z' . $row),
+                'sample_1' => $this->getCellValue($sheet, 'V'.$row),
+                'sample_2' => $this->getCellValue($sheet, 'W'.$row),
+                'sample_3' => $this->getCellValue($sheet, 'X'.$row),
+                'sample_4' => $this->getCellValue($sheet, 'Y'.$row),
+                'sample_5' => $this->getCellValue($sheet, 'Z'.$row),
             ];
         }
 
@@ -166,12 +165,12 @@ class DiaphragmWeldingImport
     {
         $samples = $record['samples'];
         unset($record['samples']);
-        
+
         // Remove name fields that need to be converted
         $operatorName = $record['operator_name'] ?? null;
         $technicianName = $record['technician_name'] ?? null;
         $checkedByName = $record['checked_by_name'] ?? null;
-        
+
         unset($record['operator_name'], $record['technician_name'], $record['checked_by_name']);
 
         $record['status'] = 'pending';
@@ -224,7 +223,7 @@ class DiaphragmWeldingImport
     protected function getCellValue($sheet, $cell)
     {
         $value = $sheet->getCell($cell)->getValue();
-        
+
         if ($value === null || $value === '') {
             return null;
         }
@@ -238,7 +237,7 @@ class DiaphragmWeldingImport
     protected function getNumericValue($sheet, $cell)
     {
         $value = $sheet->getCell($cell)->getValue();
-        
+
         if ($value === null || $value === '') {
             return null;
         }
@@ -264,7 +263,7 @@ class DiaphragmWeldingImport
     public function preview(string $filePath): array
     {
         $this->currentUser = auth()->user();
-        
+
         try {
             $spreadsheet = IOFactory::load($filePath);
 
@@ -279,13 +278,13 @@ class DiaphragmWeldingImport
             }
 
             return $this->previewResults;
-
         } catch (\Throwable $e) {
             $this->previewResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
                 'diaphragm-welding.importer.preview',
                 $e,
                 'The spreadsheet could not be previewed.'
             );
+
             return $this->previewResults;
         }
     }
@@ -296,7 +295,7 @@ class DiaphragmWeldingImport
     public function execute(string $filePath, bool $updateDuplicates = false): array
     {
         $this->currentUser = auth()->user();
-        
+
         try {
             $spreadsheet = IOFactory::load($filePath);
 
@@ -311,13 +310,13 @@ class DiaphragmWeldingImport
             }
 
             return $this->executeResults;
-
         } catch (\Throwable $e) {
             $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
                 'diaphragm-welding.importer.execute',
                 $e,
                 'The spreadsheet could not be imported.'
             );
+
             return $this->executeResults;
         }
     }
@@ -331,16 +330,17 @@ class DiaphragmWeldingImport
         $currentRow = 10; // Data starts at row 10
 
         while ($currentRow <= $highestRow) {
-            $dateValue = $sheet->getCell('A' . $currentRow)->getValue();
-            
+            $dateValue = $sheet->getCell('A'.$currentRow)->getValue();
+
             if (empty($dateValue)) {
                 $currentRow++;
+
                 continue;
             }
 
             try {
                 $record = $this->parseRecord($sheet, $currentRow);
-                
+
                 if ($record) {
                     $previewRecord = $this->buildPreviewRecord($record);
                     $this->previewResults['total_parsed']++;
@@ -352,7 +352,7 @@ class DiaphragmWeldingImport
                         $this->previewResults['duplicate_records'][] = [
                             'existing_id' => $existing->id,
                             'existing_data' => [
-                                'production_date' => $existing->production_date ? $existing->production_date->format('Y-m-d') : null,
+                                'production_date' => $existing->production_date->format('Y-m-d'),
                                 'lasermark_lot_number' => $existing->lasermark_lot_number,
                                 'machine_no' => $existing->machine_no,
                                 'jo_number' => $existing->jo_number,
@@ -364,9 +364,8 @@ class DiaphragmWeldingImport
                         $this->previewResults['new_records'][] = $previewRecord;
                     }
                 }
-                
+
                 $currentRow += 10;
-                
             } catch (\Throwable $e) {
                 $this->previewResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
                     'diaphragm-welding.importer.preview-row',
@@ -387,16 +386,17 @@ class DiaphragmWeldingImport
         $currentRow = 10; // Data starts at row 10
 
         while ($currentRow <= $highestRow) {
-            $dateValue = $sheet->getCell('A' . $currentRow)->getValue();
-            
+            $dateValue = $sheet->getCell('A'.$currentRow)->getValue();
+
             if (empty($dateValue)) {
                 $currentRow++;
+
                 continue;
             }
 
             try {
                 $record = $this->parseRecord($sheet, $currentRow);
-                
+
                 if ($record) {
                     // Check for duplicate
                     $existing = $this->findExistingRecord($record);
@@ -413,9 +413,8 @@ class DiaphragmWeldingImport
                         $this->executeResults['imported']++;
                     }
                 }
-                
+
                 $currentRow += 10;
-                
             } catch (\Throwable $e) {
                 $this->executeResults['errors'][] = SpreadsheetImportSecurity::safeFailure(
                     'diaphragm-welding.importer.execute-row',
@@ -463,7 +462,7 @@ class DiaphragmWeldingImport
     {
         $samples = $record['samples'];
         unset($record['samples']);
-        
+
         // Remove name fields
         unset($record['operator_name'], $record['technician_name'], $record['checked_by_name']);
 

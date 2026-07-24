@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class UserPermission extends Model
 {
@@ -36,10 +36,10 @@ class UserPermission extends Model
     /**
      * Create or update permission
      */
-    public static function createOrUpdate(string $name, string $module, string $action, string $description = null): self
+    public static function createOrUpdate(string $name, string $module, string $action, ?string $description = null): self
     {
         $slug = strtolower("{$module}.{$action}");
-        
+
         return static::updateOrCreate(
             ['slug' => $slug],
             [

@@ -99,13 +99,14 @@ const submit = async (): Promise<void> => {
 // Auto-validate on field blur
 const onBlur = (field: string) => {
     if (form.errors[field]) {
-        form.clearErrors(field);
+        form.clearErrors(field as any);
     }
 };
 </script>
 
 <template>
-    <AppLayout title="Create Annealing Check">
+    <AppLayout>
+        <Head title="Create Annealing Check" />
         <!-- Success Message -->
         <div v-if="showSuccess" class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
             <strong class="font-bold">Success!</strong>

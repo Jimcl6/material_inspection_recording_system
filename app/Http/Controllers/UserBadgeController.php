@@ -68,7 +68,7 @@ class UserBadgeController extends Controller
             ->active()
             ->with('qrCode')
             ->whereIn('id', $requestedIds)
-            ->whereHas('qrCode', fn ($query) => $query->active())
+            ->whereHas('qrCode', fn ($query) => $query->where('is_active', true))
             ->orderBy('id')
             ->get();
 

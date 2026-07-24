@@ -1,12 +1,22 @@
 {
     "private": true,
+    "packageManager": "npm@11.16.0",
+    "engines": {
+        "node": ">=24 <25",
+        "npm": ">=11 <12"
+    },
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "lint": "node scripts/ci/run-eslint.cjs",
+        "typecheck": "vue-tsc --noEmit",
+        "check": "npm run lint && npm run typecheck && npm run build"
     },
     "devDependencies": {
         "@casl/ability": "^6.8.1",
         "@casl/vue": "^2.2.6",
+        "@eslint/eslintrc": "^3.3.1",
+        "@eslint/js": "^9.39.1",
         "@headlessui/vue": "^1.7.23",
         "@heroicons/vue": "^2.2.0",
         "@inertiajs/vue3": "^1.3.0",
@@ -14,20 +24,30 @@
         "@tailwindcss/typography": "^0.5.20",
         "@types/node": "^25.0.3",
         "@types/ziggy-js": "^1.3.3",
-        "@vitejs/plugin-vue": "^4.0.0",
-        "@vitejs/plugin-vue-jsx": "^3.0.1",
+        "@typescript-eslint/eslint-plugin": "^8.0.0",
+        "@typescript-eslint/parser": "^8.0.0",
+        "@vitejs/plugin-vue": "^6.0.8",
+        "@vitejs/plugin-vue-jsx": "^5.1.6",
         "autoprefixer": "^10.5.4",
         "axios": "^1.18.1",
+        "eslint": "^9.39.1",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-prettier": "^5.2.0",
+        "eslint-plugin-vue": "^9.0.0",
         "html5-qrcode": "^2.3.8",
-        "laravel-vite-plugin": "^0.7.8",
+        "laravel-vite-plugin": "^3.1.3",
         "lodash": "^4.18.1",
         "pinia": "^3.0.4",
         "postcss": "^8.5.21",
         "postcss-nesting": "^13.0.2",
+        "prettier": "^3.0.0",
         "tailwindcss": "^3.2.1",
-        "vite": "^4.0.0",
+        "typescript": "^5.0.0",
+        "vite": "^8.1.5",
         "vue": "^3.5.25",
+        "vue-eslint-parser": "^9.0.0",
         "vue-toastification": "^2.0.0-rc.5",
+        "vue-tsc": "^3.0.0",
         "ziggy-js": "^2.6.0"
     },
     "dependencies": {

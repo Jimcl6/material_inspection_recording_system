@@ -112,6 +112,17 @@ const filterConfig = computed(() => [
     },
 ]);
 
+const activeFilters = computed(() =>
+    Object.fromEntries(
+        Object.entries(props.filters).filter(([, value]) => value !== null && value !== undefined && value !== '')
+    )
+);
+
+const recordRouteParameters = (check: AnnealingCheck): Record<string, string | number> => ({
+    annealing_check: check.id,
+    ...activeFilters.value,
+});
+
 const checkToDelete = ref<AnnealingCheck | null>(null);
 const showDeleteModal = ref<boolean>(false);
 
@@ -124,8 +135,8 @@ const deleteCheck = (): void => {
             checkToDelete.value = null;
         },
         preserveScroll: true,
-        onError: (error: Error): void => {
-            console.error('Error deleting check:', error);
+        onError: (errors: Record<string, string>): void => {
+            console.error('Error deleting check:', errors);
             showDeleteModal.value = false;
             checkToDelete.value = null;
             
@@ -332,9 +343,9 @@ const annealingDetailSections = (check: AnnealingCheck) => [
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex items-center justify-end space-x-2">
                                                 <Link 
-                                                    :href="route('annealing-checks.show', check.id)" 
+                                                    :href="route('annealing-checks.show', recordRouteParameters(check))"
                                                     class="p-1 text-indigo-600 hover:text-indigo-900 rounded-full hover:bg-indigo-50"
-                                                    title="View"
+                                                    v-bind="{ title: 'View' }"
                                                 >
                                                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -343,9 +354,9 @@ const annealingDetailSections = (check: AnnealingCheck) => [
                                                 </Link>
                                                 <Link 
                                                     v-if="canUpdate('annealing')"
-                                                    :href="route('annealing-checks.edit', check.id)" 
+                                                    :href="route('annealing-checks.edit', recordRouteParameters(check))"
                                                     class="p-1 text-blue-600 hover:text-blue-900 rounded-full hover:bg-blue-50"
-                                                    title="Edit"
+                                                    v-bind="{ title: 'Edit' }"
                                                 >
                                                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>

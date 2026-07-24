@@ -33,11 +33,16 @@ class MaterialPart extends Model
     public function getSubLotNumbersArray(): array
     {
         $data = $this->sub_lot_numbers;
-        if (!$data) return [];
+        if (! $data) {
+            return [];
+        }
         // Handle old array format
-        if (isset($data['sub_lots'])) return $data['sub_lots'];
+        if (isset($data['sub_lots'])) {
+            return $data['sub_lots'];
+        }
+
         // New keyed object format
-        return array_filter($data, fn($v) => $v && trim($v) !== '');
+        return array_filter($data, fn ($v) => $v && trim($v) !== '');
     }
 
     /**
@@ -64,6 +69,7 @@ class MaterialPart extends Model
         if ($endDate) {
             return $query->whereBetween('date', [$startDate, $endDate]);
         }
+
         return $query->whereDate('date', '>=', $startDate);
     }
 
@@ -74,7 +80,7 @@ class MaterialPart extends Model
     {
         return $query->where(function ($q) use ($lotNumber) {
             $q->where('main_lot_number', 'like', "%{$lotNumber}%")
-              ->orWhere('sub_lot_numbers', 'like', "%{$lotNumber}%");
+                ->orWhere('sub_lot_numbers', 'like', "%{$lotNumber}%");
         });
     }
 
@@ -88,7 +94,7 @@ class MaterialPart extends Model
             ->orderBy('letter_code', 'desc')
             ->value('letter_code');
 
-        if (!$lastCode) {
+        if (! $lastCode) {
             return 'A';
         }
 

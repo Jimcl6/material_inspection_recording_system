@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:20-bookworm-slim AS frontend
+FROM node:24-bookworm-slim AS frontend
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY . .
 RUN rm -f public/hot && npm run build
 
 
-FROM php:8.2-fpm-bookworm AS app
+FROM php:8.4-fpm-bookworm AS app
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 

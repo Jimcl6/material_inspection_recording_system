@@ -2,6 +2,4 @@
 
 namespace App\Http\Requests;
 
-class UpdateWeldingChecksheetRequest extends StoreWeldingChecksheetRequest
-{
-}
+class UpdateWeldingChecksheetRequest extends StoreWeldingChecksheetRequest {}

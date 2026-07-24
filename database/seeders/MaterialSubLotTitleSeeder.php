@@ -4,25 +4,27 @@ namespace Database\Seeders;
 
 use App\Models\MaterialSubLotTitle;
 use Illuminate\Database\Seeder;
-use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
 class MaterialSubLotTitleSeeder extends Seeder
 {
     public function run()
     {
-        $output = new ConsoleOutput();
+        $output = new ConsoleOutput;
         $referencePath = storage_path('app/reference-excels');
 
-        if (!is_dir($referencePath)) {
+        if (! is_dir($referencePath)) {
             $output->writeln("<error>Reference directory not found: {$referencePath}</error>");
-            $output->writeln("<info>Please create the directory and place Excel files (ALARM.xlsx, FRAME.xlsx, etc.) there.</info>");
+            $output->writeln('<info>Please create the directory and place Excel files (ALARM.xlsx, FRAME.xlsx, etc.) there.</info>');
+
             return;
         }
 
-        $files = glob($referencePath . '/*.xlsx');
+        $files = glob($referencePath.'/*.xlsx');
         if (empty($files)) {
             $output->writeln("<error>No .xlsx files found in {$referencePath}</error>");
+
             return;
         }
 
@@ -43,7 +45,7 @@ class MaterialSubLotTitleSeeder extends Seeder
     protected function processExcelFile(string $filePath, string $materialType, ConsoleOutput $output)
     {
         // Load only the first worksheet with read-only mode to minimize memory usage
-        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($filePath);
+        $reader = IOFactory::createReaderForFile($filePath);
         $reader->setReadDataOnly(true);
         $spreadsheet = $reader->load($filePath);
         $sheet = $spreadsheet->getActiveSheet()->toArray();
@@ -53,6 +55,7 @@ class MaterialSubLotTitleSeeder extends Seeder
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet, $sheet, $reader);
             gc_collect_cycles();
+
             return;
         }
 
@@ -63,6 +66,7 @@ class MaterialSubLotTitleSeeder extends Seeder
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet, $sheet, $reader);
             gc_collect_cycles();
+
             return;
         }
 
@@ -79,6 +83,7 @@ class MaterialSubLotTitleSeeder extends Seeder
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet, $sheet, $reader);
             gc_collect_cycles();
+
             return;
         }
 
@@ -94,6 +99,7 @@ class MaterialSubLotTitleSeeder extends Seeder
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet, $sheet, $reader);
             gc_collect_cycles();
+
             return;
         }
 
@@ -109,7 +115,7 @@ class MaterialSubLotTitleSeeder extends Seeder
             ]);
         }
 
-        $output->writeln("<info>Inserted " . count($subHeaders) . " sub-lot titles for {$materialType}</info>");
+        $output->writeln('<info>Inserted '.count($subHeaders)." sub-lot titles for {$materialType}</info>");
 
         // Explicitly free memory to prevent exhaustion on large files
         $spreadsheet->disconnectWorksheets();
@@ -127,6 +133,7 @@ class MaterialSubLotTitleSeeder extends Seeder
                 }
             }
         }
+
         return null;
     }
 
@@ -137,6 +144,7 @@ class MaterialSubLotTitleSeeder extends Seeder
                 return $index;
             }
         }
+
         return null;
     }
 
@@ -146,20 +154,20 @@ class MaterialSubLotTitleSeeder extends Seeder
 
         // Check next row for sub-headers under 'Lot Number'
         $subHeaderRow = $sheet[$headerRow + 1] ?? null;
-        if (!$subHeaderRow) {
+        if (! $subHeaderRow) {
             return $subHeaders;
         }
 
         // Extract from startCol to endCol-1, excluding empty cells
         for ($col = $startCol; $col < $endCol; $col++) {
             $cell = $subHeaderRow[$col] ?? null;
-            if (!empty($cell) && is_string($cell)) {
+            if (! empty($cell) && is_string($cell)) {
                 $subHeaders[] = trim($cell);
             }
         }
 
         if (empty($subHeaders)) {
-            $output->writeln("<comment>No sub-headers found between columns {$startCol} and " . ($endCol - 1) . "</comment>");
+            $output->writeln("<comment>No sub-headers found between columns {$startCol} and ".($endCol - 1).'</comment>');
         }
 
         return $subHeaders;

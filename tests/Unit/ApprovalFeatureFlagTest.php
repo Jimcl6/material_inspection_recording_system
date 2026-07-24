@@ -21,7 +21,7 @@ class ApprovalFeatureFlagTest extends TestCase
         $this->assertSame('approved', $state['status']);
         $this->assertNull($state['submitted_at']);
         $this->assertNotNull($state['approved_at']);
-        $this->assertCount(0, $service->modulesForUser(new User()));
+        $this->assertCount(0, $service->modulesForUser(new User));
     }
 
     public function test_enabled_approvals_create_pending_state(): void

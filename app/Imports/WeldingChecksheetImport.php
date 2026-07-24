@@ -2,21 +2,20 @@
 
 namespace App\Imports;
 
+use App\Models\User;
 use App\Models\WeldingChecksheet;
 use App\Models\WeldingChecksheetType;
 use App\Models\WeldingItemConfig;
-use App\Models\User;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use App\Support\SpreadsheetImportSecurity;
+use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class WeldingChecksheetImport
 {
-    public function __construct(protected ?string $sourceFileName = null)
-    {
-    }
+    public function __construct(protected ?string $sourceFileName = null) {}
 
     protected array $previewResults = [
         'new_records' => [],
@@ -87,16 +86,18 @@ class WeldingChecksheetImport
         $currentRow = $startRow;
 
         while ($currentRow <= $highestRow) {
-            $dateValue = $sheet->getCell('A' . $currentRow)->getValue();
+            $dateValue = $sheet->getCell('A'.$currentRow)->getValue();
             if (empty($dateValue)) {
                 $currentRow++;
+
                 continue;
             }
 
             try {
                 $record = $this->parseRecord($sheet, $currentRow, $type, $itemConfig, $itemCode, $itemName, $sheetName, $sourceFile);
-                if (!$record) {
+                if (! $record) {
                     $currentRow += $recordSpan;
+
                     continue;
                 }
 
@@ -126,8 +127,8 @@ class WeldingChecksheetImport
 
     protected function parseRecord($sheet, int $startRow, WeldingChecksheetType $type, ?WeldingItemConfig $itemConfig, ?string $itemCode, ?string $itemName, string $sheetName, string $sourceFile): ?array
     {
-        $productionDate = $this->parseDate($sheet->getCell('A' . $startRow)->getValue());
-        if (!$productionDate) {
+        $productionDate = $this->parseDate($sheet->getCell('A'.$startRow)->getValue());
+        if (! $productionDate) {
             return null;
         }
 
@@ -141,21 +142,21 @@ class WeldingChecksheetImport
     protected function parseCasingTankRecord($sheet, int $startRow, WeldingChecksheetType $type, ?WeldingItemConfig $itemConfig, ?string $itemCode, ?string $itemName, string $productionDate, string $sheetName, string $sourceFile): array
     {
         $record = $this->baseRecord($type, $itemConfig, $itemCode, $itemName, $productionDate, $sheetName, $sourceFile, $startRow);
-        $record['machine_no'] = $this->getCellValue($sheet, 'I' . $startRow);
-        $record['letter_code'] = $this->getCellValue($sheet, 'J' . $startRow);
-        $record['prod_qty'] = $this->getNumericValue($sheet, 'N' . $startRow);
-        $record['job_number'] = $this->getCellValue($sheet, 'O' . $startRow);
-        $record['quantity'] = $this->getNumericValue($sheet, 'P' . $startRow);
-        $record['temperature'] = $this->getDecimalValue($sheet, 'X' . $startRow);
-        $record['operator_name_raw'] = $this->getCellValue($sheet, 'Y' . $startRow);
-        $record['checked_by_name_raw'] = $this->getCellValue($sheet, 'Z' . $startRow);
-        $record['remarks'] = $this->getCellValue($sheet, 'AA' . $startRow);
+        $record['machine_no'] = $this->getCellValue($sheet, 'I'.$startRow);
+        $record['letter_code'] = $this->getCellValue($sheet, 'J'.$startRow);
+        $record['prod_qty'] = $this->getNumericValue($sheet, 'N'.$startRow);
+        $record['job_number'] = $this->getCellValue($sheet, 'O'.$startRow);
+        $record['quantity'] = $this->getNumericValue($sheet, 'P'.$startRow);
+        $record['temperature'] = $this->getDecimalValue($sheet, 'X'.$startRow);
+        $record['operator_name_raw'] = $this->getCellValue($sheet, 'Y'.$startRow);
+        $record['checked_by_name_raw'] = $this->getCellValue($sheet, 'Z'.$startRow);
+        $record['remarks'] = $this->getCellValue($sheet, 'AA'.$startRow);
         $record['operator_id'] = $this->findUserIdByName($record['operator_name_raw']);
         $record['checked_by_id'] = $this->findUserIdByName($record['checked_by_name_raw']);
         $record['material_fields'] = [
-            'tank' => $this->getCellValue($sheet, 'K' . $startRow),
-            'cd_partition' => $this->getCellValue($sheet, 'L' . $startRow),
-            'vcr' => $this->getCellValue($sheet, 'M' . $startRow),
+            'tank' => $this->getCellValue($sheet, 'K'.$startRow),
+            'cd_partition' => $this->getCellValue($sheet, 'L'.$startRow),
+            'vcr' => $this->getCellValue($sheet, 'M'.$startRow),
         ];
 
         $record['samples'] = $this->parseSamples($sheet, $startRow, $type, ['S', 'T', 'U', 'V', 'W']);
@@ -166,22 +167,22 @@ class WeldingChecksheetImport
     protected function parseDiaphragmRecord($sheet, int $startRow, WeldingChecksheetType $type, ?WeldingItemConfig $itemConfig, ?string $itemCode, ?string $itemName, string $productionDate, string $sheetName, string $sourceFile): array
     {
         $record = $this->baseRecord($type, $itemConfig, $itemCode, $itemName, $productionDate, $sheetName, $sourceFile, $startRow);
-        $record['machine_no'] = $this->getCellValue($sheet, 'I' . $startRow);
-        $record['letter_code'] = $this->getCellValue($sheet, 'J' . $startRow);
-        $record['prod_qty'] = $this->getNumericValue($sheet, 'N' . $startRow);
-        $record['job_number'] = $this->getCellValue($sheet, 'O' . $startRow);
-        $record['quantity'] = $this->getNumericValue($sheet, 'P' . $startRow);
-        $record['temperature'] = $this->getDecimalValue($sheet, 'X' . $startRow);
-        $record['operator_name_raw'] = $this->getCellValue($sheet, 'Y' . $startRow);
-        $record['checked_by_name_raw'] = $this->getCellValue($sheet, 'Z' . $startRow);
-        $record['remarks'] = $this->getCellValue($sheet, 'AA' . $startRow);
+        $record['machine_no'] = $this->getCellValue($sheet, 'I'.$startRow);
+        $record['letter_code'] = $this->getCellValue($sheet, 'J'.$startRow);
+        $record['prod_qty'] = $this->getNumericValue($sheet, 'N'.$startRow);
+        $record['job_number'] = $this->getCellValue($sheet, 'O'.$startRow);
+        $record['quantity'] = $this->getNumericValue($sheet, 'P'.$startRow);
+        $record['temperature'] = $this->getDecimalValue($sheet, 'X'.$startRow);
+        $record['operator_name_raw'] = $this->getCellValue($sheet, 'Y'.$startRow);
+        $record['checked_by_name_raw'] = $this->getCellValue($sheet, 'Z'.$startRow);
+        $record['remarks'] = $this->getCellValue($sheet, 'AA'.$startRow);
         $record['operator_id'] = $this->findUserIdByName($record['operator_name_raw']);
         $record['checked_by_id'] = $this->findUserIdByName($record['checked_by_name_raw']);
         $record['material_fields'] = [
-            'lasermark_lot_number' => $this->getCellValue($sheet, 'I' . $startRow),
-            'df_rubber_lot' => $this->getCellValue($sheet, 'M' . $startRow),
-            'center_plate_a_lot' => $this->getCellValue($sheet, 'N' . $startRow),
-            'center_plate_b_lot' => $this->getCellValue($sheet, 'O' . $startRow),
+            'lasermark_lot_number' => $this->getCellValue($sheet, 'I'.$startRow),
+            'df_rubber_lot' => $this->getCellValue($sheet, 'M'.$startRow),
+            'center_plate_a_lot' => $this->getCellValue($sheet, 'N'.$startRow),
+            'center_plate_b_lot' => $this->getCellValue($sheet, 'O'.$startRow),
         ];
 
         $record['samples'] = $this->parseSamples($sheet, $startRow, $type, ['V', 'W', 'X', 'Y', 'Z']);
@@ -217,7 +218,7 @@ class WeldingChecksheetImport
             $row = $startRow + $index;
             $values = [];
             foreach ($sampleColumns as $column) {
-                $values[] = $this->getCellValue($sheet, $column . $row);
+                $values[] = $this->getCellValue($sheet, $column.$row);
             }
 
             $samples[] = [
@@ -243,6 +244,7 @@ class WeldingChecksheetImport
                 'existing_data' => $this->previewRecord($existing->toArray()),
                 'new_data' => $previewRecord,
             ];
+
             return;
         }
 
@@ -252,13 +254,15 @@ class WeldingChecksheetImport
     protected function handleExecuteRecord(array $record, ?WeldingChecksheet $existing, bool $updateDuplicates): void
     {
         if ($existing) {
-            if (!$updateDuplicates) {
+            if (! $updateDuplicates) {
                 $this->executeResults['skipped']++;
+
                 return;
             }
 
             $this->saveRecord($record, $existing);
             $this->executeResults['updated']++;
+
             return;
         }
 
@@ -304,7 +308,7 @@ class WeldingChecksheetImport
         return [
             'checksheet_type_id' => $record['checksheet_type_id'] ?? null,
             'item_code' => $record['item_code'] ?? null,
-            'production_date' => isset($record['production_date']) && $record['production_date'] instanceof \Carbon\Carbon
+            'production_date' => isset($record['production_date']) && $record['production_date'] instanceof Carbon
                 ? $record['production_date']->format('Y-m-d')
                 : ($record['production_date'] ?? null),
             'machine_no' => $record['machine_no'] ?? null,
@@ -376,11 +380,12 @@ class WeldingChecksheetImport
 
     protected function findUserIdByName(?string $name): ?int
     {
-        if (!$name) {
+        if (! $name) {
             return null;
         }
 
         $cleanName = trim(strtolower($name));
+
         return User::whereRaw('LOWER(name) = ?', [$cleanName])->value('id');
     }
 }

@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DiaphragmWeldingChecksheet;
-use App\Models\DiaphragmWeldingSample;
-use App\Models\DiaphragmItemCode;
+use App\Exports\DiaphragmWeldingExport;
+use App\Http\Requests\ImportDiaphragmWeldingRequest;
 use App\Http\Requests\StoreDiaphragmWeldingRequest;
 use App\Http\Requests\UpdateDiaphragmWeldingRequest;
-use App\Http\Requests\ImportDiaphragmWeldingRequest;
+use App\Imports\DiaphragmWeldingImport;
+use App\Models\DiaphragmItemCode;
+use App\Models\DiaphragmWeldingChecksheet;
+use App\Models\DiaphragmWeldingSample;
+use App\Models\User;
 use App\Services\ActivityService;
 use App\Support\SpreadsheetImportSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DiaphragmWeldingController extends Controller
 {
@@ -28,9 +32,9 @@ class DiaphragmWeldingController extends Controller
             $search = $request->string('search');
             $query->where(function ($q) use ($search) {
                 $q->where('item_code', 'like', "%{$search}%")
-                  ->orWhere('lasermark_lot_number', 'like', "%{$search}%")
-                  ->orWhere('jo_number', 'like', "%{$search}%")
-                  ->orWhere('machine_no', 'like', "%{$search}%");
+                    ->orWhere('lasermark_lot_number', 'like', "%{$search}%")
+                    ->orWhere('jo_number', 'like', "%{$search}%")
+                    ->orWhere('machine_no', 'like', "%{$search}%");
             });
         }
 
@@ -51,9 +55,9 @@ class DiaphragmWeldingController extends Controller
         }
 
         $checksheets = $query->orderByDesc('production_date')
-                             ->orderByDesc('id')
-                             ->paginate(15)
-                             ->withQueryString();
+            ->orderByDesc('id')
+            ->paginate(15)
+            ->withQueryString();
 
         // Get unique item codes for filter dropdown
         $itemCodes = DiaphragmItemCode::orderBy('item_code')->pluck('item_code');
@@ -70,7 +74,7 @@ class DiaphragmWeldingController extends Controller
      */
     public function create()
     {
-        $users = \App\Models\User::select('id', 'name')->orderBy('name')->get();
+        $users = User::select('id', 'name')->orderBy('name')->get();
         $itemCodes = DiaphragmItemCode::orderBy('item_code')->get();
         $checkItems = DiaphragmWeldingSample::CHECK_ITEM_LABELS;
 
@@ -139,7 +143,7 @@ class DiaphragmWeldingController extends Controller
     {
         $diaphragmWelding->load('samples');
 
-        $users = \App\Models\User::select('id', 'name')->orderBy('name')->get();
+        $users = User::select('id', 'name')->orderBy('name')->get();
         $itemCodes = DiaphragmItemCode::orderBy('item_code')->get();
         $checkItems = DiaphragmWeldingSample::CHECK_ITEM_LABELS;
 
@@ -198,7 +202,7 @@ class DiaphragmWeldingController extends Controller
     public function destroy(DiaphragmWeldingChecksheet $diaphragmWelding)
     {
         $itemCode = $diaphragmWelding->item_code;
-        
+
         $diaphragmWelding->delete();
 
         // Log activity
@@ -233,7 +237,7 @@ class DiaphragmWeldingController extends Controller
         $overwrite = $request->boolean('overwrite', false);
         $tempPath = null;
 
-        if (!$file) {
+        if (! $file) {
             return Inertia::render('DiaphragmWelding/Import')
                 ->with('error', 'No file uploaded.');
         }
@@ -243,27 +247,30 @@ class DiaphragmWeldingController extends Controller
                 DiaphragmWeldingChecksheet::truncate();
             }
 
-            $import = new \App\Imports\DiaphragmWeldingImport();
-            
+            $import = new DiaphragmWeldingImport;
+
             [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'diaphragm-welding');
-            
+
             $import->import($fullPath);
-            
+
             $results = $import->getResults();
 
             $totalImported = $results['imported'] ?? 0;
             $totalSkipped = $results['skipped'] ?? 0;
             $totalErrors = count($results['errors'] ?? []);
-            
+
             $message = "Import completed: {$totalImported} imported";
-            if ($totalSkipped > 0) $message .= ", {$totalSkipped} skipped";
-            if ($totalErrors > 0) $message .= ", {$totalErrors} errors";
+            if ($totalSkipped > 0) {
+                $message .= ", {$totalSkipped} skipped";
+            }
+            if ($totalErrors > 0) {
+                $message .= ", {$totalErrors} errors";
+            }
 
             return Inertia::render('DiaphragmWelding/Import', [
                 'import_results' => $results,
-                'success' => $message
+                'success' => $message,
             ]);
-
         } catch (\Throwable $e) {
             $correlationId = SpreadsheetImportSecurity::reportFailure('diaphragm-welding.direct', $e);
 
@@ -279,9 +286,9 @@ class DiaphragmWeldingController extends Controller
      */
     public function export()
     {
-        return \Maatwebsite\Excel\Facades\Excel::download(
-            new \App\Exports\DiaphragmWeldingExport, 
-            'diaphragm-welding-' . now()->format('Y-m-d') . '.xlsx'
+        return Excel::download(
+            new DiaphragmWeldingExport,
+            'diaphragm-welding-'.now()->format('Y-m-d').'.xlsx'
         );
     }
 
@@ -301,7 +308,7 @@ class DiaphragmWeldingController extends Controller
             SpreadsheetImportSecurity::delete(session('diaphragm_welding_import_file'));
             [$tempPath, $fullPath] = SpreadsheetImportSecurity::store($file, 'diaphragm-welding');
 
-            $import = new \App\Imports\DiaphragmWeldingImport();
+            $import = new DiaphragmWeldingImport;
             $results = $import->preview($fullPath);
 
             // Store the temp file path in session for execute phase
@@ -311,7 +318,6 @@ class DiaphragmWeldingController extends Controller
                 'success' => true,
                 'preview' => $results,
             ]);
-
         } catch (\Throwable $e) {
             SpreadsheetImportSecurity::delete($tempPath);
             $correlationId = SpreadsheetImportSecurity::reportFailure('diaphragm-welding.preview', $e);
@@ -334,7 +340,7 @@ class DiaphragmWeldingController extends Controller
 
         $tempPath = session('diaphragm_welding_import_file');
 
-        if (!$tempPath) {
+        if (! $tempPath) {
             return response()->json([
                 'success' => false,
                 'error' => 'No file to import. Please upload a file first.',
@@ -346,6 +352,7 @@ class DiaphragmWeldingController extends Controller
         if ($fullPath === null) {
             SpreadsheetImportSecurity::delete($tempPath);
             session()->forget('diaphragm_welding_import_file');
+
             return response()->json([
                 'success' => false,
                 'error' => 'Import file expired. Please upload again.',
@@ -355,20 +362,25 @@ class DiaphragmWeldingController extends Controller
         try {
             $updateDuplicates = $request->boolean('update_duplicates', false);
 
-            $import = new \App\Imports\DiaphragmWeldingImport();
+            $import = new DiaphragmWeldingImport;
             $results = $import->execute($fullPath, $updateDuplicates);
 
             $message = "Import completed: {$results['imported']} created";
-            if ($results['updated'] > 0) $message .= ", {$results['updated']} updated";
-            if ($results['skipped'] > 0) $message .= ", {$results['skipped']} skipped";
-            if (count($results['errors']) > 0) $message .= ", " . count($results['errors']) . " errors";
+            if ($results['updated'] > 0) {
+                $message .= ", {$results['updated']} updated";
+            }
+            if ($results['skipped'] > 0) {
+                $message .= ", {$results['skipped']} skipped";
+            }
+            if (count($results['errors']) > 0) {
+                $message .= ', '.count($results['errors']).' errors';
+            }
 
             return response()->json([
                 'success' => true,
                 'results' => $results,
                 'message' => $message,
             ]);
-
         } catch (\Throwable $e) {
             $correlationId = SpreadsheetImportSecurity::reportFailure('diaphragm-welding.execute', $e);
 
@@ -389,7 +401,7 @@ class DiaphragmWeldingController extends Controller
     {
         $user = Auth::user();
 
-        if (!in_array($user->role?->slug, ['admin', 'inspector', 'super_admin'])) {
+        if (! in_array($user->role?->slug, ['admin', 'inspector', 'super_admin'])) {
             abort(403, 'Unauthorized');
         }
 
@@ -427,7 +439,7 @@ class DiaphragmWeldingController extends Controller
         }
 
         return redirect()->route('diaphragm-welding.approval')
-            ->with('success', count($checksheets) . ' checksheet(s) approved successfully.');
+            ->with('success', count($checksheets).' checksheet(s) approved successfully.');
     }
 
     /**
@@ -453,7 +465,7 @@ class DiaphragmWeldingController extends Controller
         }
 
         return redirect()->route('diaphragm-welding.approval')
-            ->with('success', count($checksheets) . ' checksheet(s) rejected successfully.');
+            ->with('success', count($checksheets).' checksheet(s) rejected successfully.');
     }
 
     /**
@@ -462,10 +474,10 @@ class DiaphragmWeldingController extends Controller
     public function getItemCodeRules(Request $request)
     {
         $itemCode = $request->input('item_code');
-        
+
         $config = DiaphragmItemCode::where('item_code', $itemCode)->first();
-        
-        if (!$config) {
+
+        if (! $config) {
             // Return default rules
             return response()->json([
                 'item_code' => $itemCode,

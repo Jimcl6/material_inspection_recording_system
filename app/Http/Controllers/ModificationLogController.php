@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\ModificationLog;
 use App\Services\ActivityService;
 use App\Services\DuplicateRecordGuard;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Carbon\Carbon;
 
 class ModificationLogController extends Controller
 {
@@ -24,10 +24,10 @@ class ModificationLogController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('model_code', 'like', "%{$search}%")
-                  ->orWhere('item_for_modification', 'like', "%{$search}%")
-                  ->orWhere('recorded_by', 'like', "%{$search}%")
-                  ->orWhere('material_lot_no', 'like', "%{$search}%")
-                  ->orWhere('job_no_transfer_order', 'like', "%{$search}%");
+                    ->orWhere('item_for_modification', 'like', "%{$search}%")
+                    ->orWhere('recorded_by', 'like', "%{$search}%")
+                    ->orWhere('material_lot_no', 'like', "%{$search}%")
+                    ->orWhere('job_no_transfer_order', 'like', "%{$search}%");
             });
         }
 
@@ -91,27 +91,27 @@ class ModificationLogController extends Controller
     public function store(Request $request, DuplicateRecordGuard $duplicateRecordGuard)
     {
         $date = $this->parseDateInput($request->input('prod_date'));
-        if ($date !== null) { 
-            $request->merge(['prod_date' => $date]); 
+        if ($date !== null) {
+            $request->merge(['prod_date' => $date]);
         }
-        
+
         $data = $request->validate([
-            'prod_date' => ['required','date'],
-            'col_4m' => ['nullable','string','max:50'],
-            'col_line' => ['nullable','string','max:50'],
-            'model_code' => ['required','string','max:100'],
-            'item_for_modification' => ['required','string','max:255'],
-            'nature_of_change' => ['nullable','string'],
-            'col_from' => ['nullable','string','max:255'],
-            'col_to' => ['nullable','string','max:255'],
-            'material_lot_no' => ['nullable','string','max:255'],
-            'start_serial' => ['nullable','string','max:255'],
-            'end_serial' => ['nullable','string','max:255'],
-            'recorded_by' => ['required','string','max:255'],
-            'source_of_info' => ['nullable','string','max:255'],
-            'approved_by' => ['nullable','string','max:255'],
-            'job_no_transfer_order' => ['nullable','string','max:255'],
-            'col_remarks' => ['nullable','string'],
+            'prod_date' => ['required', 'date'],
+            'col_4m' => ['nullable', 'string', 'max:50'],
+            'col_line' => ['nullable', 'string', 'max:50'],
+            'model_code' => ['required', 'string', 'max:100'],
+            'item_for_modification' => ['required', 'string', 'max:255'],
+            'nature_of_change' => ['nullable', 'string'],
+            'col_from' => ['nullable', 'string', 'max:255'],
+            'col_to' => ['nullable', 'string', 'max:255'],
+            'material_lot_no' => ['nullable', 'string', 'max:255'],
+            'start_serial' => ['nullable', 'string', 'max:255'],
+            'end_serial' => ['nullable', 'string', 'max:255'],
+            'recorded_by' => ['required', 'string', 'max:255'],
+            'source_of_info' => ['nullable', 'string', 'max:255'],
+            'approved_by' => ['nullable', 'string', 'max:255'],
+            'job_no_transfer_order' => ['nullable', 'string', 'max:255'],
+            'col_remarks' => ['nullable', 'string'],
         ]);
 
         $log = $duplicateRecordGuard->create(
@@ -134,7 +134,7 @@ class ModificationLogController extends Controller
             $log->toArray(),
             'modification_logs'
         );
-        
+
         return redirect()->route('modification-logs.show', $log->id)
             ->with('success', 'Modification log created successfully!');
     }
@@ -155,27 +155,27 @@ class ModificationLogController extends Controller
     public function update(Request $request, ModificationLog $modification_log)
     {
         $date = $this->parseDateInput($request->input('prod_date'));
-        if ($date !== null) { 
-            $request->merge(['prod_date' => $date]); 
+        if ($date !== null) {
+            $request->merge(['prod_date' => $date]);
         }
-        
+
         $data = $request->validate([
-            'prod_date' => ['required','date'],
-            'col_4m' => ['nullable','string','max:50'],
-            'col_line' => ['nullable','string','max:50'],
-            'model_code' => ['required','string','max:100'],
-            'item_for_modification' => ['required','string','max:255'],
-            'nature_of_change' => ['nullable','string'],
-            'col_from' => ['nullable','string','max:255'],
-            'col_to' => ['nullable','string','max:255'],
-            'material_lot_no' => ['nullable','string','max:255'],
-            'start_serial' => ['nullable','string','max:255'],
-            'end_serial' => ['nullable','string','max:255'],
-            'recorded_by' => ['required','string','max:255'],
-            'source_of_info' => ['nullable','string','max:255'],
-            'approved_by' => ['nullable','string','max:255'],
-            'job_no_transfer_order' => ['nullable','string','max:255'],
-            'col_remarks' => ['nullable','string'],
+            'prod_date' => ['required', 'date'],
+            'col_4m' => ['nullable', 'string', 'max:50'],
+            'col_line' => ['nullable', 'string', 'max:50'],
+            'model_code' => ['required', 'string', 'max:100'],
+            'item_for_modification' => ['required', 'string', 'max:255'],
+            'nature_of_change' => ['nullable', 'string'],
+            'col_from' => ['nullable', 'string', 'max:255'],
+            'col_to' => ['nullable', 'string', 'max:255'],
+            'material_lot_no' => ['nullable', 'string', 'max:255'],
+            'start_serial' => ['nullable', 'string', 'max:255'],
+            'end_serial' => ['nullable', 'string', 'max:255'],
+            'recorded_by' => ['required', 'string', 'max:255'],
+            'source_of_info' => ['nullable', 'string', 'max:255'],
+            'approved_by' => ['nullable', 'string', 'max:255'],
+            'job_no_transfer_order' => ['nullable', 'string', 'max:255'],
+            'col_remarks' => ['nullable', 'string'],
         ]);
 
         $before = ActivityService::snapshot($modification_log);
@@ -188,7 +188,7 @@ class ModificationLogController extends Controller
             "Updated modification log for {$modification_log->model_code}",
             'modification_logs'
         );
-        
+
         return redirect()->route('modification-logs.show', $modification_log->id)
             ->with('success', 'Modification log updated successfully!');
     }
@@ -200,7 +200,7 @@ class ModificationLogController extends Controller
     {
         $recordData = $modification_log->toArray();
         $modelCode = $modification_log->model_code;
-        
+
         $modification_log->delete();
 
         ActivityService::log(
@@ -210,7 +210,7 @@ class ModificationLogController extends Controller
             $recordData,
             'modification_logs'
         );
-        
+
         return redirect()->route('modification-logs.index')
             ->with('success', 'Modification log deleted successfully!');
     }
@@ -220,14 +220,20 @@ class ModificationLogController extends Controller
      */
     protected function parseDateInput(?string $value): ?string
     {
-        if (!$value) return null;
+        if (! $value) {
+            return null;
+        }
         $formats = ['d/m/Y H:i', 'd/m/Y', 'Y-m-d\TH:i', 'Y-m-d H:i', 'Y-m-d'];
         foreach ($formats as $fmt) {
             try {
                 $dt = Carbon::createFromFormat($fmt, $value);
-                if ($dt !== false) return $dt->format('Y-m-d H:i:s');
-            } catch (\Exception $e) {}
+                if ($dt !== false) {
+                    return $dt->format('Y-m-d H:i:s');
+                }
+            } catch (\Exception $e) {
+            }
         }
+
         return null;
     }
 }
