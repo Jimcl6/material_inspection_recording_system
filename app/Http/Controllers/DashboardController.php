@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\ActivityService;
 use App\Services\ApprovalWorkflowService;
 use App\Services\DashboardReportingService;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
