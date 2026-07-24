@@ -4,7 +4,7 @@ This guide reproduces the Phase 4 GitHub Actions checks without connecting to pr
 
 ## Supported tools
 
-- PHP 8.4 matches CI. PHP 8.2 is the minimum supported local and production runtime.
+- PHP 8.4 is the required local, CI, and production runtime.
 - Composer 2.
 - Node.js 24 LTS and npm 11.
 - MySQL 8.4 matches CI. A disposable local MySQL 8.x instance is acceptable.
@@ -77,7 +77,7 @@ Production dependency advisories are blocking. The full npm audit permits only t
 docker build --target app --tag mirs-ci:local .
 ```
 
-The Docker build uses Node 24 for assets and PHP 8.2 for the production application image.
+The Docker build uses Node 24 for assets and PHP 8.4 for the production application image.
 
 ## Reset and failure checks
 
