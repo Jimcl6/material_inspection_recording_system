@@ -47,6 +47,13 @@ class TestDatabaseGuardTest extends TestCase
                 ],
                 'matches a prohibited database name',
             ],
+            'live database with testing suffix' => [
+                [
+                    'DB_DATABASE' => 'fc_1_data_db_testing',
+                    'TEST_PROHIBITED_DATABASES' => 'forge,laravel,mirs,production,fc_1_data_db_testing',
+                ],
+                'matches a prohibited database name',
+            ],
             'unapproved host' => [['DB_HOST' => 'production-db.internal'], 'not an approved disposable MySQL host'],
         ];
     }
@@ -63,7 +70,7 @@ class TestDatabaseGuardTest extends TestCase
             'DB_HOST' => '127.0.0.1',
             'DB_DATABASE' => 'mirs_testing',
             'TEST_ALLOWED_DATABASE_HOSTS' => '127.0.0.1,localhost,mysql',
-            'TEST_PROHIBITED_DATABASES' => 'forge,laravel,mirs,production',
+            'TEST_PROHIBITED_DATABASES' => 'forge,laravel,mirs,production,fc_1_data_db_testing',
         ];
     }
 }
