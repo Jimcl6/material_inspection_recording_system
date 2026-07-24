@@ -160,7 +160,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Record login history
      */
-    public function recordLogin(string $ipAddress, string $userAgent = null, string $loginType = 'password', bool $successful = true, string $failureReason = null): UserLoginHistory
+    public function recordLogin(string $ipAddress, ?string $userAgent = null, string $loginType = 'password', bool $successful = true, ?string $failureReason = null): UserLoginHistory
     {
         $this->update([
             'last_login_at' => now(),
