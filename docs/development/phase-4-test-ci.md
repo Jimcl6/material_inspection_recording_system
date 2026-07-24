@@ -6,7 +6,7 @@ This guide reproduces the Phase 4 GitHub Actions checks without connecting to pr
 
 - PHP 8.4 is the required local, CI, and production runtime.
 - Composer 2.
-- Node.js 24 LTS and npm 11.
+- Node.js 24 LTS and npm 11.16.
 - MySQL 8.4 matches CI. A disposable local MySQL 8.x instance is acceptable.
 - Docker with BuildKit for the production image check.
 

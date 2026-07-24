@@ -1,6 +1,6 @@
 # Phase 6 supported platform
 
-Phase 6 standardizes MIRS on PHP 8.4, Node.js 24 LTS, Laravel 12, and MySQL. It intentionally preserves the Laravel 10 application structure and does not begin Phase 7 refactoring.
+Phase 6 standardizes MIRS on PHP 8.4, Node.js 24 LTS with npm 11.16, Laravel 12, and MySQL. It intentionally preserves the Laravel 10 application structure and does not begin Phase 7 refactoring.
 
 ## Runtime and dependency checkpoints
 
