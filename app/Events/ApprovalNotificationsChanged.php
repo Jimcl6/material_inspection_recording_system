@@ -14,8 +14,7 @@ class ApprovalNotificationsChanged implements ShouldBroadcastNow
     public function __construct(
         public int $userId,
         public array $summary
-    ) {
-    }
+    ) {}
 
     public function broadcastOn(): PrivateChannel
     {

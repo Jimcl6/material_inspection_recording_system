@@ -6,6 +6,7 @@ use App\Models\Department;
 use App\Models\Position;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\UserLoginHistory;
 use App\Models\UserQrCode;
 use App\Services\AccountAccessService;
 use App\Services\ActivityService;
@@ -41,8 +42,8 @@ class UserManagementController extends Controller
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('employee_id', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('employee_id', 'like', "%{$search}%");
             });
         }
 
@@ -170,7 +171,7 @@ class UserManagementController extends Controller
         $user->load(['role', 'department', 'position', 'qrCode']);
 
         // Load login history separately to avoid created_at issues
-        $loginHistory = \App\Models\UserLoginHistory::where('user_id', $user->id)
+        $loginHistory = UserLoginHistory::where('user_id', $user->id)
             ->orderBy('login_at', 'desc')
             ->limit(10)
             ->get();

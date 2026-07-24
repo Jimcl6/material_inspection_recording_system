@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Support\SpreadsheetImportSecurity;
+use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
 
@@ -19,7 +20,7 @@ class ImportAnnealingCheckRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\Rule|array<mixed>|string>
+     * @return array<string, Rule|array<mixed>|string>
      */
     public function rules(): array
     {

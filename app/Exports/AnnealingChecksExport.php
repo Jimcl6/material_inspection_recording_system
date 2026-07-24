@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\AnnealingCheck;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -11,7 +12,7 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 class AnnealingChecksExport implements FromCollection, WithHeadings, WithMapping, WithTitle
 {
     /**
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function collection()
     {

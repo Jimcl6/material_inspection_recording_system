@@ -11,7 +11,7 @@ class AnnealingCheckImportTest extends TestCase
 {
     public function test_import_preserves_temperature_setting_without_machine_setting(): void
     {
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         $sheet->setCellValue('A8', 'ITEM CODE');
@@ -39,7 +39,7 @@ class AnnealingCheckImportTest extends TestCase
         $sheet->setCellValue('J10', '08:00');
         $sheet->setCellValue('K10', '11:00');
 
-        $import = new AnnealingChecksWithHeadersImport();
+        $import = new AnnealingChecksWithHeadersImport;
         $reflection = new ReflectionClass($import);
 
         $currentUser = $reflection->getProperty('currentUser');

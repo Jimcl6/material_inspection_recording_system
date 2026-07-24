@@ -200,7 +200,7 @@ class WeldingChecksheetConfigurationTest extends TestCase
 
     private function weldingWorkbookUpload(string $key): UploadedFile
     {
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Welding Data');
         $sheet->setCellValue('A10', '2026-07-21');

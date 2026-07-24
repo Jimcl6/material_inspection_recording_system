@@ -126,11 +126,11 @@ class MagnetismChecksheetImport
     /**
      * Preview import - Phase 1: Parse file and detect duplicates
      *
-     * @param  string  $filePath Path to Excel file
-     * @param  string  $itemCode Item code
-     * @param  string  $itemName Item name
-     * @param  string  $machineNo Machine number
-     * @param  string|null  $format Format type (HPI-PR03-01 or HPI-PR05-03), null for auto-detect
+     * @param  string  $filePath  Path to Excel file
+     * @param  string  $itemCode  Item code
+     * @param  string  $itemName  Item name
+     * @param  string  $machineNo  Machine number
+     * @param  string|null  $format  Format type (HPI-PR03-01 or HPI-PR05-03), null for auto-detect
      */
     public function preview(string $filePath, string $itemCode, string $itemName, string $machineNo, ?string $format = null): array
     {
@@ -178,12 +178,12 @@ class MagnetismChecksheetImport
     /**
      * Execute import - Phase 2: Create/update records based on user choice
      *
-     * @param  string  $filePath Path to Excel file
-     * @param  string  $itemCode Item code
-     * @param  string  $itemName Item name
-     * @param  string  $machineNo Machine number
-     * @param  bool  $updateDuplicates Whether to update duplicate records
-     * @param  string|null  $format Format type (HPI-PR03-01 or HPI-PR05-03)
+     * @param  string  $filePath  Path to Excel file
+     * @param  string  $itemCode  Item code
+     * @param  string  $itemName  Item name
+     * @param  string  $machineNo  Machine number
+     * @param  bool  $updateDuplicates  Whether to update duplicate records
+     * @param  string|null  $format  Format type (HPI-PR03-01 or HPI-PR05-03)
      * @return array{
      *     batches_imported: int,
      *     batches_updated: int,

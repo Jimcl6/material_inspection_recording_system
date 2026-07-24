@@ -11,13 +11,14 @@ use App\Models\User;
 use App\Models\WeldingChecksheet;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class DashboardReportingService
 {
     /**
      * @var array<string, array{
      *     label: string,
-     *     model: class-string<\Illuminate\Database\Eloquent\Model>,
+     *     model: class-string<Model>,
      *     date_column?: string,
      *     calendar_columns?: bool,
      *     approvals: bool
@@ -166,7 +167,7 @@ class DashboardReportingService
     }
 
     /**
-     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $model
+     * @param  class-string<Model>  $model
      * @return array{
      *     totalRecords: int,
      *     currentMonthTotal: int,
@@ -184,7 +185,7 @@ class DashboardReportingService
         CarbonImmutable $nextMonthStart,
         bool $supportsApprovals
     ): array {
-        /** @var Builder<\Illuminate\Database\Eloquent\Model> $query */
+        /** @var Builder<Model> $query */
         $query = $model::query();
         $query->selectRaw('COUNT(*) AS total_records')
             ->selectRaw(
@@ -216,7 +217,7 @@ class DashboardReportingService
     }
 
     /**
-     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $model
+     * @param  class-string<Model>  $model
      * @return array{
      *     totalRecords: int,
      *     currentMonthTotal: int,
@@ -231,7 +232,7 @@ class DashboardReportingService
         CarbonImmutable $currentMonthStart,
         CarbonImmutable $previousMonthStart
     ): array {
-        /** @var Builder<\Illuminate\Database\Eloquent\Model> $query */
+        /** @var Builder<Model> $query */
         $query = $model::query();
         $result = $query
             ->selectRaw('COUNT(*) AS total_records')

@@ -40,6 +40,7 @@ class MaterialPart extends Model
         if (isset($data['sub_lots'])) {
             return $data['sub_lots'];
         }
+
         // New keyed object format
         return array_filter($data, fn ($v) => $v && trim($v) !== '');
     }
@@ -79,7 +80,7 @@ class MaterialPart extends Model
     {
         return $query->where(function ($q) use ($lotNumber) {
             $q->where('main_lot_number', 'like', "%{$lotNumber}%")
-              ->orWhere('sub_lot_numbers', 'like', "%{$lotNumber}%");
+                ->orWhere('sub_lot_numbers', 'like', "%{$lotNumber}%");
         });
     }
 

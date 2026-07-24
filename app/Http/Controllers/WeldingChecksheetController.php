@@ -332,7 +332,7 @@ class WeldingChecksheetController extends Controller
         ActivityService::logExport('welding', WeldingChecksheet::count());
 
         return Excel::download(
-            new WeldingChecksheetsExport(),
+            new WeldingChecksheetsExport,
             'welding-checksheets-'.now()->format('Y-m-d').'.xlsx'
         );
     }

@@ -24,10 +24,10 @@ class ModificationLogController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('model_code', 'like', "%{$search}%")
-                  ->orWhere('item_for_modification', 'like', "%{$search}%")
-                  ->orWhere('recorded_by', 'like', "%{$search}%")
-                  ->orWhere('material_lot_no', 'like', "%{$search}%")
-                  ->orWhere('job_no_transfer_order', 'like', "%{$search}%");
+                    ->orWhere('item_for_modification', 'like', "%{$search}%")
+                    ->orWhere('recorded_by', 'like', "%{$search}%")
+                    ->orWhere('material_lot_no', 'like', "%{$search}%")
+                    ->orWhere('job_no_transfer_order', 'like', "%{$search}%");
             });
         }
 

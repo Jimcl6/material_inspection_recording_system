@@ -4,13 +4,14 @@ namespace Database\Seeders;
 
 use App\Models\MaterialSubLotTitle;
 use Illuminate\Database\Seeder;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
 class MaterialSubLotTitleSeeder extends Seeder
 {
     public function run()
     {
-        $output = new ConsoleOutput();
+        $output = new ConsoleOutput;
         $referencePath = storage_path('app/reference-excels');
 
         if (! is_dir($referencePath)) {
@@ -44,7 +45,7 @@ class MaterialSubLotTitleSeeder extends Seeder
     protected function processExcelFile(string $filePath, string $materialType, ConsoleOutput $output)
     {
         // Load only the first worksheet with read-only mode to minimize memory usage
-        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($filePath);
+        $reader = IOFactory::createReaderForFile($filePath);
         $reader->setReadDataOnly(true);
         $spreadsheet = $reader->load($filePath);
         $sheet = $spreadsheet->getActiveSheet()->toArray();

@@ -4,17 +4,19 @@ namespace App\Exports;
 
 use App\Models\DiaphragmWeldingChecksheet;
 use App\Models\DiaphragmWeldingSample;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class DiaphragmWeldingExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths
+class DiaphragmWeldingExport implements FromCollection, WithColumnWidths, WithHeadings, WithMapping, WithStyles
 {
     /**
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function collection()
     {
@@ -101,7 +103,7 @@ class DiaphragmWeldingExport implements FromCollection, WithHeadings, WithMappin
             1 => [
                 'font' => ['bold' => true],
                 'fill' => [
-                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'fillType' => Fill::FILL_SOLID,
                     'startColor' => ['rgb' => 'E2E8F0'],
                 ],
             ],

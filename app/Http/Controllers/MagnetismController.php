@@ -467,7 +467,7 @@ class MagnetismController extends Controller
             session(['magnetism_import_machine_no' => $request->input('machine_no')]);
 
             // Run preview with format (auto-detect if null)
-            $importer = new MagnetismChecksheetImport();
+            $importer = new MagnetismChecksheetImport;
             $preview = $importer->preview(
                 $fullPath,
                 $request->input('item_code'),
@@ -536,7 +536,7 @@ class MagnetismController extends Controller
             $format = $request->input('format') ?? $detectedFormat;
 
             // Run execute
-            $importer = new MagnetismChecksheetImport();
+            $importer = new MagnetismChecksheetImport;
             $results = $importer->execute(
                 $fullPath,
                 $itemCode,

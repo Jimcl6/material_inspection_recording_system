@@ -18,9 +18,7 @@ class SecureSpreadsheetUpload implements Rule
         'application/CDFV2',
     ];
 
-    public function __construct(private bool $allowCsv = false)
-    {
-    }
+    public function __construct(private bool $allowCsv = false) {}
 
     public function passes($attribute, $value): bool
     {
