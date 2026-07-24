@@ -14,8 +14,7 @@ class DashboardController extends Controller
     public function index(
         ApprovalWorkflowService $approvalWorkflowService,
         DashboardReportingService $dashboardReportingService
-    ): \Inertia\Response
-    {
+    ): \Inertia\Response {
         /** @var User $user */
         $user = Auth::user();
         $report = $dashboardReportingService->reportFor($user);
