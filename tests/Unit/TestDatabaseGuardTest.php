@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Tests\Support\TestDatabaseGuard;
@@ -11,10 +12,9 @@ use Tests\Support\TestDatabaseGuard;
 class TestDatabaseGuardTest extends TestCase
 {
     /**
-     * @dataProvider unsafeConfigurations
-     *
      * @param  array<string, string>  $overrides
      */
+    #[DataProvider('unsafeConfigurations')]
     public function test_it_rejects_unsafe_database_configurations(array $overrides, string $expectedMessage): void
     {
         $this->expectException(RuntimeException::class);
@@ -33,7 +33,7 @@ class TestDatabaseGuardTest extends TestCase
     /**
      * @return array<string, array{array<string, string>, string}>
      */
-    public function unsafeConfigurations(): array
+    public static function unsafeConfigurations(): array
     {
         return [
             'non-testing environment' => [['APP_ENV' => 'production'], 'APP_ENV must be testing'],
