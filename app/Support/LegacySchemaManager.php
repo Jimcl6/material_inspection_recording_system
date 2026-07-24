@@ -19,7 +19,6 @@ final class LegacySchemaManager
     public function listTableIndexes(string $table): array
     {
         return collect($this->connection->getSchemaBuilder()->getIndexes($table))
-            ->filter(fn (array $index): bool => is_string($index['name'] ?? null))
             ->mapWithKeys(fn (array $index): array => [$index['name'] => $index])
             ->all();
     }
