@@ -11,8 +11,10 @@ interface UserOption {
 const props = withDefaults(defineProps<{
     annealingCheck: Record<string, any>;
     users?: UserOption[];
+    filters?: Record<string, string>;
 }>(), {
-    users: () => []
+    users: () => [],
+    filters: () => ({})
 });
 
 // Format date to YYYY-MM-DD for HTML date input
@@ -398,7 +400,7 @@ const confirmDelete = () => {
                                 </button>
                                 <div class="space-x-3">
                                     <a
-                                        :href="route('annealing-checks.index')"
+                                        :href="route('annealing-checks.index', filters)"
                                         class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                     >
                                         Cancel

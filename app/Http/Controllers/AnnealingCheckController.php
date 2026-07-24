@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\AnnealingChecksExport;
 use App\Http\Requests\ImportAnnealingCheckRequest;
+use App\Http\Requests\IndexAnnealingCheckRequest;
 use App\Http\Requests\StoreAnnealingCheckRequest;
 use App\Http\Requests\UpdateAnnealingCheckRequest;
 use App\Imports\AnnealingChecksWithHeadersImport;
@@ -23,15 +24,37 @@ class AnnealingCheckController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): \Inertia\Response
+    public function index(IndexAnnealingCheckRequest $request): \Inertia\Response
     {
-        $annealingChecks = AnnealingCheck::with(['pic', 'checkedBy', 'verifiedBy'])
-            ->latest()
-            ->paginate(15);
+        $filters = $request->validated();
+        $search = $filters['search'] ?? null;
+
+        $annealingChecks = AnnealingCheck::query()
+            ->with(['pic', 'checkedBy', 'verifiedBy'])
+            ->when($search, function ($query, string $search): void {
+                $escapedSearch = addcslashes($search, '\\%_');
+                $pattern = "%{$escapedSearch}%";
+
+                $query->where(function ($query) use ($pattern): void {
+                    $query->where('item_code', 'like', $pattern)
+                        ->orWhere('supplier_lot_number', 'like', $pattern)
+                        ->orWhere('machine_number', 'like', $pattern);
+                });
+            })
+            ->when($filters['date_from'] ?? null, fn ($query, string $date) => $query->where('annealing_date', '>=', $date))
+            ->when($filters['date_to'] ?? null, fn ($query, string $date) => $query->where('annealing_date', '<=', $date))
+            ->when(
+                $filters['machine_number'] ?? null,
+                fn ($query, string $machineNumber) => $query->where('machine_number', $machineNumber)
+            )
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(15)
+            ->withQueryString();
 
         return Inertia::render('AnnealingChecks/Index', [
             'annealingChecks' => $annealingChecks,
-            'filters' => $request->only(['search', 'date_from', 'date_to', 'machine_number']),
+            'filters' => $filters,
             'machineNumbers' => AnnealingCheck::whereNotNull('machine_number')
                 ->where('machine_number', '!=', '')
                 ->distinct()
@@ -104,12 +127,13 @@ class AnnealingCheckController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(AnnealingCheck $annealingCheck): \Inertia\Response
+    public function show(IndexAnnealingCheckRequest $request, AnnealingCheck $annealingCheck): \Inertia\Response
     {
         $annealingCheck->load(['pic', 'checkedBy', 'verifiedBy']);
 
         return Inertia::render('AnnealingChecks/Show', [
             'annealingCheck' => $annealingCheck,
+            'filters' => $request->validated(),
         ]);
     }
 
@@ -141,11 +165,12 @@ class AnnealingCheckController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(AnnealingCheck $annealingCheck): \Inertia\Response
+    public function edit(IndexAnnealingCheckRequest $request, AnnealingCheck $annealingCheck): \Inertia\Response
     {
         return Inertia::render('AnnealingChecks/Edit', [
             'annealingCheck' => $annealingCheck,
             'users' => \App\Models\User::select('id', 'name')->orderBy('name')->get(),
+            'filters' => $request->validated(),
         ]);
     }
 

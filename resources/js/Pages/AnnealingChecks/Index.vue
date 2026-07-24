@@ -112,6 +112,17 @@ const filterConfig = computed(() => [
     },
 ]);
 
+const activeFilters = computed(() =>
+    Object.fromEntries(
+        Object.entries(props.filters).filter(([, value]) => value !== null && value !== undefined && value !== '')
+    )
+);
+
+const recordRouteParameters = (check: AnnealingCheck): Record<string, string | number> => ({
+    annealing_check: check.id,
+    ...activeFilters.value,
+});
+
 const checkToDelete = ref<AnnealingCheck | null>(null);
 const showDeleteModal = ref<boolean>(false);
 
@@ -332,7 +343,7 @@ const annealingDetailSections = (check: AnnealingCheck) => [
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex items-center justify-end space-x-2">
                                                 <Link 
-                                                    :href="route('annealing-checks.show', check.id)" 
+                                                    :href="route('annealing-checks.show', recordRouteParameters(check))"
                                                     class="p-1 text-indigo-600 hover:text-indigo-900 rounded-full hover:bg-indigo-50"
                                                     v-bind="{ title: 'View' }"
                                                 >
@@ -343,7 +354,7 @@ const annealingDetailSections = (check: AnnealingCheck) => [
                                                 </Link>
                                                 <Link 
                                                     v-if="canUpdate('annealing')"
-                                                    :href="route('annealing-checks.edit', check.id)" 
+                                                    :href="route('annealing-checks.edit', recordRouteParameters(check))"
                                                     class="p-1 text-blue-600 hover:text-blue-900 rounded-full hover:bg-blue-50"
                                                     v-bind="{ title: 'Edit' }"
                                                 >
