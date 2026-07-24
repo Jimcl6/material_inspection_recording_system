@@ -22,6 +22,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'closed', 'confirm', 'confirm-next']);
 
+const keypadDigits = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 const draft = ref('');
 const initialWasNonNumeric = ref(false);
 
@@ -207,15 +208,17 @@ const handleKeydown = (event) => {
                             </p>
 
                             <div class="mt-4 grid grid-cols-3 gap-2" aria-label="Numeric keypad">
+                                <!-- eslint-disable vue/valid-v-for -- Known parser false positive for keyed Vue template loops. -->
                                 <button
-                                    v-for="number in ['1', '2', '3', '4', '5', '6', '7', '8', '9']"
-                                    :key="number"
+                                    v-for="digit in keypadDigits"
+                                    :key="digit"
                                     type="button"
                                     class="min-h-[4rem] rounded-xl border border-gray-300 bg-white text-2xl font-semibold text-gray-900 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-indigo-100"
-                                    @click="appendDigit(number)"
+                                    @click="appendDigit(digit)"
                                 >
-                                    {{ number }}
+                                    {{ digit }}
                                 </button>
+                                <!-- eslint-enable vue/valid-v-for -->
                                 <button
                                     type="button"
                                     class="min-h-[4rem] rounded-xl border border-gray-300 bg-gray-50 text-2xl font-semibold text-gray-900 shadow-sm transition hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
