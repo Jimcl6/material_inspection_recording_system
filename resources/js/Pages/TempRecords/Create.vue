@@ -7,6 +7,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue'
 import SecondaryButton from '@/Components/SecondaryButton.vue'
 import TextInput from '@/Components/TextInput.vue'
 import Card from '@/Components/Card.vue'
+import NumericKeypadField from '@/Components/NumericKeypadField.vue'
 import SectionTitle from '@/Components/SectionTitle.vue'
 
 const props = defineProps({
@@ -219,24 +220,17 @@ const submit = () => {
                                             />
                                             <InputError :message="form.errors.time_am" class="mt-2" />
                                         </div>
-                                        <div>
-                                            <InputLabel for="temp_am" value="Temperature (°C)" />
-                                            <div class="relative rounded-md shadow-sm">
-                                                <TextInput
-                                                    id="temp_am"
-                                                    type="number"
-                                                    step="0.1"
-                                                    v-model="form.temp_am"
-                                                    class="block w-full pr-10"
-                                                    :class="{ 'border-red-500': form.errors.temp_am }"
-                                                    placeholder="0.0"
-                                                />
-                                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                                    <span class="text-gray-500 sm:text-sm">°C</span>
-                                                </div>
-                                            </div>
-                                            <InputError :message="form.errors.temp_am" class="mt-2" />
-                                        </div>
+                                        <NumericKeypadField
+                                            id="temp_am"
+                                            v-model="form.temp_am"
+                                            label="Temperature (°C)"
+                                            dialog-title="Morning (AM) Temperature"
+                                            unit="°C"
+                                            placeholder="0.0"
+                                            :decimal-places="1"
+                                            :max-integer-digits="18"
+                                            :error="form.errors.temp_am"
+                                        />
                                     </div>
                                 </div>
 
@@ -255,24 +249,17 @@ const submit = () => {
                                             />
                                             <InputError :message="form.errors.time_pm" class="mt-2" />
                                         </div>
-                                        <div>
-                                            <InputLabel for="temp_pm" value="Temperature (°C)" />
-                                            <div class="relative rounded-md shadow-sm">
-                                                <TextInput
-                                                    id="temp_pm"
-                                                    type="number"
-                                                    step="0.1"
-                                                    v-model="form.temp_pm"
-                                                    class="block w-full pr-10"
-                                                    :class="{ 'border-red-500': form.errors.temp_pm }"
-                                                    placeholder="0.0"
-                                                />
-                                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                                    <span class="text-gray-500 sm:text-sm">°C</span>
-                                                </div>
-                                            </div>
-                                            <InputError :message="form.errors.temp_pm" class="mt-2" />
-                                        </div>
+                                        <NumericKeypadField
+                                            id="temp_pm"
+                                            v-model="form.temp_pm"
+                                            label="Temperature (°C)"
+                                            dialog-title="Afternoon (PM) Temperature"
+                                            unit="°C"
+                                            placeholder="0.0"
+                                            :decimal-places="1"
+                                            :max-integer-digits="18"
+                                            :error="form.errors.temp_pm"
+                                        />
                                     </div>
                                 </div>
                             </div>
