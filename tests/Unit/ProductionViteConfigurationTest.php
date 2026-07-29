@@ -12,7 +12,7 @@ class ProductionViteConfigurationTest extends TestCase
     {
         $this->app->instance('env', 'production');
 
-        $vite = new Vite();
+        $vite = new Vite;
         $this->app->instance(Vite::class, $vite);
 
         (new AppServiceProvider($this->app))->boot();
