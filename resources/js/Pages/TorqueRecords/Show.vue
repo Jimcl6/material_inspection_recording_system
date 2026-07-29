@@ -99,7 +99,7 @@ const readingsFor = (period) => (props.record.readings || [])
                     <!-- Main Content -->
                     <div class="px-6 py-4">
                         <!-- Basic Information -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="tablet-detail-grid grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                             <div>
                                 <h4 class="text-md font-medium text-gray-900 mb-4">Driver Information</h4>
                                 <dl class="space-y-3">
@@ -193,7 +193,7 @@ const readingsFor = (period) => (props.record.readings || [])
                         <!-- Torque Readings -->
                         <div class="mt-8">
                             <h4 class="text-md font-medium text-gray-900 mb-4">Torque Readings</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="tablet-detail-grid grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- Morning Reading -->
                                 <div class="border border-gray-200 rounded-lg p-6 bg-gray-50">
                                     <h5 class="text-md font-medium text-gray-900 mb-4">Morning (AM)</h5>

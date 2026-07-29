@@ -102,7 +102,7 @@ const getSubLotEntries = (materialPart) => {
                     <div class="p-6 bg-white border-b border-gray-200">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="tablet-detail-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             <!-- Material Type -->
                             <div>
                                 <h4 class="text-sm font-medium text-gray-500 mb-1">Material Type</h4>
@@ -162,7 +162,7 @@ const getSubLotEntries = (materialPart) => {
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Sub Lot Numbers</h3>
                         
                         <div v-if="getSubLotCount(props.materialPart) > 0">
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="tablet-detail-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <div v-for="(entry, index) in getSubLotEntries(props.materialPart)" :key="index" class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                                     <h4 class="text-sm font-medium text-gray-500 mb-2">
                                         {{ entry.label }}
@@ -186,7 +186,7 @@ const getSubLotEntries = (materialPart) => {
                     <div class="p-6 bg-white border-b border-gray-200">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Timestamps</h3>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="tablet-detail-grid grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <h4 class="text-sm font-medium text-gray-500 mb-1">Created At</h4>
                                 <p class="text-lg text-gray-900">{{ formatDate(props.materialPart.created_at) }}</p>

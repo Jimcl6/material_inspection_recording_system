@@ -1,6 +1,7 @@
 <script setup>
-import { reactive, watch, computed } from 'vue';
+import { reactive, ref, watch, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 const props = defineProps({
     filters: {
@@ -23,6 +24,8 @@ const props = defineProps({
 });
 
 const filterValues = reactive({});
+const filtersOpen = ref(false);
+const { isTabletMode } = useTabletMode();
 
 // Initialize filter values from props
 props.filterConfig.forEach((config) => {
@@ -32,6 +35,9 @@ props.filterConfig.forEach((config) => {
 const hasActiveFilters = computed(() => {
     return Object.values(filterValues).some((v) => v !== '' && v !== null && v !== undefined);
 });
+const activeFilterCount = computed(() =>
+    Object.values(filterValues).filter((v) => v !== '' && v !== null && v !== undefined).length
+);
 
 let debounceTimeout = null;
 
@@ -76,26 +82,45 @@ props.filterConfig.forEach((config) => {
 <template>
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
         <div class="p-6 bg-white border-b border-gray-200">
-            <div class="flex items-center justify-between mb-4">
+            <div
+                :class="isTabletMode
+                    ? ['flex flex-wrap items-center justify-between gap-3', { 'mb-4': filtersOpen }]
+                    : 'flex items-center justify-between mb-4'"
+            >
                 <div class="flex items-center">
                     <svg class="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
                     </svg>
                     <h3 class="text-lg font-medium text-gray-900">Filters</h3>
                 </div>
-                <button
-                    v-if="hasActiveFilters"
-                    @click="resetFilters"
-                    class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150"
-                >
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                    Clear Filters
-                </button>
+                <div class="flex items-center gap-2">
+                    <button
+                        v-if="hasActiveFilters"
+                        @click="resetFilters"
+                        class="inline-flex items-center px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150"
+                        :class="isTabletMode ? 'min-h-11 py-2' : 'py-1.5'"
+                    >
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        {{ isTabletMode ? 'Clear' : 'Clear Filters' }}
+                    </button>
+                    <button
+                        v-if="isTabletMode"
+                        type="button"
+                        class="inline-flex min-h-11 items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        :aria-expanded="filtersOpen"
+                        @click="filtersOpen = !filtersOpen"
+                    >
+                        {{ filtersOpen ? 'Hide filters' : `Filters${activeFilterCount ? ` (${activeFilterCount})` : ''}` }}
+                    </button>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div
+                v-show="!isTabletMode || filtersOpen"
+                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"
+            >
                 <div v-for="config in filterConfig" :key="config.key">
                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ config.label }}</label>
 

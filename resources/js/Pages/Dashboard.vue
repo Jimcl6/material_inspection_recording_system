@@ -7,7 +7,12 @@
         </template>
 
         <div class="py-8">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <TabletDashboard
+                v-if="isTabletMode"
+                :dashboard-summary="dashboardSummary"
+                :pending-approvals-count="pendingApprovalsCount"
+            />
+            <div v-else class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <!-- Permission-scoped reporting summary -->
                 <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div class="rounded-lg bg-white p-5 shadow-sm">
@@ -283,7 +288,9 @@ import { Link } from '@inertiajs/vue3';
 // import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DashboardModuleStats from '@/Components/DashboardModuleStats.vue';
+import TabletDashboard from '@/Components/Tablet/TabletDashboard.vue';
 import { usePermissions } from '@/Composables/usePermissions';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 const dashboardModuleKeys = [
     'annealing',
@@ -296,6 +303,7 @@ const dashboardModuleKeys = [
 ];
 
 const { canView } = usePermissions();
+const { isTabletMode } = useTabletMode();
 const hasVisibleDashboardModules = computed(() => dashboardModuleKeys.some((module) => canView(module)));
 
 const props = defineProps({

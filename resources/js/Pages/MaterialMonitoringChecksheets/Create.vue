@@ -2,13 +2,20 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import NumericKeypadField from '@/Components/NumericKeypadField.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 const props = defineProps({
     materialTypes: {
         type: Object,
         default: () => ({})
+    },
+    subLotFieldsByMaterialType: {
+        type: Object,
+        default: () => ({})
     }
 });
+const { isTabletMode } = useTabletMode();
 
 // Debug: Log props to verify subLotTitles
 console.log('Create.vue props:', props);
@@ -28,38 +35,27 @@ const form = useForm({
 const subLotFields = ref([]);
 const subLotValues = ref({});
 
-const fetchSubLotFields = async (materialType) => {
+const loadSubLotFields = (materialType) => {
     if (!materialType) {
         subLotFields.value = [];
         subLotValues.value = {};
         form.sub_lot_numbers = {};
         return;
     }
-    
-    try {
-        const response = await fetch(`/api/material-types/${encodeURIComponent(materialType)}/sub-lot-fields`);
-        const fields = await response.json();
-        
-        subLotFields.value = fields;
-        
-        // Initialize sub-lot values object
-        const initialValues = {};
-        fields.forEach(field => {
-            initialValues[field.toLowerCase().replace(/\s+/g, '_')] = '';
-        });
-        subLotValues.value = initialValues;
-        form.sub_lot_numbers = initialValues;
-        
-    } catch (error) {
-        console.error('Failed to fetch sub lot fields:', error);
-        subLotFields.value = [];
-        subLotValues.value = {};
-        form.sub_lot_numbers = {};
-    }
+
+    const fields = props.subLotFieldsByMaterialType[materialType] ?? [];
+    subLotFields.value = fields;
+
+    const initialValues = {};
+    fields.forEach(field => {
+        initialValues[field.toLowerCase().replace(/\s+/g, '_')] = '';
+    });
+    subLotValues.value = initialValues;
+    form.sub_lot_numbers = initialValues;
 };
 
 const onMaterialTypeChange = () => {
-    fetchSubLotFields(form.material_type);
+    loadSubLotFields(form.material_type);
 };
 
 const materialTypeOptions = Object.entries(props.materialTypes).map(([key, value]) => ({
@@ -202,14 +198,24 @@ const submit = () => {
 
                                 <!-- Produced Quantity -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Produced Quantity</label>
-                                    <input
-                                        v-model.number="form.produced_qty"
-                                        type="number"
-                                        min="0"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        required
+                                    <NumericKeypadField
+                                        v-if="isTabletMode"
+                                        id="produced_qty"
+                                        v-model="form.produced_qty"
+                                        label="Produced Quantity"
+                                        dialog-title="Produced Quantity"
+                                        :decimal-places="0"
                                     />
+                                    <template v-else>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Produced Quantity</label>
+                                        <input
+                                            v-model.number="form.produced_qty"
+                                            type="number"
+                                            min="0"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                            required
+                                        />
+                                    </template>
                                 </div>
 
                                 <!-- Operator -->

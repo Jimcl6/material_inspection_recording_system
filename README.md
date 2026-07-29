@@ -97,6 +97,12 @@ Build production frontend assets with:
 npm run build
 ```
 
+For Android standalone installation, HTTPS requirements, deployment checks, and
+tablet acceptance testing, see
+[`docs/android-pwa-rollout.md`](docs/android-pwa-rollout.md).
+The standard `npm run check` command also validates the generated PWA manifest,
+Android icons, online-only worker, installation UI, and server safeguards.
+
 After adding, renaming, or removing Laravel routes used by Vue through `route(...)`, regenerate Ziggy routes:
 
 ```bash

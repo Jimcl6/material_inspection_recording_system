@@ -7,9 +7,12 @@ import DeleteButton from '@/Components/DeleteButton.vue';
 import { usePermissions } from '@/Composables/usePermissions';
 import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
 import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
+import TabletRecordList from '@/Components/Tablet/TabletRecordList.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 const { canCreate, canUpdate, canDelete } = usePermissions();
 const { toggleExpanded, isExpanded } = useSingleExpandedRow();
+const { isTabletMode } = useTabletMode();
 
 const props = defineProps({
     materialParts: {
@@ -120,6 +123,11 @@ const materialDetailSections = (materialPart) => [
         ],
     },
 ];
+const tabletFacts = (materialPart) => [
+    { label: 'Date', value: formatDate(materialPart.date) },
+    { label: 'Type', value: props.materialTypes[materialPart.material_type] || materialPart.material_type },
+    { label: 'Quantity', value: materialPart.produced_qty?.toLocaleString() || 0 },
+];
 </script>
 
 <template>
@@ -164,7 +172,32 @@ const materialDetailSections = (materialPart) => [
                             </div>
                         </div>
 
-                        <div class="overflow-x-auto">
+                        <TabletRecordList
+                            v-if="isTabletMode"
+                            :records="materialParts.data || []"
+                            :title-for="(materialPart) => materialPart.item_block_code"
+                            :facts-for="tabletFacts"
+                            :sections-for="materialDetailSections"
+                            empty-message="No material monitoring records found."
+                        >
+                            <template #actions="{ record: materialPart }">
+                                <Link
+                                    :href="route('material-monitoring-checksheets.show', materialPart.id)"
+                                    class="inline-flex min-h-11 items-center rounded-lg border border-indigo-200 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"
+                                >
+                                    View
+                                </Link>
+                                <Link
+                                    v-if="canUpdate('material')"
+                                    :href="route('material-monitoring-checksheets.edit', materialPart.id)"
+                                    class="inline-flex min-h-11 items-center rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+                                >
+                                    Edit
+                                </Link>
+                                <DeleteButton v-if="canDelete('material')" :material-part="materialPart" />
+                            </template>
+                        </TabletRecordList>
+                        <div v-else class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>

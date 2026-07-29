@@ -1,6 +1,8 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import TabletApprovalReview from '@/Components/Tablet/TabletApprovalReview.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 import { ref, computed } from 'vue';
 
 const props = defineProps({
@@ -12,6 +14,9 @@ const selectedChecks = ref([]);
 const selectAll = ref(false);
 const bulkAction = ref('');
 const approvalNotes = ref('');
+const tabletBulkMode = ref(false);
+const tabletProcessing = ref(false);
+const { isTabletMode } = useTabletMode();
 
 const filteredChecks = computed(() => {
     return props.pendingChecks.filter(check => check.status === 'pending');
@@ -30,7 +35,7 @@ const bulkApprove = () => {
         return;
     }
     
-    Inertia.post(route('annealing-checks.bulk-approve'), {
+    router.post(route('annealing-checks.bulk-approve'), {
         check_ids: selectedChecks.value,
         notes: approvalNotes.value,
     }, {
@@ -47,7 +52,7 @@ const bulkReject = () => {
         return;
     }
     
-    Inertia.post(route('annealing-checks.bulk-reject'), {
+    router.post(route('annealing-checks.bulk-reject'), {
         check_ids: selectedChecks.value,
         notes: approvalNotes.value,
     }, {
@@ -56,6 +61,19 @@ const bulkReject = () => {
             selectAll.value = false;
             approvalNotes.value = '';
         }
+    });
+};
+
+const submitOne = (check, action) => {
+    tabletProcessing.value = true;
+    router.post(route(action === 'approve' ? 'annealing-checks.bulk-approve' : 'annealing-checks.bulk-reject'), {
+        check_ids: [check.id],
+        notes: approvalNotes.value,
+    }, {
+        onFinish: () => {
+            tabletProcessing.value = false;
+            approvalNotes.value = '';
+        },
     });
 };
 
@@ -87,6 +105,26 @@ const formatDate = (date) => {
                             </p>
                         </div>
 
+                        <TabletApprovalReview
+                            v-if="isTabletMode && !tabletBulkMode"
+                            v-model:notes="approvalNotes"
+                            :records="filteredChecks"
+                            :title-for="(check) => check.item_code"
+                            :subtitle-for="(check) => check.supplier_lot_number"
+                            :facts-for="(check) => [
+                                { label: 'Date', value: formatDate(check.annealing_date) },
+                                { label: 'Quantity', value: check.quantity },
+                                { label: 'Machine', value: check.machine_number },
+                                { label: 'Submitted by', value: check.created_by?.name },
+                            ]"
+                            show-route-name="annealing-checks.show"
+                            :processing="tabletProcessing"
+                            @approve="(check) => submitOne(check, 'approve')"
+                            @reject="(check) => submitOne(check, 'reject')"
+                            @bulk="tabletBulkMode = true"
+                        />
+
+                        <template v-else>
                         <!-- Bulk Actions -->
                         <div v-if="selectedChecks.length > 0" class="mb-4 p-4 bg-gray-50 rounded-lg">
                             <div class="flex items-center justify-between">
@@ -196,6 +234,7 @@ const formatDate = (date) => {
                                 <p class="text-gray-500">No pending approvals at this time.</p>
                             </div>
                         </div>
+                        </template>
                     </div>
                 </div>
             </div>

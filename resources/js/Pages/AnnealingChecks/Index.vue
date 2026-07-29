@@ -3,13 +3,16 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DataTableFilters from '@/Components/DataTableFilters.vue';
 import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
+import TabletRecordList from '@/Components/Tablet/TabletRecordList.vue';
 import { ref, computed } from 'vue';
 import { route } from 'ziggy-js';
 import { usePermissions } from '@/Composables/usePermissions';
 import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 const { canCreate, canUpdate, canDelete, canImport, approvalsEnabled } = usePermissions();
 const { toggleExpanded, isExpanded } = useSingleExpandedRow();
+const { isTabletMode } = useTabletMode();
 
 type Filters = {
     search?: string;
@@ -221,6 +224,11 @@ const annealingDetailSections = (check: AnnealingCheck) => [
         ],
     },
 ];
+const tabletFacts = (check: AnnealingCheck) => [
+    { label: 'Lot', value: check.supplier_lot_number },
+    { label: 'Date', value: formatDate(check.annealing_date) },
+    { label: 'Machine', value: check.machine_number },
+];
 </script>
 
 <template>
@@ -234,7 +242,7 @@ const annealingDetailSections = (check: AnnealingCheck) => [
                 </h2>
                 <div class="space-x-2">
                     <Link 
-                        v-if="canImport('annealing')"
+                        v-if="!isTabletMode && canImport('annealing')"
                         :href="route('annealing-checks.import.form')" 
                         class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
@@ -267,7 +275,40 @@ const annealingDetailSections = (check: AnnealingCheck) => [
 
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 bg-white border-b border-gray-200">
-                    <div class="overflow-x-auto">
+                        <TabletRecordList
+                            v-if="isTabletMode"
+                            :records="annealingChecks.data"
+                            :title-for="(check) => check.item_code"
+                            :facts-for="tabletFacts"
+                            :status-for="(check) => approvalsEnabled ? check.status : null"
+                            :sections-for="annealingDetailSections"
+                            empty-message="No annealing checks found."
+                        >
+                            <template #actions="{ record: check }">
+                                <Link
+                                    :href="route('annealing-checks.show', recordRouteParameters(check))"
+                                    class="inline-flex min-h-11 items-center rounded-lg border border-indigo-200 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"
+                                >
+                                    View
+                                </Link>
+                                <Link
+                                    v-if="canUpdate('annealing')"
+                                    :href="route('annealing-checks.edit', recordRouteParameters(check))"
+                                    class="inline-flex min-h-11 items-center rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+                                >
+                                    Edit
+                                </Link>
+                                <button
+                                    v-if="canDelete('annealing')"
+                                    type="button"
+                                    class="inline-flex min-h-11 items-center rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                                    @click="confirmDelete(check)"
+                                >
+                                    Delete
+                                </button>
+                            </template>
+                        </TabletRecordList>
+                    <div v-else class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>

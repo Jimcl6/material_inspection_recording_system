@@ -1,6 +1,8 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import TabletApprovalReview from '@/Components/Tablet/TabletApprovalReview.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 import { computed, ref } from 'vue';
 
 const props = defineProps({
@@ -12,6 +14,8 @@ const props = defineProps({
 
 const selectedIds = ref([]);
 const notes = ref('');
+const tabletBulkMode = ref(false);
+const { isTabletMode } = useTabletMode();
 
 const form = useForm({
     record_ids: [],
@@ -37,6 +41,11 @@ const submit = (action) => {
     });
 };
 
+const submitOne = (record, action) => {
+    selectedIds.value = [record.id];
+    submit(action);
+};
+
 const formatDate = (value) => value ? new Date(value).toLocaleDateString() : 'N/A';
 </script>
 
@@ -56,6 +65,25 @@ const formatDate = (value) => value ? new Date(value).toLocaleDateString() : 'N/
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
+                    <TabletApprovalReview
+                        v-if="isTabletMode && !tabletBulkMode"
+                        v-model:notes="notes"
+                        :records="pendingRecords"
+                        :title-for="(record) => record.model_series"
+                        :subtitle-for="(record) => record.screw_type"
+                        :facts-for="(record) => [
+                            { label: 'Date', value: formatDate(record.date) },
+                            { label: 'Driver', value: record.driver_model },
+                            { label: 'PIC', value: record.person_in_charge },
+                            { label: 'Checked by', value: record.checked_by },
+                        ]"
+                        show-route-name="torque-records.show"
+                        :processing="form.processing"
+                        @approve="(record) => submitOne(record, 'approve')"
+                        @reject="(record) => submitOne(record, 'reject')"
+                        @bulk="tabletBulkMode = true"
+                    />
+                    <template v-else>
                     <div class="mb-4 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                         <div>
                             <h3 class="text-lg font-medium text-gray-900">Pending Torque Records</h3>
@@ -108,6 +136,7 @@ const formatDate = (value) => value ? new Date(value).toLocaleDateString() : 'N/
                             </tbody>
                         </table>
                     </div>
+                    </template>
                 </div>
             </div>
         </div>

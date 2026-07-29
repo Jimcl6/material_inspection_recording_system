@@ -3,6 +3,9 @@ import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import NumericKeypadField from '@/Components/NumericKeypadField.vue';
+import TabletFormStepper from '@/Components/Tablet/TabletFormStepper.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 interface User {
     id: number;
@@ -31,6 +34,9 @@ const page = usePage();
 const isLoading = ref(false);
 const showSuccess = ref(false);
 const users = computed(() => (page.props as { users: User[] }).users || []);
+const { isTabletMode } = useTabletMode();
+const currentStep = ref(0);
+const tabletSteps = ['Receiving details', 'Annealing process', 'Personnel and save'];
 
 // Form validation rules
 const validateForm = () => {
@@ -51,7 +57,7 @@ const form = useForm({
     quantity: 1,
     annealing_date: '',
     machine_number: '',
-    temperature_setting: null,
+    temperature_setting: null as number | null,
     annealing_time: '',
     damper_setting: '',
     time_in: '',
@@ -124,8 +130,12 @@ const onBlur = (field: string) => {
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 bg-white border-b border-gray-200">
                         <form @submit.prevent="submit" class="space-y-6">
+                            <TabletFormStepper v-if="isTabletMode" v-model="currentStep" :steps="tabletSteps" />
                             <!-- Basic Information -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div
+                                class="annealing-tablet-grid grid grid-cols-1 md:grid-cols-2 gap-6"
+                                :data-step="isTabletMode ? currentStep : null"
+                            >
                                 <!-- Item Code -->
                                 <div>
                                     <label for="item_code" class="block text-sm font-medium text-gray-700">
@@ -184,17 +194,27 @@ const onBlur = (field: string) => {
 
                                 <!-- Quantity -->
                                 <div>
-                                    <label for="quantity" class="block text-sm font-medium text-gray-700">
-                                        Quantity <span class="text-red-500">*</span>
-                                    </label>
-                                    <input
+                                    <NumericKeypadField
+                                        v-if="isTabletMode"
                                         id="quantity"
-                                        v-model.number="form.quantity"
-                                        type="number"
-                                        min="1"
-                                        required
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        v-model="form.quantity"
+                                        label="Quantity *"
+                                        dialog-title="Annealing Quantity"
+                                        :decimal-places="0"
                                     />
+                                    <template v-else>
+                                        <label for="quantity" class="block text-sm font-medium text-gray-700">
+                                            Quantity <span class="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            id="quantity"
+                                            v-model.number="form.quantity"
+                                            type="number"
+                                            min="1"
+                                            required
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        />
+                                    </template>
                                     <p v-if="form.errors.quantity" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.quantity }}
                                     </p>
@@ -238,17 +258,29 @@ const onBlur = (field: string) => {
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
                                     <!-- Temperature Setting -->
                                     <div>
-                                        <label for="temperature_setting" class="block text-sm font-medium text-gray-700">
-                                            Temperature Setting (°C)
-                                        </label>
-                                        <input
+                                        <NumericKeypadField
+                                            v-if="isTabletMode"
                                             id="temperature_setting"
-                                            v-model.number="form.temperature_setting"
-                                            type="number"
-                                            step="0.01"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                            placeholder="e.g., 850.00"
+                                            :model-value="form.temperature_setting ?? ''"
+                                            label="Temperature Setting (°C)"
+                                            dialog-title="Annealing Temperature"
+                                            unit="°C"
+                                            :decimal-places="2"
+                                            @update:model-value="form.temperature_setting = $event === '' ? null : Number($event)"
                                         />
+                                        <template v-else>
+                                            <label for="temperature_setting" class="block text-sm font-medium text-gray-700">
+                                                Temperature Setting (°C)
+                                            </label>
+                                            <input
+                                                id="temperature_setting"
+                                                v-model.number="form.temperature_setting"
+                                                type="number"
+                                                step="0.01"
+                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                placeholder="e.g., 850.00"
+                                            />
+                                        </template>
                                         <p v-if="form.errors.temperature_setting" class="mt-1 text-sm text-red-600">
                                             {{ form.errors.temperature_setting }}
                                         </p>
@@ -374,7 +406,7 @@ const onBlur = (field: string) => {
                             </div>
 
                             <!-- Remarks -->
-                            <div class="mt-6">
+                            <div v-show="!isTabletMode || currentStep === 2" class="mt-6">
                                 <label for="remarks" class="block text-sm font-medium text-gray-700">
                                     Remarks
                                 </label>
@@ -390,7 +422,7 @@ const onBlur = (field: string) => {
                             </div>
 
                             <!-- Form Actions -->
-                            <div class="flex justify-end space-x-3 pt-6">
+                            <div v-show="!isTabletMode || currentStep === 2" class="flex justify-end space-x-3 pt-6">
                                 <a
                                     :href="route('annealing-checks.index')"
                                     class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"

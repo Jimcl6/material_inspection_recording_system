@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 defineProps({
     approvalModules: {
@@ -20,9 +21,12 @@ const formatDate = (value) => {
 
     return new Date(value).toLocaleDateString();
 };
+
+const { isTabletMode } = useTabletMode();
 </script>
 
 <template>
+    <!-- eslint-disable vue/valid-v-for -- Known parser false positive for keyed Vue template loops. -->
     <Head title="Pending Approvals" />
 
     <AppLayout>
@@ -65,7 +69,31 @@ const formatDate = (value) => {
                         </Link>
                     </div>
 
-                    <div class="overflow-x-auto">
+                    <div v-if="isTabletMode" class="divide-y divide-gray-200">
+                        <Link
+                            v-for="record in approvalModule.records"
+                            :key="record.id"
+                            :href="route(record.showRouteName, record.showRouteParams)"
+                            class="block min-h-20 px-5 py-4 hover:bg-indigo-50"
+                        >
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="min-w-0">
+                                    <p class="truncate text-base font-semibold text-gray-900">{{ record.title }}</p>
+                                    <p class="mt-1 text-sm text-gray-600">{{ record.subtitle || 'No additional details' }}</p>
+                                </div>
+                                <span class="shrink-0 text-sm font-semibold text-indigo-700">Review</span>
+                            </div>
+                            <div class="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-500">
+                                <span>{{ formatDate(record.date) }}</span>
+                                <span>{{ record.submittedBy || 'System' }}</span>
+                            </div>
+                        </Link>
+                        <div v-if="approvalModule.records.length === 0" class="px-6 py-8 text-center text-sm text-gray-500">
+                            No pending records in this module.
+                        </div>
+                    </div>
+
+                    <div v-else class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
@@ -108,4 +136,5 @@ const formatDate = (value) => {
             </div>
         </div>
     </AppLayout>
+    <!-- eslint-enable vue/valid-v-for -->
 </template>

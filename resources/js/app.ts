@@ -7,6 +7,7 @@ import { ZiggyVue, route as ziggyRoute } from 'ziggy-js';
 import type { Page } from '@inertiajs/core';
 import type { Config } from 'ziggy-js';
 import { createPinia } from 'pinia';
+import { initializePwa } from '@/Composables/usePwa';
 
 declare global {
     interface Window {
@@ -20,6 +21,8 @@ declare global {
 // import SomeComponent from '@/Components/SomeComponent.vue';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Material Inspection Recording System';
+
+initializePwa();
 
 const syncCsrfToken = (page: Page): void => {
     const token = page.props.csrf_token;
