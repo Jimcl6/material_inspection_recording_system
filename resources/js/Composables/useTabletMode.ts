@@ -4,9 +4,13 @@ import { route } from 'ziggy-js';
 
 export const TABLET_MEDIA_QUERY =
     '(min-width: 600px) and (max-width: 1280px) and (min-height: 600px) and (hover: none) and (pointer: coarse)';
+export const INSTALLED_TABLET_MEDIA_QUERY =
+    '(display-mode: standalone) and (min-width: 540px) and (max-width: 1440px) and (any-pointer: coarse), ' +
+    '(display-mode: fullscreen) and (min-width: 540px) and (max-width: 1440px) and (any-pointer: coarse)';
 
 const tabletDevice = ref(false);
 let tabletMediaQuery: MediaQueryList | null = null;
+let installedTabletMediaQuery: MediaQueryList | null = null;
 let tabletListenerStarted = false;
 
 const OPERATIONAL_ROUTES = new Set([
@@ -39,7 +43,7 @@ const OPERATIONAL_ROUTES = new Set([
     'material-monitoring-checksheets.index',
     'material-monitoring-checksheets.create',
     'material-monitoring-checksheets.show',
-    'material-monitoring-checksheets.edit',
+    'material-monitoring-checksheets.edit'
 ]);
 
 const startTabletListener = (): void => {
@@ -48,10 +52,17 @@ const startTabletListener = (): void => {
     }
 
     tabletMediaQuery = window.matchMedia(TABLET_MEDIA_QUERY);
-    tabletDevice.value = tabletMediaQuery.matches;
-    tabletMediaQuery.addEventListener('change', (event) => {
-        tabletDevice.value = event.matches;
-    });
+    installedTabletMediaQuery = window.matchMedia(INSTALLED_TABLET_MEDIA_QUERY);
+
+    const syncTabletDevice = (): void => {
+        tabletDevice.value = Boolean(
+            tabletMediaQuery?.matches || installedTabletMediaQuery?.matches
+        );
+    };
+
+    syncTabletDevice();
+    tabletMediaQuery.addEventListener('change', syncTabletDevice);
+    installedTabletMediaQuery.addEventListener('change', syncTabletDevice);
     tabletListenerStarted = true;
 };
 
@@ -66,18 +77,14 @@ export function useTabletMode() {
         return route().current() || '';
     });
 
-    const isTabletOperationalRoute = computed(() =>
-        OPERATIONAL_ROUTES.has(currentRouteName.value),
-    );
+    const isTabletOperationalRoute = computed(() => OPERATIONAL_ROUTES.has(currentRouteName.value));
 
-    const isTabletMode = computed(
-        () => tabletDevice.value && isTabletOperationalRoute.value,
-    );
+    const isTabletMode = computed(() => tabletDevice.value && isTabletOperationalRoute.value);
 
     return {
         isTabletDevice: readonly(tabletDevice),
         isTabletOperationalRoute,
         isTabletMode,
-        currentRouteName,
+        currentRouteName
     };
 }
