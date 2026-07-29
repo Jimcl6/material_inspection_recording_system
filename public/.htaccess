@@ -23,7 +23,6 @@
 <IfModule mod_headers.c>
     Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
     <FilesMatch "^sw\.js$">
-        Header always set Service-Worker-Allowed "/"
         Header always set Cache-Control "no-cache"
     </FilesMatch>
     <FilesMatch "^manifest\.webmanifest$">

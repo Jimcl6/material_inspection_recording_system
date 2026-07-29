@@ -21,9 +21,9 @@ compiled frontend in `public/build` is sufficient for normal use; run
 
 This LAN HTTP setup is temporary browser access, not the final Android
 installation path. Android does not treat a non-localhost HTTP origin as a
-secure PWA context, and PHP's built-in server does not apply the production
-Apache or Nginx service-worker headers. Wait for the canonical HTTPS origin
-before installing MIRS from Chrome.
+secure PWA context, and PHP's built-in server does not reproduce the production
+cache headers. Wait for the canonical HTTPS origin before installing MIRS from
+Chrome.
 
 ## Production prerequisites
 
@@ -35,9 +35,10 @@ before installing MIRS from Chrome.
 - Build and serve Laravel from `public/`. Delete `public/hot` before starting the
   production runtime. Production Laravel also ignores that development marker as
   a safeguard against accidentally emitting Vite development-server URLs.
-- Serve `/build/sw.js` with `Service-Worker-Allowed: /` and
-  `Cache-Control: no-cache`. The included Apache and Nginx configurations provide
-  these headers.
+- Serve `/sw.js` and `/manifest.webmanifest` with `Cache-Control: no-cache`.
+  Both files live at the origin root, so the worker receives root scope without
+  a special scope-authorization header. The included Apache and Nginx
+  configurations provide the cache headers.
 - Do not install the app until the final production origin is stable. The
   manifest identity and launcher installation are tied to that origin.
 
@@ -60,15 +61,14 @@ npm run check
 Run these checks against the final HTTPS origin:
 
 ```bash
-curl -I https://mirs.example.com/build/sw.js
-curl -I https://mirs.example.com/build/manifest.webmanifest
+curl -I https://mirs.example.com/sw.js
+curl -I https://mirs.example.com/manifest.webmanifest
 curl -s https://mirs.example.com/login
 ```
 
 Confirm:
 
-- `/build/sw.js` returns `200`, JavaScript content, root worker permission, and
-  no-cache headers.
+- `/sw.js` returns `200`, JavaScript content, and no-cache headers.
 - The manifest returns `200` with `application/manifest+json`.
 - Login HTML references `/build/assets/...`, not port `5173` or another Vite
   development server.

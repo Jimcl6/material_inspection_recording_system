@@ -17,7 +17,7 @@ const readRequiredFile = (filePath) => {
     return fs.readFileSync(filePath);
 };
 
-const manifestPath = path.join(buildPath, 'manifest.webmanifest');
+const manifestPath = path.join(publicPath, 'manifest.webmanifest');
 const manifest = JSON.parse(readRequiredFile(manifestPath).toString('utf8'));
 
 const expectedManifest = {
@@ -67,14 +67,18 @@ for (const requiredIcon of requiredIcons) {
     }
 }
 
-const worker = readRequiredFile(path.join(buildPath, 'sw.js')).toString('utf8');
+const worker = readRequiredFile(path.join(publicPath, 'sw.js')).toString('utf8');
 
-if (!worker.includes('precacheAndRoute')) {
-    fail('generated worker does not precache versioned frontend assets');
+if (!worker.includes('const BUILD_ID =')) {
+    fail('generated worker does not contain a release build ID');
 }
 
-if (worker.includes('registerRoute')) {
-    fail('generated worker must not runtime-cache authenticated requests');
+if (!worker.includes('SKIP_WAITING')) {
+    fail('generated worker does not support user-approved updates');
+}
+
+if (worker.includes("addEventListener('fetch'") || worker.includes('caches.')) {
+    fail('generated worker must not cache authenticated requests or application data');
 }
 
 for (const forbiddenPath of ['/dashboard', '/login', '/api/']) {
@@ -90,7 +94,7 @@ const appBundles = fs
 const appBundle = appBundles.join('\n');
 
 for (const requiredRuntimeSignal of [
-    '/build/sw.js',
+    '/sw.js',
     'beforeinstallprompt',
     'appinstalled',
     'Install MIRS',
@@ -112,17 +116,17 @@ const dockerfile = readRequiredFile(
 ).toString('utf8');
 
 if (
-    !nginx.includes('location = /build/sw.js')
-    || !nginx.includes('Service-Worker-Allowed "/" always')
+    !nginx.includes('location = /sw.js')
+    || !nginx.includes('Cache-Control "no-cache" always')
 ) {
-    fail('Nginx does not authorize the worker root scope');
+    fail('Nginx does not serve the root worker with no-cache headers');
 }
 
 if (
     !apache.includes('<FilesMatch "^sw\\.js$">')
-    || !apache.includes('Service-Worker-Allowed "/"')
+    || !apache.includes('Cache-Control "no-cache"')
 ) {
-    fail('Apache does not authorize the worker root scope');
+    fail('Apache does not serve the root worker with no-cache headers');
 }
 
 if (!dockerfile.includes('rm -f public/hot')) {
@@ -131,5 +135,5 @@ if (!dockerfile.includes('rm -f public/hot')) {
 
 console.log(
     `PWA verification passed: standalone manifest, ${requiredIcons.length} Android icons, `
-    + 'online-only worker, install/update UI, and production server safeguards.',
+    + 'root-scoped online-only worker, install/update UI, and production safeguards.',
 );

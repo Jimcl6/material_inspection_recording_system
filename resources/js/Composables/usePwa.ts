@@ -1,5 +1,4 @@
 import { computed, readonly, ref, shallowRef } from 'vue';
-import { registerSW } from 'virtual:pwa-register';
 
 type InstallChoice = {
     outcome: 'accepted' | 'dismissed';
@@ -35,7 +34,6 @@ const registrationError = ref<string | null>(null);
 
 let initialized = false;
 let serviceWorkerRegistration: ServiceWorkerRegistration | undefined;
-let updateServiceWorker: ((reloadPage?: boolean) => Promise<void>) | undefined;
 
 const serviceWorkersSupported =
     typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
@@ -94,6 +92,60 @@ const checkForUpdates = async (): Promise<void> => {
     }
 };
 
+const watchServiceWorker = (
+    registration: ServiceWorkerRegistration,
+): void => {
+    const trackInstallingWorker = (
+        installingWorker: ServiceWorker,
+    ): void => {
+        installingWorker.addEventListener('statechange', () => {
+            if (
+                installingWorker.state === 'installed'
+                && navigator.serviceWorker.controller
+            ) {
+                updateAvailable.value = true;
+            }
+        });
+    };
+
+    if (registration.waiting && navigator.serviceWorker.controller) {
+        updateAvailable.value = true;
+    }
+
+    if (registration.installing) {
+        trackInstallingWorker(registration.installing);
+    }
+
+    registration.addEventListener('updatefound', () => {
+        const installingWorker = registration.installing;
+
+        if (!installingWorker) {
+            return;
+        }
+
+        trackInstallingWorker(installingWorker);
+    });
+};
+
+const registerServiceWorker = async (): Promise<void> => {
+    try {
+        const registration = await navigator.serviceWorker.register('/sw.js', {
+            scope: '/',
+            updateViaCache: 'none',
+        });
+
+        serviceWorkerRegistration = registration;
+        registrationError.value = null;
+        watchServiceWorker(registration);
+        await checkForUpdates();
+    } catch (error) {
+        registrationError.value =
+            error instanceof Error
+                ? error.message
+                : 'The application service worker could not be registered.';
+    }
+};
+
 const promptInstall = async (): Promise<PwaInstallOutcome> => {
     const installPrompt = deferredInstallPrompt.value;
 
@@ -118,19 +170,24 @@ const promptInstall = async (): Promise<PwaInstallOutcome> => {
 };
 
 const applyUpdate = async (): Promise<void> => {
-    if (!updateAvailable.value || !updateServiceWorker) {
+    const waitingWorker = serviceWorkerRegistration?.waiting;
+
+    if (!updateAvailable.value || !waitingWorker) {
         return;
     }
 
     isApplyingUpdate.value = true;
 
-    try {
-        await updateServiceWorker(true);
-    } finally {
-        window.setTimeout(() => {
-            isApplyingUpdate.value = false;
-        }, 5000);
-    }
+    navigator.serviceWorker.addEventListener(
+        'controllerchange',
+        () => window.location.reload(),
+        { once: true },
+    );
+    waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+
+    window.setTimeout(() => {
+        isApplyingUpdate.value = false;
+    }, 5000);
 };
 
 export const initializePwa = (): void => {
@@ -177,22 +234,7 @@ export const initializePwa = (): void => {
         return;
     }
 
-    updateServiceWorker = registerSW({
-        immediate: true,
-        onNeedRefresh: () => {
-            updateAvailable.value = true;
-        },
-        onRegisteredSW: (_swUrl, registration) => {
-            serviceWorkerRegistration = registration;
-            void checkForUpdates();
-        },
-        onRegisterError: (error) => {
-            registrationError.value =
-                error instanceof Error
-                    ? error.message
-                    : 'The application service worker could not be registered.';
-        },
-    });
+    void registerServiceWorker();
 
     window.setInterval(() => {
         void checkForUpdates();
