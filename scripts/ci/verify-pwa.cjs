@@ -105,6 +105,16 @@ for (const requiredRuntimeSignal of [
     }
 }
 
+for (const requiredTabletSignal of [
+    '(display-mode: standalone) and (min-width: 540px)',
+    '(display-mode: fullscreen) and (min-width: 540px)',
+    '(any-pointer: coarse)',
+]) {
+    if (!appBundle.includes(requiredTabletSignal)) {
+        fail(`compiled app is missing installed-tablet detection: ${requiredTabletSignal}`);
+    }
+}
+
 const nginx = readRequiredFile(
     path.join(root, 'docker', 'nginx', 'default.conf'),
 ).toString('utf8');
