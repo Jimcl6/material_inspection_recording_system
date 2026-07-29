@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import TabletApprovalReview from '@/Components/Tablet/TabletApprovalReview.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 import { computed, ref } from 'vue';
 import { route } from 'ziggy-js';
 
@@ -21,6 +23,8 @@ const props = defineProps<{
 
 const selectedIds = ref<number[]>([]);
 const notes = ref('');
+const tabletBulkMode = ref(false);
+const { isTabletMode } = useTabletMode();
 
 const approveForm = useForm({
     checksheet_ids: [] as number[],
@@ -50,6 +54,11 @@ const submit = (action: 'approve' | 'reject') => {
     });
 };
 
+const submitOne = (checksheet: PendingChecksheet, action: 'approve' | 'reject') => {
+    selectedIds.value = [checksheet.id];
+    submit(action);
+};
+
 const formatDate = (value: string): string => value ? new Date(value).toLocaleDateString() : '';
 </script>
 
@@ -70,6 +79,25 @@ const formatDate = (value: string): string => value ? new Date(value).toLocaleDa
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
+                        <TabletApprovalReview
+                            v-if="isTabletMode && !tabletBulkMode"
+                            v-model:notes="notes"
+                            :records="pendingChecksheets"
+                            :title-for="(checksheet) => checksheet.item_code"
+                            :subtitle-for="(checksheet) => checksheet.type?.name"
+                            :facts-for="(checksheet) => [
+                                { label: 'Date', value: formatDate(checksheet.production_date) },
+                                { label: 'Machine', value: checksheet.machine_no },
+                                { label: 'Job number', value: checksheet.job_number },
+                                { label: 'Operator', value: checksheet.operator?.name || checksheet.operator_name_raw },
+                            ]"
+                            show-route-name="welding-checksheets.show"
+                            :processing="approveForm.processing"
+                            @approve="(checksheet) => submitOne(checksheet, 'approve')"
+                            @reject="(checksheet) => submitOne(checksheet, 'reject')"
+                            @bulk="tabletBulkMode = true"
+                        />
+                        <template v-else>
                         <div class="mb-4 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                             <div>
                                 <h3 class="text-lg font-medium text-gray-900">Pending Checksheets</h3>
@@ -122,6 +150,7 @@ const formatDate = (value: string): string => value ? new Date(value).toLocaleDa
                                 </tbody>
                             </table>
                         </div>
+                        </template>
                     </div>
                 </div>
             </div>

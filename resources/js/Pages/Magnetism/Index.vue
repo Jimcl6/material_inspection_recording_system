@@ -9,7 +9,7 @@
                 </h2>
                 <div class="space-x-2">
                     <Link 
-                        v-if="canImport('magnetism')"
+                        v-if="!isTabletMode && canImport('magnetism')"
                         :href="route('magnetism-checksheet.import.form')" 
                         class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
                     >
@@ -38,7 +38,17 @@
                     <div class="p-6 bg-white border-b border-gray-200">
                         <!-- Filters -->
                         <div class="mb-6">
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div v-if="isTabletMode" class="mb-4 flex items-center justify-between">
+                                <p class="text-base font-semibold text-gray-900">Record filters</p>
+                                <button
+                                    type="button"
+                                    class="min-h-11 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"
+                                    @click="filtersOpen = !filtersOpen"
+                                >
+                                    {{ filtersOpen ? 'Hide filters' : `Filters${activeFilterCount ? ` (${activeFilterCount})` : ''}` }}
+                                </button>
+                            </div>
+                            <div v-show="!isTabletMode || filtersOpen" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Item Code</label>
                                     <input
@@ -78,7 +88,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="mt-4 flex space-x-2">
+                            <div v-show="!isTabletMode || filtersOpen" class="mt-4 flex space-x-2">
                                 <button 
                                     @click="applyFilters"
                                     class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
@@ -101,7 +111,39 @@
                         </div>
 
                         <!-- Table -->
-                        <div class="overflow-x-auto">
+                        <TabletRecordList
+                            v-if="isTabletMode"
+                            :records="checksheets.data"
+                            :title-for="(checksheet) => checksheet.item_code"
+                            :facts-for="tabletFacts"
+                            :sections-for="checksheetDetailSections"
+                            empty-message="No magnetism checksheets found."
+                        >
+                            <template #actions="{ record: checksheet }">
+                                <Link
+                                    :href="route('magnetism-checksheet.show', checksheet.id)"
+                                    class="inline-flex min-h-11 items-center rounded-lg border border-indigo-200 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"
+                                >
+                                    View
+                                </Link>
+                                <Link
+                                    v-if="canUpdate('magnetism')"
+                                    :href="route('magnetism-checksheet.edit', checksheet.id)"
+                                    class="inline-flex min-h-11 items-center rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+                                >
+                                    Edit
+                                </Link>
+                                <button
+                                    v-if="canDelete('magnetism')"
+                                    type="button"
+                                    class="inline-flex min-h-11 items-center rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                                    @click="confirmDelete(checksheet)"
+                                >
+                                    Delete
+                                </button>
+                            </template>
+                        </TabletRecordList>
+                        <div v-else class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
@@ -268,15 +310,18 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref, reactive } from 'vue';
+import { computed, ref, reactive } from 'vue';
 import { usePermissions } from '@/Composables/usePermissions';
 import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
 import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
+import TabletRecordList from '@/Components/Tablet/TabletRecordList.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 declare function route(name: string, params?: any): string;
 
 const { canCreate, canUpdate, canDelete, canImport } = usePermissions();
 const { toggleExpanded, isExpanded } = useSingleExpandedRow();
+const { isTabletMode } = useTabletMode();
 
 interface Checksheet {
     id: number;
@@ -311,6 +356,10 @@ const filters = reactive({
     month: props.filters?.month || '',
     year: props.filters?.year || '',
 });
+const filtersOpen = ref(false);
+const activeFilterCount = computed(() =>
+    Object.values(filters).filter((value) => value !== '' && value !== null && value !== undefined).length
+);
 
 const showDeleteModal = ref(false);
 const itemToDelete = ref<Checksheet | null>(null);
@@ -353,6 +402,11 @@ const checksheetDetailSections = (cs: Checksheet) => [
             { label: 'Year', value: cs.year },
         ],
     },
+];
+const tabletFacts = (cs: Checksheet) => [
+    { label: 'Name', value: cs.item_name },
+    { label: 'Machine', value: cs.machine_no },
+    { label: 'Period', value: `${getMonthName(cs.month)} ${cs.year}` },
 ];
 
 const applyFilters = () => {

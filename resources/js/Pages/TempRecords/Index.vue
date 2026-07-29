@@ -9,7 +9,7 @@
         </h2>
         <div class="flex space-x-2">
           <Link 
-            v-if="canImport('temperature')"
+            v-if="!isTabletMode && canImport('temperature')"
             :href="route('temp-records.import.form')" 
             class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
           >
@@ -43,7 +43,40 @@
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
           <div class="p-6 bg-white border-b border-gray-200">
             <!-- Records Table -->
-            <div class="overflow-x-auto">
+            <TabletRecordList
+              v-if="isTabletMode"
+              :records="records.data"
+              :title-for="(record) => record.model_series"
+              :facts-for="tabletFacts"
+              :status-for="(record) => approvalsEnabled ? record.status : null"
+              :sections-for="temperatureDetailSections"
+              empty-message="No temperature records found."
+            >
+              <template #actions="{ record }">
+                <Link
+                  :href="route('temp-records.show', record.id)"
+                  class="inline-flex min-h-11 items-center rounded-lg border border-indigo-200 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"
+                >
+                  View
+                </Link>
+                <Link
+                  v-if="canUpdate('temperature')"
+                  :href="route('temp-records.edit', record.id)"
+                  class="inline-flex min-h-11 items-center rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+                >
+                  Edit
+                </Link>
+                <button
+                  v-if="canDelete('temperature')"
+                  type="button"
+                  class="inline-flex min-h-11 items-center rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                  @click="confirmDelete(record)"
+                >
+                  Delete
+                </button>
+              </template>
+            </TabletRecordList>
+            <div v-else class="overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
@@ -246,11 +279,14 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import ApprovalStatus from '@/Components/ApprovalStatus.vue';
 import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
+import TabletRecordList from '@/Components/Tablet/TabletRecordList.vue';
 import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
 import { usePermissions } from '@/Composables/usePermissions';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 const { canCreate, canUpdate, canDelete, canImport, approvalsEnabled } = usePermissions();
 const { toggleExpanded, isExpanded } = useSingleExpandedRow();
+const { isTabletMode } = useTabletMode();
 
 const props = defineProps({
   records: {
@@ -390,6 +426,11 @@ const temperatureDetailSections = (record) => [
       { label: 'Status', value: record.status },
     ],
   },
+];
+const tabletFacts = (record) => [
+  { label: 'Date', value: formatDate(record.date) },
+  { label: 'Equipment', value: record.equipment_type },
+  { label: 'Line', value: record.line_assigned },
 ];
 
 </script>

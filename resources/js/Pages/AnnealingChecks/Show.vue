@@ -78,7 +78,7 @@ const formatDate = (dateString) => {
                     <!-- Main Content -->
                     <div class="px-6 py-4">
                         <!-- Basic Information -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="tablet-detail-grid grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                             <div>
                                 <h4 class="text-md font-medium text-gray-900 mb-4">Basic Information</h4>
                                 <dl class="space-y-3">

@@ -60,6 +60,7 @@ class MaterialPartController extends Controller
         return Inertia::render('MaterialMonitoringChecksheets/Create', [
             'materialTypes' => $materialTypes,
             'subLotTitles' => $subLotTitles,
+            'subLotFieldsByMaterialType' => config('sublot_fields', []),
         ]);
     }
 
@@ -157,6 +158,7 @@ class MaterialPartController extends Controller
             'materialPart' => $materialPart,
             'materialTypes' => MaterialPart::getMaterialTypes(),
             'subLotTitles' => $subLotTitles,
+            'subLotFieldsByMaterialType' => config('sublot_fields', []),
         ]);
     }
 

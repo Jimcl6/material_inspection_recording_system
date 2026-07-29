@@ -67,6 +67,7 @@ class DashboardReportingService
      * @return array{
      *     dashboardSummary: array{
      *         totalRecords: int,
+     *         todayTotal: int,
      *         currentMonthTotal: int,
      *         previousMonthTotal: int,
      *         trendPercentage: float|null,
@@ -90,7 +91,8 @@ class DashboardReportingService
                 ? $this->aggregateCalendarModule(
                     $definition['model'],
                     $currentMonthStart,
-                    $previousMonthStart
+                    $previousMonthStart,
+                    $asOf
                 )
                 : $this->aggregateDateModule(
                     $definition['model'],
@@ -98,12 +100,14 @@ class DashboardReportingService
                     $previousMonthStart,
                     $currentMonthStart,
                     $nextMonthStart,
+                    $asOf,
                     $definition['approvals']
                 );
 
             $stats = [
                 'label' => $definition['label'],
                 'totalRecords' => $counts['totalRecords'],
+                'todayTotal' => $counts['todayTotal'],
                 'currentMonthTotal' => $counts['currentMonthTotal'],
                 'previousMonthTotal' => $counts['previousMonthTotal'],
                 'trendPercentage' => $this->trend(
@@ -124,6 +128,7 @@ class DashboardReportingService
 
         $summary = [
             'totalRecords' => array_sum(array_column($moduleStats, 'totalRecords')),
+            'todayTotal' => array_sum(array_column($moduleStats, 'todayTotal')),
             'currentMonthTotal' => array_sum(array_column($moduleStats, 'currentMonthTotal')),
             'previousMonthTotal' => array_sum(array_column($moduleStats, 'previousMonthTotal')),
             'trendPercentage' => null,
@@ -170,6 +175,7 @@ class DashboardReportingService
      * @param  class-string<Model>  $model
      * @return array{
      *     totalRecords: int,
+     *     todayTotal: int,
      *     currentMonthTotal: int,
      *     previousMonthTotal: int,
      *     approved: int,
@@ -183,11 +189,16 @@ class DashboardReportingService
         CarbonImmutable $previousMonthStart,
         CarbonImmutable $currentMonthStart,
         CarbonImmutable $nextMonthStart,
+        CarbonImmutable $asOf,
         bool $supportsApprovals
     ): array {
         /** @var Builder<Model> $query */
         $query = $model::query();
         $query->selectRaw('COUNT(*) AS total_records')
+            ->selectRaw(
+                "COALESCE(SUM(CASE WHEN {$dateColumn} >= ? AND {$dateColumn} < ? THEN 1 ELSE 0 END), 0) AS today_total",
+                [$asOf->toDateString(), $asOf->addDay()->toDateString()]
+            )
             ->selectRaw(
                 "COALESCE(SUM(CASE WHEN {$dateColumn} >= ? AND {$dateColumn} < ? THEN 1 ELSE 0 END), 0) AS current_month_total",
                 [$currentMonthStart->toDateString(), $nextMonthStart->toDateString()]
@@ -208,6 +219,7 @@ class DashboardReportingService
 
         return [
             'totalRecords' => (int) ($result->total_records ?? 0),
+            'todayTotal' => (int) ($result->today_total ?? 0),
             'currentMonthTotal' => (int) ($result->current_month_total ?? 0),
             'previousMonthTotal' => (int) ($result->previous_month_total ?? 0),
             'approved' => (int) ($result->approved ?? 0),
@@ -220,6 +232,7 @@ class DashboardReportingService
      * @param  class-string<Model>  $model
      * @return array{
      *     totalRecords: int,
+     *     todayTotal: int,
      *     currentMonthTotal: int,
      *     previousMonthTotal: int,
      *     approved: int,
@@ -230,12 +243,17 @@ class DashboardReportingService
     private function aggregateCalendarModule(
         string $model,
         CarbonImmutable $currentMonthStart,
-        CarbonImmutable $previousMonthStart
+        CarbonImmutable $previousMonthStart,
+        CarbonImmutable $asOf
     ): array {
         /** @var Builder<Model> $query */
         $query = $model::query();
         $result = $query
             ->selectRaw('COUNT(*) AS total_records')
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END), 0) AS today_total',
+                [$asOf->startOfDay()->toDateTimeString(), $asOf->addDay()->startOfDay()->toDateTimeString()]
+            )
             ->selectRaw(
                 'COALESCE(SUM(CASE WHEN year = ? AND month = ? THEN 1 ELSE 0 END), 0) AS current_month_total',
                 [$currentMonthStart->year, $currentMonthStart->month]
@@ -249,6 +267,7 @@ class DashboardReportingService
 
         return [
             'totalRecords' => (int) ($result->total_records ?? 0),
+            'todayTotal' => (int) ($result->today_total ?? 0),
             'currentMonthTotal' => (int) ($result->current_month_total ?? 0),
             'previousMonthTotal' => (int) ($result->previous_month_total ?? 0),
             'approved' => 0,

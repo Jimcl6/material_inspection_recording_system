@@ -2,6 +2,8 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, onMounted } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import NumericKeypadField from '@/Components/NumericKeypadField.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 import DeleteButton from '@/Components/DeleteButton.vue';
 
 const props = defineProps({
@@ -12,8 +14,13 @@ const props = defineProps({
     materialTypes: {
         type: Object,
         default: () => ({})
+    },
+    subLotFieldsByMaterialType: {
+        type: Object,
+        default: () => ({})
     }
 });
+const { isTabletMode } = useTabletMode();
 
 // Handle case where materialPart might be an array or empty
 const materialPartData = Array.isArray(props.materialPart) ? {} : props.materialPart;
@@ -33,40 +40,30 @@ const form = useForm({
 const subLotFields = ref([]);
 const subLotValues = ref({});
 
-const fetchSubLotFields = async (materialType) => {
+const loadSubLotFields = (materialType) => {
     if (!materialType) {
         subLotFields.value = [];
         subLotValues.value = {};
         form.sub_lot_numbers = {};
         return;
     }
-    
-    try {
-        const response = await fetch(`/api/material-types/${encodeURIComponent(materialType)}/sub-lot-fields`);
-        const fields = await response.json();
-        
-        subLotFields.value = fields;
-        
-        // Initialize sub-lot values, preserving existing data where keys match
-        const existingData = form.sub_lot_numbers || {};
-        const initialValues = {};
-        fields.forEach(field => {
-            const key = field.toLowerCase().replace(/\s+/g, '_');
-            initialValues[key] = existingData[key] || '';
-        });
-        subLotValues.value = initialValues;
-        form.sub_lot_numbers = initialValues;
-        
-    } catch (error) {
-        console.error('Failed to fetch sub lot fields:', error);
-        subLotFields.value = [];
-        subLotValues.value = {};
-        form.sub_lot_numbers = {};
-    }
+
+    const fields = props.subLotFieldsByMaterialType[materialType] ?? [];
+    subLotFields.value = fields;
+
+    // Preserve values that belong to the currently selected material type.
+    const existingData = form.sub_lot_numbers || {};
+    const initialValues = {};
+    fields.forEach(field => {
+        const key = field.toLowerCase().replace(/\s+/g, '_');
+        initialValues[key] = existingData[key] || '';
+    });
+    subLotValues.value = initialValues;
+    form.sub_lot_numbers = initialValues;
 };
 
 const onMaterialTypeChange = () => {
-    fetchSubLotFields(form.material_type);
+    loadSubLotFields(form.material_type);
 };
 
 const materialTypeOptions = Object.entries(props.materialTypes).map(([key, value]) => ({
@@ -83,7 +80,7 @@ const updateSubLotValue = (field, value) => {
 // Load sub-lot fields for the current material type on mount
 onMounted(() => {
     if (form.material_type) {
-        fetchSubLotFields(form.material_type);
+        loadSubLotFields(form.material_type);
     }
 });
 
@@ -213,14 +210,24 @@ const submit = () => {
 
                                 <!-- Produced Quantity -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Produced Quantity</label>
-                                    <input
-                                        v-model.number="form.produced_qty"
-                                        type="number"
-                                        min="0"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        required
+                                    <NumericKeypadField
+                                        v-if="isTabletMode"
+                                        id="produced_qty"
+                                        v-model="form.produced_qty"
+                                        label="Produced Quantity"
+                                        dialog-title="Produced Quantity"
+                                        :decimal-places="0"
                                     />
+                                    <template v-else>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Produced Quantity</label>
+                                        <input
+                                            v-model.number="form.produced_qty"
+                                            type="number"
+                                            min="0"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                            required
+                                        />
+                                    </template>
                                 </div>
 
                                 <!-- Operator -->

@@ -8,7 +8,12 @@ import SidebarNavLink from '@/Components/Sidebar/SidebarNavLink.vue';
 import SidebarNavGroup from '@/Components/Sidebar/SidebarNavGroup.vue';
 import SidebarSection from '@/Components/Sidebar/SidebarSection.vue';
 import SidebarOverlay from '@/Components/Sidebar/SidebarOverlay.vue';
+import PwaStatusBanners from '@/Components/PwaStatusBanners.vue';
+import TabletBottomNavigation from '@/Components/Tablet/TabletBottomNavigation.vue';
 import { usePermissions } from '@/Composables/usePermissions';
+import { usePwa } from '@/Composables/usePwa';
+import { useTabletMode } from '@/Composables/useTabletMode';
+import { useTabletRecentRoute } from '@/Composables/useTabletRecentRoute';
 
 import {
     HomeIcon,
@@ -26,12 +31,16 @@ import {
     ListBulletIcon,
     Bars3Icon,
     BellIcon,
+    ArrowDownTrayIcon,
     XMarkIcon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
 } from '@heroicons/vue/24/outline';
 
 const { canView, canCreate, canImport, canApprove, isAdmin, isSuperAdmin } = usePermissions();
+const { canInstall, promptInstall } = usePwa();
+const { isTabletMode } = useTabletMode();
+useTabletRecentRoute();
 const page = usePage();
 
 const sidebarOpen = ref(false);
@@ -51,6 +60,10 @@ const closeSidebar = () => {
 
 const toggleSidebarCollapse = () => {
     sidebarCollapsed.value = !sidebarCollapsed.value;
+};
+
+const installPwa = () => {
+    void promptInstall();
 };
 
 const handleResize = () => {
@@ -152,12 +165,19 @@ const sidebarWidth = computed(() => {
 });
 
 const mainMargin = computed(() => {
+    if (isTabletMode.value) {
+        return '';
+    }
+
     return sidebarCollapsed.value ? 'lg:ml-16' : 'lg:ml-64';
 });
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-100">
+    <div
+        class="pwa-app-shell min-h-screen bg-gray-100"
+        :class="{ 'tablet-operational': isTabletMode }"
+    >
         <!-- Mobile sidebar overlay -->
         <SidebarOverlay :show="sidebarOpen" @close="closeSidebar" />
 
@@ -172,7 +192,10 @@ const mainMargin = computed(() => {
         >
             <div
                 v-show="sidebarOpen"
-                class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl lg:hidden flex flex-col"
+                :class="[
+                    'fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl flex-col',
+                    isTabletMode ? 'flex' : 'flex lg:hidden',
+                ]"
             >
                 <!-- Mobile sidebar header -->
                 <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200">
@@ -407,6 +430,7 @@ const mainMargin = computed(() => {
 
         <!-- Desktop sidebar -->
         <div
+            v-if="!isTabletMode"
             :class="[
                 'hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col bg-white border-r border-gray-200 transition-all duration-300',
                 sidebarWidth
@@ -676,7 +700,10 @@ const mainMargin = computed(() => {
                     <!-- Mobile menu button -->
                     <button
                         @click="sidebarOpen = true"
-                        class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        :class="[
+                            isTabletMode ? '' : 'lg:hidden',
+                            'p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                        ]"
                     >
                         <Bars3Icon class="h-6 w-6" />
                     </button>
@@ -694,6 +721,20 @@ const mainMargin = computed(() => {
 
                     <!-- User dropdown -->
                     <div class="ml-4 flex shrink-0 items-center">
+                        <Link
+                            v-if="isTabletMode && hasApprovalAccess"
+                            :href="route('approvals.index')"
+                            class="relative mr-3 inline-flex h-11 w-11 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            aria-label="Open pending approvals"
+                        >
+                            <BellIcon class="h-6 w-6" />
+                            <span
+                                v-if="notificationCount > 0"
+                                class="absolute right-0 top-0 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white ring-2 ring-white"
+                            >
+                                {{ notificationCountLabel }}
+                            </span>
+                        </Link>
                         <Dropdown align="right" width="notification">
                             <template #trigger>
                                 <button
@@ -707,7 +748,7 @@ const mainMargin = computed(() => {
                                                 {{ $page.props.auth.user.name.charAt(0).toUpperCase() }}
                                             </span>
                                             <span
-                                                v-if="hasApprovalAccess && notificationCount > 0"
+                                                v-if="!isTabletMode && hasApprovalAccess && notificationCount > 0"
                                                 class="absolute -right-1.5 -top-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white ring-2 ring-white"
                                             >
                                                 {{ notificationCountLabel }}
@@ -724,7 +765,7 @@ const mainMargin = computed(() => {
                             </template>
 
                             <template #content>
-                                <div v-if="hasApprovalAccess" class="border-b border-gray-100">
+                                <div v-if="!isTabletMode && hasApprovalAccess" class="border-b border-gray-100">
                                     <div class="flex items-center justify-between px-4 py-3">
                                         <div>
                                             <p class="text-sm font-semibold text-gray-900">Approval notifications</p>
@@ -794,6 +835,15 @@ const mainMargin = computed(() => {
                                     <p class="text-sm font-medium text-gray-900">{{ $page.props.auth.user.name }}</p>
                                     <p class="text-xs text-gray-500 truncate">{{ $page.props.auth.user.email }}</p>
                                 </div>
+                                <button
+                                    v-if="canInstall"
+                                    type="button"
+                                    class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                                    @click="installPwa"
+                                >
+                                    <ArrowDownTrayIcon class="h-4 w-4" />
+                                    Install MIRS
+                                </button>
                                 <DropdownLink :href="route('profile.edit')">
                                     Profile
                                 </DropdownLink>
@@ -806,8 +856,10 @@ const mainMargin = computed(() => {
                 </div>
             </header>
 
+            <PwaStatusBanners :show-install-promotion="route().current('dashboard')" />
+
             <!-- Page content -->
-            <main class="flex-1">
+            <main :class="['flex-1', isTabletMode ? 'pb-24' : '']">
                 <div class="py-6">
                     <div class=" mx-auto px-4 sm:px-6 lg:px-8">
                         <div
@@ -823,5 +875,7 @@ const mainMargin = computed(() => {
                 </div>
             </main>
         </div>
+
+        <TabletBottomNavigation v-if="isTabletMode" />
     </div>
 </template>

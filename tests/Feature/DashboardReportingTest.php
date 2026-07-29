@@ -40,18 +40,20 @@ class DashboardReportingTest extends TestCase
         $user = $this->userWithViewPermissions(['annealing']);
         $this->annealing('2026-07-02', 'approved');
         $this->annealing('2026-07-03', 'pending');
+        $this->annealing('2026-07-24', 'approved');
         $this->annealing('2026-06-20', 'rejected');
         TempRecord::factory()->create(['date' => '2026-07-04']);
 
         $report = $this->reporting->reportFor($user, CarbonImmutable::parse('2026-07-24'));
 
         $this->assertSame(['annealing'], array_keys($report['moduleStats']));
-        $this->assertSame(3, $report['dashboardSummary']['totalRecords']);
-        $this->assertSame(2, $report['dashboardSummary']['currentMonthTotal']);
+        $this->assertSame(4, $report['dashboardSummary']['totalRecords']);
+        $this->assertSame(3, $report['dashboardSummary']['currentMonthTotal']);
         $this->assertSame(1, $report['dashboardSummary']['previousMonthTotal']);
-        $this->assertSame(100.0, $report['dashboardSummary']['trendPercentage']);
+        $this->assertSame(1, $report['dashboardSummary']['todayTotal']);
+        $this->assertSame(200.0, $report['dashboardSummary']['trendPercentage']);
         $this->assertSame([
-            'approved' => 1,
+            'approved' => 2,
             'pending' => 1,
             'rejected' => 1,
         ], $report['dashboardSummary']['approvals']);
@@ -86,6 +88,7 @@ class DashboardReportingTest extends TestCase
         $this->assertSame([], $report['moduleStats']);
         $this->assertSame([
             'totalRecords' => 0,
+            'todayTotal' => 0,
             'currentMonthTotal' => 0,
             'previousMonthTotal' => 0,
             'trendPercentage' => null,
@@ -211,6 +214,7 @@ class DashboardReportingTest extends TestCase
                     ->missing('stats')
                     ->has('dashboardSummary', fn (Assert $summary) => $summary
                         ->where('totalRecords', 1)
+                        ->where('todayTotal', 0)
                         ->where('currentMonthTotal', 1)
                         ->where('previousMonthTotal', 0)
                         ->where('trendPercentage', null)
@@ -220,6 +224,7 @@ class DashboardReportingTest extends TestCase
                     ->has('moduleStats.annealing', fn (Assert $stats) => $stats
                         ->where('label', 'Annealing')
                         ->where('totalRecords', 1)
+                        ->where('todayTotal', 0)
                         ->where('currentMonthTotal', 1)
                         ->where('previousMonthTotal', 0)
                         ->where('trendPercentage', null)

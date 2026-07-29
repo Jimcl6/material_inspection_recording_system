@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { route } from 'ziggy-js';
 import { usePermissions } from '@/Composables/usePermissions';
 import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
 import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
+import TabletRecordList from '@/Components/Tablet/TabletRecordList.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 const { canCreate, canUpdate, canDelete, canImport, canExport, approvalsEnabled } = usePermissions();
 const { toggleExpanded, isExpanded } = useSingleExpandedRow();
+const { isTabletMode } = useTabletMode();
 
 interface Checksheet {
     id: number;
@@ -52,6 +55,12 @@ const machineNo = ref(props.filters.machine_no || '');
 const dateFrom = ref(props.filters.date_from || '');
 const dateTo = ref(props.filters.date_to || '');
 const status = ref(props.filters.status || '');
+const filtersOpen = ref(false);
+const activeFilterCount = computed(() =>
+    [search, typeId, itemCode, machineNo, dateFrom, dateTo, status]
+        .filter((value) => value.value !== '' && value.value !== null && value.value !== undefined)
+        .length
+);
 
 const applyFilters = () => {
     router.get(route('welding-checksheets.index'), {
@@ -117,6 +126,11 @@ const checksheetDetailSections = (checksheet: Checksheet) => [
         ],
     },
 ];
+const tabletFacts = (checksheet: Checksheet) => [
+    { label: 'Date', value: formatDate(checksheet.production_date) },
+    { label: 'Type', value: checksheet.type?.name },
+    { label: 'Machine', value: checksheet.machine_no },
+];
 </script>
 
 <template>
@@ -128,14 +142,14 @@ const checksheetDetailSections = (checksheet: Checksheet) => [
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">Welding Checksheet</h2>
                 <div class="space-x-2 flex items-end mx-3">
                     <a
-                        v-if="canExport('welding')"
+                        v-if="!isTabletMode && canExport('welding')"
                         :href="route('welding-checksheets.export')"
                         class="inline-flex items-center px-4 py-2 bg-gray-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-800"
                     >
                         Export
                     </a>
                     <Link
-                        v-if="canImport('welding')"
+                        v-if="!isTabletMode && canImport('welding')"
                         :href="route('welding-checksheets.import.form')"
                         class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700"
                     >
@@ -156,7 +170,18 @@ const checksheetDetailSections = (checksheet: Checksheet) => [
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6">
+                        <div v-if="isTabletMode" class="mb-4 flex items-center justify-between">
+                            <p class="text-base font-semibold text-gray-900">Record filters</p>
+                            <button
+                                type="button"
+                                class="min-h-11 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"
+                                @click="filtersOpen = !filtersOpen"
+                            >
+                                {{ filtersOpen ? 'Hide filters' : `Filters${activeFilterCount ? ` (${activeFilterCount})` : ''}` }}
+                            </button>
+                        </div>
                         <div
+                            v-show="!isTabletMode || filtersOpen"
                             class="grid grid-cols-1 gap-4"
                             :class="approvalsEnabled ? 'md:grid-cols-7' : 'md:grid-cols-6'"
                         >
@@ -200,7 +225,7 @@ const checksheetDetailSections = (checksheet: Checksheet) => [
                                 </select>
                             </div>
                         </div>
-                        <div class="mt-4 flex justify-end space-x-2">
+                        <div v-show="!isTabletMode || filtersOpen" class="mt-4 flex justify-end space-x-2">
                             <button @click="resetFilters" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Reset</button>
                             <button @click="applyFilters" class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700">Apply Filters</button>
                         </div>
@@ -209,7 +234,40 @@ const checksheetDetailSections = (checksheet: Checksheet) => [
 
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
-                        <div class="overflow-x-auto">
+                        <TabletRecordList
+                            v-if="isTabletMode"
+                            :records="checksheets.data"
+                            :title-for="(checksheet) => checksheet.item_code"
+                            :facts-for="tabletFacts"
+                            :status-for="(checksheet) => approvalsEnabled ? checksheet.status : null"
+                            :sections-for="checksheetDetailSections"
+                            empty-message="No welding checksheets found."
+                        >
+                            <template #actions="{ record: checksheet }">
+                                <Link
+                                    :href="route('welding-checksheets.show', checksheet.id)"
+                                    class="inline-flex min-h-11 items-center rounded-lg border border-indigo-200 px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50"
+                                >
+                                    View
+                                </Link>
+                                <Link
+                                    v-if="canUpdate('welding')"
+                                    :href="route('welding-checksheets.edit', checksheet.id)"
+                                    class="inline-flex min-h-11 items-center rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+                                >
+                                    Edit
+                                </Link>
+                                <button
+                                    v-if="canDelete('welding')"
+                                    type="button"
+                                    class="inline-flex min-h-11 items-center rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+                                    @click="confirmDelete(checksheet)"
+                                >
+                                    Delete
+                                </button>
+                            </template>
+                        </TabletRecordList>
+                        <div v-else class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>

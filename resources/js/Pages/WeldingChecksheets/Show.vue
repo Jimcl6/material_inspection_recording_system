@@ -34,7 +34,7 @@ const sampleValues = (sample: any): string[] => sample.sample_values || [];
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Summary</h3>
-                        <dl class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                        <dl class="tablet-detail-grid grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                             <div><dt class="font-medium text-gray-500">Type</dt><dd>{{ checksheet.type?.name || 'N/A' }}</dd></div>
                             <div><dt class="font-medium text-gray-500">Item Code</dt><dd>{{ checksheet.item_code || 'N/A' }}</dd></div>
                             <div><dt class="font-medium text-gray-500">Production Date</dt><dd>{{ formatDate(checksheet.production_date) }}</dd></div>
@@ -50,7 +50,7 @@ const sampleValues = (sample: any): string[] => sample.sample_values || [];
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Materials</h3>
-                        <dl class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                        <dl class="tablet-detail-grid grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                             <div v-for="(value, key) in materialFields()" :key="key">
                                 <dt class="font-medium text-gray-500">{{ String(key).replaceAll('_', ' ') }}</dt>
                                 <dd>{{ value || 'N/A' }}</dd>
@@ -86,7 +86,7 @@ const sampleValues = (sample: any): string[] => sample.sample_values || [];
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Personnel & Remarks</h3>
-                        <dl class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                        <dl class="tablet-detail-grid grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                             <div><dt class="font-medium text-gray-500">Operator</dt><dd>{{ checksheet.operator?.name || checksheet.operator_name_raw || 'N/A' }}</dd></div>
                             <div><dt class="font-medium text-gray-500">Technician</dt><dd>{{ checksheet.technician?.name || checksheet.technician_name_raw || 'N/A' }}</dd></div>
                             <div><dt class="font-medium text-gray-500">Checked By</dt><dd>{{ checksheet.checked_by?.name || checksheet.checked_by_name_raw || 'N/A' }}</dd></div>

@@ -9,6 +9,9 @@ import TextInput from '@/Components/TextInput.vue'
 import Card from '@/Components/Card.vue'
 import NumericKeypadField from '@/Components/NumericKeypadField.vue'
 import SectionTitle from '@/Components/SectionTitle.vue'
+import TabletFormStepper from '@/Components/Tablet/TabletFormStepper.vue'
+import { useTabletMode } from '@/Composables/useTabletMode'
+import { ref } from 'vue'
 
 const props = defineProps({
     equipmentTypes: {
@@ -41,6 +44,9 @@ const form = useForm({
     col_remarks: '',
     checked_by: '',
 })
+const { isTabletMode } = useTabletMode()
+const currentStep = ref(0)
+const tabletSteps = ['Basic information', 'Equipment', 'Readings', 'Review and save']
 
 const submit = () => {
     form.post(route('temp-records.store'), {
@@ -81,8 +87,9 @@ const submit = () => {
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <Card class="overflow-hidden">
                     <form @submit.prevent="submit" class="p-6">
+                        <TabletFormStepper v-if="isTabletMode" v-model="currentStep" :steps="tabletSteps" />
                         <!-- Basic Information Card -->
-                        <Card class="mb-6">
+                        <Card v-show="!isTabletMode || currentStep === 0" class="mb-6">
                             <template #header>
                                 <SectionTitle>Basic Information</SectionTitle>
                             </template>
@@ -140,7 +147,7 @@ const submit = () => {
                         </Card>
 
                         <!-- Equipment Information Card -->
-                        <Card class="mb-6">
+                        <Card v-show="!isTabletMode || currentStep === 1" class="mb-6">
                             <template #header>
                                 <SectionTitle>Equipment Information</SectionTitle>
                             </template>
@@ -200,7 +207,7 @@ const submit = () => {
                         </Card>
 
                         <!-- Temperature Readings Card -->
-                        <Card class="mb-6">
+                        <Card v-show="!isTabletMode || currentStep === 2" class="mb-6">
                             <template #header>
                                 <SectionTitle>Temperature Readings</SectionTitle>
                             </template>
@@ -266,7 +273,7 @@ const submit = () => {
                         </Card>
 
                         <!-- Remarks & Checked By Card -->
-                        <Card card-class="mb-6">
+                        <Card v-show="!isTabletMode || currentStep === 3" card-class="mb-6">
                             <template #header>
                                 <SectionTitle>Additional Information</SectionTitle>
                             </template>
@@ -300,7 +307,7 @@ const submit = () => {
                         </Card>
 
                         <!-- Form Actions -->
-                        <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
+                        <div v-show="!isTabletMode || currentStep === 3" class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
                             <Link 
                                 :href="route('temp-records.index')" 
                                 class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150"
