@@ -9,6 +9,7 @@ use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureFeatureEnabled;
+use App\Http\Middleware\EnsurePasswordHasBeenChanged;
 use App\Http\Middleware\ForceHttpsForAppUrl;
 use App\Http\Middleware\HandleCors;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -105,5 +106,6 @@ class Kernel extends HttpKernel
         'module.permission' => CheckModulePermission::class,
         'feature' => EnsureFeatureEnabled::class,
         'account.active' => EnsureAccountIsActive::class,
+        'password.changed' => EnsurePasswordHasBeenChanged::class,
     ];
 }

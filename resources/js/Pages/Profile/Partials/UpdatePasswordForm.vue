@@ -9,6 +9,10 @@ import { ref } from 'vue';
 const passwordInput = ref(null);
 const currentPasswordInput = ref(null);
 
+defineProps({
+    mustChangePassword: Boolean,
+});
+
 const form = useForm({
     current_password: '',
     password: '',
@@ -39,9 +43,21 @@ const updatePassword = () => {
             <h2 class="text-lg font-medium text-gray-900">Update Password</h2>
 
             <p class="mt-1 text-sm text-gray-600">
-                Ensure your account is using a long, random password to stay secure.
+                <span v-if="mustChangePassword">
+                    You are signed in with a temporary password. Choose a new password before continuing.
+                </span>
+                <span v-else>
+                    Ensure your account is using a long, random password to stay secure.
+                </span>
             </p>
         </header>
+
+        <div
+            v-if="mustChangePassword"
+            class="mt-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        >
+            Your account is locked to this page until your temporary password is replaced.
+        </div>
 
         <form @submit.prevent="updatePassword" class="mt-6 space-y-6">
             <div>

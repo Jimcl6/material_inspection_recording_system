@@ -40,12 +40,11 @@ class ProfileTest extends TestCase
 
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
     }
 
-    public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
+    public function test_profile_update_does_not_require_email_verification(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->unverified()->create();
 
         $response = $this
             ->actingAs($user)
@@ -58,7 +57,8 @@ class ProfileTest extends TestCase
             ->assertSessionHasNoErrors()
             ->assertRedirect('/profile');
 
-        $this->assertNotNull($user->refresh()->email_verified_at);
+        $this->assertNull($user->refresh()->email_verified_at);
+        $this->get('/dashboard')->assertOk();
     }
 
     public function test_user_can_delete_their_account(): void

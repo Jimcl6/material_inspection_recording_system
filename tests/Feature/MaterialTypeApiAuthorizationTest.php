@@ -25,13 +25,17 @@ class MaterialTypeApiAuthorizationTest extends TestCase
         $this->getJson('/api/material-types')->assertForbidden();
     }
 
-    public function test_unverified_user_with_permission_is_forbidden(): void
+    public function test_user_with_temporary_password_requirement_is_forbidden(): void
     {
-        $user = User::factory()->unverified()->create();
+        $user = User::factory()->create([
+            'must_change_password' => true,
+        ]);
         $this->grantMaterialViewPermission($user);
         Sanctum::actingAs($user);
 
-        $this->getJson('/api/material-types')->assertForbidden();
+        $this->getJson('/api/material-types')
+            ->assertForbidden()
+            ->assertExactJson(['message' => 'You must change your temporary password before continuing.']);
     }
 
     public function test_authorized_responses_preserve_existing_json_shapes(): void

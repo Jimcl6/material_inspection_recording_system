@@ -29,7 +29,7 @@ Route::get('/', function () {
 require __DIR__.'/auth.php';
 
 // Protected routes
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'password.changed'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
