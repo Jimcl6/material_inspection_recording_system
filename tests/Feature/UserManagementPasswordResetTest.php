@@ -62,5 +62,50 @@ class UserManagementPasswordResetTest extends TestCase
             ->assertSessionHas('success', 'User updated successfully.');
 
         $this->assertTrue(Hash::check('temporary-password', $user->refresh()->password));
+        $this->assertTrue($user->must_change_password);
+    }
+
+    public function test_user_with_temporary_password_must_change_password_before_continuing(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => true,
+        ]);
+
+        $loginResponse = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $loginResponse
+            ->assertRedirect(route('profile.edit'))
+            ->assertSessionHas('status', 'Please change your temporary password before continuing.');
+
+        $this->get(route('dashboard'))
+            ->assertRedirect(route('profile.edit'))
+            ->assertSessionHas('status', 'Please change your temporary password before continuing.');
+    }
+
+    public function test_password_update_clears_temporary_password_requirement(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => true,
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->from(route('profile.edit'))
+            ->put(route('password.update'), [
+                'current_password' => 'password',
+                'password' => 'new-secure-password',
+                'password_confirmation' => 'new-secure-password',
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('profile.edit'))
+            ->assertSessionHas('status', 'Password updated successfully.');
+
+        $this->assertFalse($user->refresh()->must_change_password);
+        $this->get(route('dashboard'))->assertOk();
     }
 }

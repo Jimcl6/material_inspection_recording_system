@@ -23,7 +23,7 @@ Route::middleware(['auth:sanctum', 'account.active'])->get('/user', function (Re
 Route::middleware([
     'auth:sanctum',
     'account.active',
-    'verified',
+    'password.changed',
     'module.permission:material,view',
     'throttle:material-api',
 ])->group(function (): void {

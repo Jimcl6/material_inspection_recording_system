@@ -244,6 +244,7 @@ class UserManagementController extends Controller
 
             if ($request->filled('password')) {
                 $updateData['password'] = Hash::make($validated['password']);
+                $updateData['must_change_password'] = true;
             }
 
             $before = ActivityService::snapshot($user);

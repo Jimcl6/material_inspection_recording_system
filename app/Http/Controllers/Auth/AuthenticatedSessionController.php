@@ -38,6 +38,11 @@ class AuthenticatedSessionController extends Controller
         // Log the login activity
         ActivityService::logLogin();
 
+        if ($request->user()->must_change_password) {
+            return redirect()->route('profile.edit')
+                ->with('status', 'Please change your temporary password before continuing.');
+        }
+
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 

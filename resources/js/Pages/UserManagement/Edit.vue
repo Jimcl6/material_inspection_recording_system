@@ -174,6 +174,7 @@ const submit = () => {
                             <h3 class="text-lg font-medium text-gray-900 mb-2">Password Reset (Optional)</h3>
                             <p class="mb-4 text-sm text-gray-500">
                                 Enter a temporary password only when this user needs administrator-assisted recovery.
+                                They will be required to change it immediately after signing in.
                                 Leave both fields blank to keep the current password.
                             </p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
