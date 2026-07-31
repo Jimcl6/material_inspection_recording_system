@@ -25,7 +25,7 @@ const manifest = {
     scope: '/',
     display: 'standalone',
     prefer_related_applications: false,
-    orientation: 'portrait',
+    orientation: 'any',
     background_color: '#f4f7f6',
     theme_color: '#0f4c5c',
     icons: [

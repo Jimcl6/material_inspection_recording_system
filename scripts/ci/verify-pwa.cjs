@@ -26,6 +26,7 @@ const expectedManifest = {
     scope: '/',
     display: 'standalone',
     prefer_related_applications: false,
+    orientation: 'any',
 };
 
 for (const [key, expected] of Object.entries(expectedManifest)) {
