@@ -76,6 +76,7 @@ class TorqueRecordReadingsTest extends TestCase
             $payload = $this->payload([
                 'model_series' => 'TRQ-'.$driverModel.'-MODEL',
                 'driver_model' => $driverModel,
+                'line_assigned' => 'Line '.$driverModel,
             ]);
 
             $this->actingAs($user)->post(route('torque-records.store'), $payload)->assertRedirect();
