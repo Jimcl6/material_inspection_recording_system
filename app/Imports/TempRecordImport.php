@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\TempRecord;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
+use App\Support\ModelTypeOptions;
 use App\Support\SpreadsheetImportSecurity;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -397,7 +398,7 @@ class TempRecordImport
         return [
             'date' => $dateInfo['date'],
             'model_series' => $footer['model_series'] ?? null,
-            'solder_model' => $headerData['equipment_no'],
+            'solder_model' => ModelTypeOptions::temperatureFromEquipmentType($equipmentType),
             'line_assigned' => $lineAssigned,
             'control_no' => $headerData['equipment_no'],
             'equipment_type' => $equipmentType,

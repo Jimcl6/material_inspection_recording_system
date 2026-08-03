@@ -32,6 +32,7 @@ class ApprovalNotificationTest extends TestCase
         $response = $this->actingAs($operator)->post(route('temp-records.store'), [
             'date' => '2026-07-02',
             'model_series' => 'TMP-NOTIFY-001',
+            'solder_model' => 'Iron',
             'equipment_type' => 'Soldering Iron',
             'control_no' => 'TMP-NOTIFY-CN-001',
             'temp_am' => '25',
@@ -67,6 +68,43 @@ class ApprovalNotificationTest extends TestCase
             fn (ApprovalNotificationsChanged $event) => $event->userId === $approver->id
                 && $event->summary['pendingCount'] === 1
         );
+    }
+
+    public function test_temperature_store_accepts_only_canonical_solder_models(): void
+    {
+        config(['features.approvals' => false]);
+        $operator = $this->userWithPermissions('temperature-model-operator', [['temperature', 'create']]);
+
+        foreach (['Iron', 'Pot'] as $solderModel) {
+            $payload = [
+                'date' => '2026-08-03',
+                'model_series' => 'TMP-'.$solderModel.'-MODEL-'.uniqid(),
+                'solder_model' => $solderModel,
+                'equipment_type' => $solderModel === 'Iron' ? 'Soldering Iron' : 'Soldering Pot',
+                'control_no' => 'TMP-'.$solderModel.'-'.uniqid(),
+                'temp_am' => '25.0',
+            ];
+
+            $this->actingAs($operator)->post(route('temp-records.store'), $payload)->assertRedirect();
+            $this->assertDatabaseHas('temp_records', [
+                'model_series' => $payload['model_series'],
+                'solder_model' => $solderModel,
+            ]);
+        }
+
+        $this->actingAs($operator)
+            ->from(route('temp-records.create'))
+            ->post(route('temp-records.store'), [
+                'date' => '2026-08-03',
+                'model_series' => 'TMP-INVALID-MODEL',
+                'solder_model' => 'Soldering Iron',
+                'equipment_type' => 'Soldering Iron',
+                'control_no' => 'TMP-INVALID',
+                'temp_am' => '25.0',
+            ])
+            ->assertSessionHasErrors('solder_model');
+
+        $this->assertDatabaseMissing('temp_records', ['model_series' => 'TMP-INVALID-MODEL']);
     }
 
     public function test_summary_endpoint_returns_current_users_actionable_approvals(): void
@@ -113,7 +151,7 @@ class ApprovalNotificationTest extends TestCase
         $record = TorqueRecord::create([
             'date' => '2026-07-02',
             'model_series' => 'TRQ-NOTIFY-001',
-            'driver_model' => 'Electric Driver',
+            'driver_model' => 'Electric',
             'line_assigned' => 'Line 1',
             'screw_type' => 'M4',
             'torque_am' => '10',

@@ -121,7 +121,7 @@ class ApprovalActivityLoggingTest extends TestCase
         $record = TorqueRecord::create([
             'date' => '2026-06-26',
             'model_series' => 'TRQ-ACT-001',
-            'driver_model' => 'Electric Driver',
+            'driver_model' => 'Electric',
             'line_assigned' => 'Line 1',
             'screw_type' => 'M4',
             'torque_am' => '10',

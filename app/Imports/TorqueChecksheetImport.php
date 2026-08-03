@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\TorqueRecord;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
+use App\Support\ModelTypeOptions;
 use App\Support\SpreadsheetImportSecurity;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -124,6 +125,14 @@ class TorqueChecksheetImport
             // Extract block data (6 rows per block)
             $blockData = $this->extractBlockData($sheet, $currentRow, $headerData);
 
+            if ($blockData['driver_model'] === null) {
+                $source = trim((string) ($blockData['driver_model_source'] ?? '')) ?: 'blank';
+                $this->results['errors'][] = "{$sheetName} row {$currentRow} has an unsupported driver model ({$source}). Use Electric or Air.";
+                $currentRow += 6;
+
+                continue;
+            }
+
             // For each date column, create a record
             foreach ($dateColumns as $dateInfo) {
                 $record = $this->buildRecordFromBlock($sheet, $currentRow, $blockData, $dateInfo, $timeData, $headerData);
@@ -179,6 +188,14 @@ class TorqueChecksheetImport
             }
 
             $blockData = $this->extractBlockData($sheet, $currentRow, $headerData);
+
+            if ($blockData['driver_model'] === null) {
+                $source = trim((string) ($blockData['driver_model_source'] ?? '')) ?: 'blank';
+                $this->executeResults['errors'][] = "{$sheetName} row {$currentRow} has an unsupported driver model ({$source}). Use Electric or Air.";
+                $currentRow += 6;
+
+                continue;
+            }
 
             foreach ($dateColumns as $dateInfo) {
                 $record = $this->buildRecordFromBlock($sheet, $currentRow, $blockData, $dateInfo, $timeData, $headerData);
@@ -317,15 +334,12 @@ class TorqueChecksheetImport
         $driverType = $this->getCellValue($sheet, 'B'.($startRow + 2));
         $processAssigned = $this->getCellValue($sheet, 'A'.($startRow + 3));
 
-        // Clean driver model (usually "Electric Driver" or "Electic Driver")
-        if ($driverModel) {
-            $driverModel = preg_replace('/^Ele[c]?tric\s*/i', 'Electric ', $driverModel);
-            $driverModel = trim($driverModel);
-        }
+        $normalizedDriverModel = ModelTypeOptions::normalizeTorque($driverModel);
 
         return [
             'screw_type' => $screwType,
-            'driver_model' => $driverModel ?: 'Electric Driver',
+            'driver_model' => $normalizedDriverModel,
+            'driver_model_source' => $driverModel,
             'driver_type' => $driverType,
             'process_assigned' => $processAssigned,
         ];

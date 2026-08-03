@@ -75,18 +75,14 @@
 
               <!-- Solder Details -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label for="driver_model" class="block text-sm font-medium text-gray-700">
-                    Driver Model
-                  </label>
-                  <input
-                    id="driver_model"
-                    v-model="form.driver_model"
-                    type="text"
-                    maxlength="100"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
+                <ModelTypeRadioGroup
+                  id="driver_model"
+                  v-model="form.driver_model"
+                  label="Driver Model"
+                  :options="['Electric', 'Air']"
+                  :error="form.errors.driver_model"
+                  required
+                />
                 <div>
                   <label for="driver_type" class="block text-sm font-medium text-gray-700">
                     Driver Type <span class="text-red-500">*</span>
@@ -248,6 +244,7 @@
 </template>
 
 <script setup>
+import ModelTypeRadioGroup from '@/Components/ModelTypeRadioGroup.vue'
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'

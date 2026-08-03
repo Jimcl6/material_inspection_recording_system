@@ -68,6 +68,59 @@ class TorqueRecordReadingsTest extends TestCase
         $this->assertDatabaseMissing('torque_records', ['model_series' => 'TRQ-NINE-READINGS']);
     }
 
+    public function test_store_accepts_only_canonical_driver_models(): void
+    {
+        $user = $this->superAdmin();
+
+        foreach (['Electric', 'Air'] as $driverModel) {
+            $payload = $this->payload([
+                'model_series' => 'TRQ-'.$driverModel.'-MODEL',
+                'driver_model' => $driverModel,
+                'line_assigned' => 'Line '.$driverModel,
+            ]);
+
+            $this->actingAs($user)->post(route('torque-records.store'), $payload)->assertRedirect();
+            $this->assertDatabaseHas('torque_records', [
+                'model_series' => $payload['model_series'],
+                'driver_model' => $driverModel,
+            ]);
+        }
+
+        $invalid = $this->payload([
+            'model_series' => 'TRQ-INVALID-MODEL',
+            'driver_model' => 'Electric Driver',
+        ]);
+
+        $this->actingAs($user)
+            ->from(route('torque-records.create'))
+            ->post(route('torque-records.store'), $invalid)
+            ->assertSessionHasErrors('driver_model');
+        $this->assertDatabaseMissing('torque_records', ['model_series' => 'TRQ-INVALID-MODEL']);
+    }
+
+    public function test_update_preserves_an_unchanged_legacy_driver_model(): void
+    {
+        $record = TorqueRecord::factory()->create([
+            'model_series' => 'TRQ-LEGACY-MODEL',
+            'driver_model' => 'Legacy Driver 7',
+        ]);
+
+        $payload = $this->payload([
+            'model_series' => 'TRQ-LEGACY-MODEL-UPDATED',
+            'driver_model' => 'Legacy Driver 7',
+        ]);
+
+        $this->actingAs($this->superAdmin())
+            ->put(route('torque-records.update', $record), $payload)
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('torque_records', [
+            'id' => $record->id,
+            'model_series' => 'TRQ-LEGACY-MODEL-UPDATED',
+            'driver_model' => 'Legacy Driver 7',
+        ]);
+    }
+
     public function test_store_requires_a_matching_time_and_at_least_one_reading(): void
     {
         $user = $this->superAdmin();
@@ -202,7 +255,7 @@ class TorqueRecordReadingsTest extends TestCase
         return array_replace([
             'date' => '2026-07-13',
             'model_series' => 'TRQ-MULTI-'.uniqid(),
-            'driver_model' => 'Electric Driver',
+            'driver_model' => 'Electric',
             'driver_type' => 'Automatic',
             'line_assigned' => 'Line 1',
             'control_no' => 'CTRL-'.uniqid(),

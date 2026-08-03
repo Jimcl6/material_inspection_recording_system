@@ -15,7 +15,7 @@ class TorqueRecordFactory extends Factory
         return [
             'date' => '2026-01-05',
             'model_series' => 'TEST-SERIES',
-            'driver_model' => 'TEST-DRIVER',
+            'driver_model' => fake()->randomElement(['Electric', 'Air']),
             'driver_type' => 'TEST-TYPE',
             'line_assigned' => 'TEST-LINE',
             'control_no' => 'TEST-TORQUE-001',

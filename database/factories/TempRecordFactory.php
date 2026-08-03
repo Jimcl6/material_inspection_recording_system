@@ -15,7 +15,7 @@ class TempRecordFactory extends Factory
         return [
             'date' => '2026-01-04',
             'model_series' => 'TEST-SERIES',
-            'solder_model' => 'TEST-SOLDER',
+            'solder_model' => fake()->randomElement(['Pot', 'Iron']),
             'line_assigned' => 'TEST-LINE',
             'control_no' => 'TEST-TEMP-001',
             'equipment_type' => 'TEST-EQUIPMENT',

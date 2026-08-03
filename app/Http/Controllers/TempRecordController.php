@@ -8,9 +8,11 @@ use App\Services\ActivityService;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use App\Services\DuplicateRecordGuard;
+use App\Support\ModelTypeOptions;
 use App\Support\SpreadsheetImportSecurity;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -113,7 +115,7 @@ class TempRecordController extends Controller
         $data = $request->validate([
             'date' => ['nullable', 'date'],
             'model_series' => ['required', 'string', 'max:100'],
-            'solder_model' => ['nullable', 'string', 'max:100'],
+            'solder_model' => ['required', 'string', Rule::in(ModelTypeOptions::TEMPERATURE)],
             'line_assigned' => ['nullable', 'string', 'max:100'],
             'control_no' => ['nullable', 'string', 'max:50'],
             'equipment_type' => ['required', 'string', 'max:100'],
@@ -182,10 +184,15 @@ class TempRecordController extends Controller
         if ($date !== null) {
             $request->merge(['date' => $date]);
         }
+        $solderModelRules = ['required', 'string', 'max:100'];
+        if (in_array($temp_record->solder_model, ModelTypeOptions::TEMPERATURE, true) || $request->input('solder_model') !== $temp_record->solder_model) {
+            $solderModelRules[] = Rule::in(ModelTypeOptions::TEMPERATURE);
+        }
+
         $data = $request->validate([
             'date' => ['nullable', 'date'],
             'model_series' => ['required', 'string', 'max:100'],
-            'solder_model' => ['nullable', 'string', 'max:100'],
+            'solder_model' => $solderModelRules,
             'line_assigned' => ['nullable', 'string', 'max:100'],
             'control_no' => ['nullable', 'string', 'max:50'],
             'equipment_type' => ['required', 'string', 'max:100'],
@@ -349,7 +356,7 @@ class TempRecordController extends Controller
     {
         $request->validate([
             'file' => SpreadsheetImportSecurity::rules(),
-            'equipment_type' => ['nullable', 'string'],
+            'equipment_type' => ['required', 'string', Rule::in(['Soldering Iron', 'Soldering Pot'])],
         ]);
 
         $tempPath = null;
@@ -388,7 +395,7 @@ class TempRecordController extends Controller
     public function importExecute(Request $request)
     {
         $request->validate([
-            'equipment_type' => ['required', 'string'],
+            'equipment_type' => ['required', 'string', Rule::in(['Soldering Iron', 'Soldering Pot'])],
             'line_assigned' => ['nullable', 'string', 'max:100'],
             'process_assigned' => ['nullable', 'string', 'max:100'],
             'update_duplicates' => ['nullable', 'boolean'],
