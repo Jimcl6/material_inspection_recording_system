@@ -8,9 +8,11 @@ use App\Services\ActivityService;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use App\Services\DuplicateRecordGuard;
+use App\Support\ModelTypeOptions;
 use App\Support\SpreadsheetImportSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -165,7 +167,7 @@ class TorqueRecordController extends Controller
 
     public function update(Request $request, TorqueRecord $torque_record)
     {
-        $data = $this->validatedData($request);
+        $data = $this->validatedData($request, $torque_record);
         $readingRows = $this->normalizeReadings($data['readings']);
         unset($data['readings']);
         $data = $this->withLegacyReadingValues($data, $readingRows);
@@ -461,12 +463,17 @@ class TorqueRecordController extends Controller
         }
     }
 
-    private function validatedData(Request $request): array
+    private function validatedData(Request $request, ?TorqueRecord $record = null): array
     {
+        $driverModelRules = ['required', 'string', 'max:100'];
+        if ($record === null || in_array($record->driver_model, ModelTypeOptions::TORQUE, true) || $request->input('driver_model') !== $record->driver_model) {
+            $driverModelRules[] = Rule::in(ModelTypeOptions::TORQUE);
+        }
+
         $data = $request->validate([
             'date' => ['nullable', 'date'],
             'model_series' => ['nullable', 'string', 'max:100'],
-            'driver_model' => ['nullable', 'string', 'max:100'],
+            'driver_model' => $driverModelRules,
             'driver_type' => ['nullable', 'string', 'max:100'],
             'line_assigned' => ['nullable', 'string', 'max:100'],
             'control_no' => ['nullable', 'string', 'max:50'],

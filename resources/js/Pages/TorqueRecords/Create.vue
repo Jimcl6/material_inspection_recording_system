@@ -9,6 +9,7 @@ import TextInput from '@/Components/TextInput.vue';
 import Card from '@/Components/Card.vue';
 import SectionTitle from '@/Components/SectionTitle.vue';
 import TorqueReadingGroup from '@/Components/TorqueReadingGroup.vue';
+import ModelTypeRadioGroup from '@/Components/ModelTypeRadioGroup.vue';
 import TabletFormStepper from '@/Components/Tablet/TabletFormStepper.vue';
 import { useTabletMode } from '@/Composables/useTabletMode';
 import { ref } from 'vue';
@@ -120,17 +121,14 @@ const submit = () => {
                                 <SectionTitle>Driver Details</SectionTitle>
                             </template>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <InputLabel for="driver_model" value="Driver Model" />
-                                    <TextInput
-                                        id="driver_model"
-                                        type="text"
-                                        v-model="form.driver_model"
-                                        class="mt-1 block w-full"
-                                        :class="{ 'border-red-500': form.errors.driver_model }"
-                                    />
-                                    <InputError :message="form.errors.driver_model" class="mt-2" />
-                                </div>
+                                <ModelTypeRadioGroup
+                                    id="driver_model"
+                                    v-model="form.driver_model"
+                                    label="Driver Model"
+                                    :options="['Electric', 'Air']"
+                                    :error="form.errors.driver_model"
+                                    required
+                                />
 
                                 <div>
                                     <InputLabel for="line_assigned" value="Line Assigned" />

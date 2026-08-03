@@ -8,6 +8,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue'
 import TextInput from '@/Components/TextInput.vue'
 import Card from '@/Components/Card.vue'
 import NumericKeypadField from '@/Components/NumericKeypadField.vue'
+import ModelTypeRadioGroup from '@/Components/ModelTypeRadioGroup.vue'
 import SectionTitle from '@/Components/SectionTitle.vue'
 import TabletFormStepper from '@/Components/Tablet/TabletFormStepper.vue'
 import { useTabletMode } from '@/Composables/useTabletMode'
@@ -120,17 +121,14 @@ const submit = () => {
                                     <InputError :message="form.errors.model_series" class="mt-2" />
                                 </div>
 
-                                <div>
-                                    <InputLabel for="solder_model" value="Solder Model" />
-                                    <TextInput
-                                        id="solder_model"
-                                        type="text"
-                                        v-model="form.solder_model"
-                                        class="mt-1 block w-full"
-                                        :class="{ 'border-red-500': form.errors.solder_model }"
-                                    />
-                                    <InputError :message="form.errors.solder_model" class="mt-2" />
-                                </div>
+                                <ModelTypeRadioGroup
+                                    id="solder_model"
+                                    v-model="form.solder_model"
+                                    label="Solder Model"
+                                    :options="['Pot', 'Iron']"
+                                    :error="form.errors.solder_model"
+                                    required
+                                />
 
                                 <div>
                                     <InputLabel for="line_assigned" value="Line Assigned" />
