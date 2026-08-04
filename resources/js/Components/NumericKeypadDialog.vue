@@ -17,6 +17,7 @@ const props = defineProps({
     maxIntegerDigits: { type: Number, default: 18 },
     maxValue: { type: [String, Number], default: null },
     showNext: { type: Boolean, default: false },
+    nextLabel: { type: String, default: 'Next Reading' },
     sessionKey: { type: [String, Number], default: '' },
 });
 
@@ -278,7 +279,7 @@ const handleKeydown = (event) => {
                                     :disabled="!canAdvance"
                                     @click="confirmNext"
                                 >
-                                    Next Reading
+                                    {{ nextLabel }}
                                 </button>
                             </div>
                         </DialogPanel>

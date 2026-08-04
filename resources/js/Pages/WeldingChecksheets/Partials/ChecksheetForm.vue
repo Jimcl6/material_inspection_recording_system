@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Link, useForm } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import TabletFormStepper from '@/Components/Tablet/TabletFormStepper.vue';
+import NumericKeypadDialog from '@/Components/NumericKeypadDialog.vue';
 import NumericKeypadField from '@/Components/NumericKeypadField.vue';
 import { useTabletMode } from '@/Composables/useTabletMode';
 
@@ -72,6 +73,23 @@ interface Checksheet {
     remarks?: string | null;
     samples?: ChecksheetSample[];
 }
+
+interface ActiveSampleKeypad {
+    rowIndex: number;
+    sampleIndex: number;
+    sessionKey: string;
+}
+
+const NUMERIC_SAMPLE_KEYS = new Set([
+    'collapse_depth',
+    'collapse_time',
+    'strength',
+    'measurement_1',
+    'measurement_2',
+    'measurement_3',
+    'measurement_4',
+    'measurement_5',
+]);
 
 const diaphragmDataRecordingRules = (strengthMin = 0.30): Record<string, any> => ({
     strength_min: strengthMin,
@@ -146,6 +164,8 @@ const firstType = props.types[0] || null;
 const { isTabletMode } = useTabletMode();
 const currentStep = ref(0);
 const tabletSteps = ['Template', 'Production and material', 'Samples', 'Personnel and save'];
+const activeSampleKeypad = ref<ActiveSampleKeypad | null>(null);
+const lastSampleTriggerId = ref('');
 
 const form = useForm({
     checksheet_type_id: props.checksheet?.checksheet_type_id || firstType?.id || null,
@@ -451,6 +471,147 @@ const isSampleInputDisabled = (sample: ChecksheetSample): boolean => {
         && activeValidationRules.value.measurement_1_type === 'not_recorded';
 };
 
+const isNumericSampleInput = (sample: ChecksheetSample): boolean => {
+    return NUMERIC_SAMPLE_KEYS.has(sample.check_item_key) && !isSampleInputDisabled(sample);
+};
+
+const sampleCellId = (rowIndex: number, sampleIndex: number): string => {
+    return `welding-sample-${rowIndex}-${sampleIndex}`;
+};
+
+const currentSampleCellId = (): string => {
+    if (!activeSampleKeypad.value) {
+        return '';
+    }
+
+    return sampleCellId(activeSampleKeypad.value.rowIndex, activeSampleKeypad.value.sampleIndex);
+};
+
+const sampleButtonClass = (sample: ChecksheetSample, index: number): string[] => {
+    if (!hasSampleInputError(sample, index)) {
+        return ['border-gray-300', 'bg-white', 'text-gray-900'];
+    }
+
+    return ['sample-input-invalid'];
+};
+
+const activeSample = computed<ChecksheetSample | null>(() => {
+    if (!activeSampleKeypad.value) {
+        return null;
+    }
+
+    return form.samples[activeSampleKeypad.value.rowIndex] || null;
+});
+
+const activeSampleValue = computed(() => {
+    if (!activeSampleKeypad.value || !activeSample.value) {
+        return '';
+    }
+
+    return activeSample.value.sample_values[activeSampleKeypad.value.sampleIndex] || '';
+});
+
+const activeSampleUnit = computed(() => {
+    const label = activeSample.value?.check_item_label || '';
+    const unit = label.match(/\(([^)]+)\)/)?.[1];
+
+    return unit || '';
+});
+
+const activeSampleTitle = computed(() => {
+    if (!activeSampleKeypad.value || !activeSample.value) {
+        return 'Welding Sample';
+    }
+
+    return `${activeSample.value.check_item_label} - Sample ${activeSampleKeypad.value.sampleIndex + 1}`;
+});
+
+const numericSampleCells = (): Array<{ rowIndex: number; sampleIndex: number }> => {
+    const cells: Array<{ rowIndex: number; sampleIndex: number }> = [];
+
+    form.samples.forEach((sample, rowIndex) => {
+        if (!isNumericSampleInput(sample)) {
+            return;
+        }
+
+        sample.sample_values.forEach((_, sampleIndex) => {
+            cells.push({ rowIndex, sampleIndex });
+        });
+    });
+
+    return cells;
+};
+
+const nextSampleCell = computed(() => {
+    if (!activeSampleKeypad.value) {
+        return null;
+    }
+
+    const cells = numericSampleCells();
+    const activeIndex = cells.findIndex(cell => (
+        cell.rowIndex === activeSampleKeypad.value?.rowIndex
+        && cell.sampleIndex === activeSampleKeypad.value?.sampleIndex
+    ));
+
+    return activeIndex >= 0 ? cells[activeIndex + 1] || null : null;
+});
+
+const showSampleKeypad = computed(() => activeSampleKeypad.value !== null);
+
+const openSampleKeypad = (rowIndex: number, sampleIndex: number): void => {
+    const sample = form.samples[rowIndex];
+    if (!sample || !isNumericSampleInput(sample)) {
+        return;
+    }
+
+    activeSampleKeypad.value = {
+        rowIndex,
+        sampleIndex,
+        sessionKey: `${sample.check_item_key}-${sampleIndex}-${Date.now()}`,
+    };
+};
+
+const closeSampleKeypad = (): void => {
+    lastSampleTriggerId.value = currentSampleCellId();
+    activeSampleKeypad.value = null;
+};
+
+const restoreSampleFocus = (): void => {
+    const triggerId = lastSampleTriggerId.value;
+    if (!triggerId) {
+        return;
+    }
+
+    nextTick(() => {
+        document.getElementById(triggerId)?.focus();
+    });
+};
+
+const commitSampleValue = (value: string): void => {
+    if (!activeSampleKeypad.value || !activeSample.value) {
+        return;
+    }
+
+    activeSample.value.sample_values[activeSampleKeypad.value.sampleIndex] = value;
+};
+
+const confirmSampleValue = (value: string): void => {
+    commitSampleValue(value);
+    closeSampleKeypad();
+};
+
+const confirmSampleValueAndOpenNext = (value: string): void => {
+    const nextCell = nextSampleCell.value;
+    commitSampleValue(value);
+
+    if (!nextCell) {
+        closeSampleKeypad();
+        return;
+    }
+
+    openSampleKeypad(nextCell.rowIndex, nextCell.sampleIndex);
+};
+
 const sampleRequirementText = (sample: ChecksheetSample): string => {
     const rules = activeValidationRules.value;
 
@@ -672,11 +833,27 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <tr v-for="sample in form.samples" :key="sample.check_item_key">
+                            <tr v-for="(sample, rowIndex) in form.samples" :key="sample.check_item_key">
                                 <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ sample.check_item_label }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-500">{{ sampleRequirementText(sample) }}</td>
                                 <td v-for="(_, index) in sample.sample_values" :key="index" class="px-4 py-3">
+                                    <button
+                                        v-if="isNumericSampleInput(sample)"
+                                        :id="sampleCellId(rowIndex, index)"
+                                        type="button"
+                                        class="flex min-h-[3.5rem] w-28 items-center justify-center rounded-md border px-2 text-center text-sm font-medium shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                                        :class="sampleButtonClass(sample, index)"
+                                        :aria-invalid="hasSampleInputError(sample, index)"
+                                        :title="sampleInputTitle(sample, index)"
+                                        aria-haspopup="dialog"
+                                        @click="openSampleKeypad(rowIndex, index)"
+                                    >
+                                        <span :class="sample.sample_values[index] ? 'text-gray-900' : 'text-gray-400'">
+                                            {{ sample.sample_values[index] || 'Tap' }}
+                                        </span>
+                                    </button>
                                     <input
+                                        v-else
                                         v-model="sample.sample_values[index]"
                                         type="text"
                                         class="w-24 rounded-md shadow-sm sm:text-sm text-center"
@@ -690,6 +867,22 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                         </tbody>
                     </table>
                 </div>
+
+                <NumericKeypadDialog
+                    :show="showSampleKeypad"
+                    :model-value="activeSampleValue"
+                    :title="activeSampleTitle"
+                    :unit="activeSampleUnit"
+                    :decimal-places="3"
+                    :max-integer-digits="18"
+                    :show-next="Boolean(nextSampleCell)"
+                    next-label="Next Sample"
+                    :session-key="activeSampleKeypad?.sessionKey || ''"
+                    @close="closeSampleKeypad"
+                    @closed="restoreSampleFocus"
+                    @confirm="confirmSampleValue"
+                    @confirm-next="confirmSampleValueAndOpenNext"
+                />
             </div>
         </div>
 

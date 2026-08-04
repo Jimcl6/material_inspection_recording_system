@@ -3,10 +3,10 @@ import { computed, onMounted, readonly, ref } from 'vue';
 import { route } from 'ziggy-js';
 
 export const TABLET_MEDIA_QUERY =
-    '(min-width: 600px) and (max-width: 1280px) and (min-height: 600px) and (hover: none) and (pointer: coarse)';
+    '(min-width: 600px) and (max-width: 1600px) and (min-height: 600px) and (hover: none) and (pointer: coarse)';
 export const INSTALLED_TABLET_MEDIA_QUERY =
-    '(display-mode: standalone) and (min-width: 540px) and (max-width: 1440px) and (any-pointer: coarse), ' +
-    '(display-mode: fullscreen) and (min-width: 540px) and (max-width: 1440px) and (any-pointer: coarse)';
+    '(display-mode: standalone) and (min-width: 540px) and (max-width: 1600px) and (any-pointer: coarse), ' +
+    '(display-mode: fullscreen) and (min-width: 540px) and (max-width: 1600px) and (any-pointer: coarse)';
 
 const tabletDevice = ref(false);
 let tabletMediaQuery: MediaQueryList | null = null;
