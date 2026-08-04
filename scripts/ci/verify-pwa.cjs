@@ -109,6 +109,7 @@ for (const requiredRuntimeSignal of [
 for (const requiredTabletSignal of [
     '(display-mode: standalone) and (min-width: 540px)',
     '(display-mode: fullscreen) and (min-width: 540px)',
+    '(max-width: 1600px)',
     '(any-pointer: coarse)',
 ]) {
     if (!appBundle.includes(requiredTabletSignal)) {
