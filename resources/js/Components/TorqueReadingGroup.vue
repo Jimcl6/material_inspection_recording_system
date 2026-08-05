@@ -4,6 +4,7 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import NumericKeypadDialog from '@/Components/NumericKeypadDialog.vue';
 import TextInput from '@/Components/TextInput.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 const props = defineProps({
     period: {
@@ -19,6 +20,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:time', 'update:readings']);
 const maximumReadings = 8;
+const { isTabletMode } = useTabletMode();
 const showKeypad = ref(false);
 const activeReadingIndex = ref(0);
 const readingTriggers = ref([]);
@@ -40,6 +42,8 @@ const setReadingTrigger = (element, index) => {
 };
 
 const openKeypad = (index) => {
+    if (!isTabletMode.value) return;
+
     activeReadingIndex.value = index;
     showKeypad.value = true;
 };
@@ -130,6 +134,7 @@ const confirmAndAdvance = (value) => {
                 </div>
                 <div class="relative mt-1 rounded-md shadow-sm">
                     <button
+                        v-if="isTabletMode"
                         :id="`${period}_torque_${index}`"
                         :ref="(element) => setReadingTrigger(element, index)"
                         type="button"
@@ -142,6 +147,20 @@ const confirmAndAdvance = (value) => {
                             {{ reading.torque_value !== '' && reading.torque_value !== null ? reading.torque_value : '0.00' }}
                         </span>
                     </button>
+                    <input
+                        v-else
+                        :id="`${period}_torque_${index}`"
+                        :value="reading.torque_value"
+                        type="number"
+                        min="0"
+                        max="99999999.99"
+                        step="0.01"
+                        inputmode="decimal"
+                        placeholder="0.00"
+                        class="block w-full rounded-md border px-3 pr-14 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        :class="readingError(index) ? 'border-red-500' : 'border-gray-300'"
+                        @input="updateReading(index, $event.target.value)"
+                    />
                     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                         <span class="text-gray-500 sm:text-sm">N·m</span>
                     </div>
@@ -163,7 +182,7 @@ const confirmAndAdvance = (value) => {
         </button>
 
         <NumericKeypadDialog
-            :show="showKeypad"
+            :show="isTabletMode && showKeypad"
             :model-value="activeReading.torque_value"
             :title="activeReadingTitle"
             unit="N·m"

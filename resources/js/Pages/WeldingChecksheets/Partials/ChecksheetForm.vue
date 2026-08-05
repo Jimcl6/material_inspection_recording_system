@@ -838,7 +838,7 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                                 <td class="px-4 py-3 text-sm text-gray-500">{{ sampleRequirementText(sample) }}</td>
                                 <td v-for="(_, index) in sample.sample_values" :key="index" class="px-4 py-3">
                                     <button
-                                        v-if="isNumericSampleInput(sample)"
+                                        v-if="isTabletMode && isNumericSampleInput(sample)"
                                         :id="sampleCellId(rowIndex, index)"
                                         type="button"
                                         class="flex min-h-[3.5rem] w-28 items-center justify-center rounded-md border px-2 text-center text-sm font-medium shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
@@ -869,7 +869,7 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                 </div>
 
                 <NumericKeypadDialog
-                    :show="showSampleKeypad"
+                    :show="isTabletMode && showSampleKeypad"
                     :model-value="activeSampleValue"
                     :title="activeSampleTitle"
                     :unit="activeSampleUnit"
