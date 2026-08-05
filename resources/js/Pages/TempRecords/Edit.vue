@@ -176,6 +176,7 @@
                         />
                       </div>
                       <NumericKeypadField
+                        v-if="isTabletMode"
                         id="temp_am"
                         label="Temperature (AM)"
                         dialog-title="Morning (AM) Temperature"
@@ -187,6 +188,23 @@
                         :error="form.errors.temp_am"
                         @update:model-value="updateTemperature('am', $event)"
                       />
+                      <div v-else>
+                        <label for="temp_am" class="block text-sm font-medium text-gray-700">
+                          Temperature (AM)
+                        </label>
+                        <input
+                          id="temp_am"
+                          :value="form.temp_am"
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          placeholder="0.0"
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          :class="{ 'border-red-500': form.errors.temp_am }"
+                          @input="updateTemperature('am', $event.target.value)"
+                        />
+                        <p v-if="form.errors.temp_am" class="mt-2 text-sm text-red-600">{{ form.errors.temp_am }}</p>
+                      </div>
                     </div>
                   </div>
 
@@ -207,6 +225,7 @@
                         />
                       </div>
                       <NumericKeypadField
+                        v-if="isTabletMode"
                         id="temp_pm"
                         label="Temperature (PM)"
                         dialog-title="Afternoon (PM) Temperature"
@@ -218,6 +237,23 @@
                         :error="form.errors.temp_pm"
                         @update:model-value="updateTemperature('pm', $event)"
                       />
+                      <div v-else>
+                        <label for="temp_pm" class="block text-sm font-medium text-gray-700">
+                          Temperature (PM)
+                        </label>
+                        <input
+                          id="temp_pm"
+                          :value="form.temp_pm"
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          placeholder="0.0"
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          :class="{ 'border-red-500': form.errors.temp_pm }"
+                          @input="updateTemperature('pm', $event.target.value)"
+                        />
+                        <p v-if="form.errors.temp_pm" class="mt-2 text-sm text-red-600">{{ form.errors.temp_pm }}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -280,6 +316,7 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import NumericKeypadField from '@/Components/NumericKeypadField.vue'
+import { useTabletMode } from '@/Composables/useTabletMode'
 
 const props = defineProps({
   record: {
@@ -296,6 +333,7 @@ const timeTouched = {
   am: false,
   pm: false,
 }
+const { isTabletMode } = useTabletMode()
 
 const padDatePart = (value) => String(value).padStart(2, '0')
 

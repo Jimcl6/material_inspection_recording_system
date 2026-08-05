@@ -226,6 +226,7 @@ const submit = () => {
                                             <InputError :message="form.errors.time_am" class="mt-2" />
                                         </div>
                                         <NumericKeypadField
+                                            v-if="isTabletMode"
                                             id="temp_am"
                                             v-model="form.temp_am"
                                             label="Temperature (°C)"
@@ -236,6 +237,20 @@ const submit = () => {
                                             :max-integer-digits="18"
                                             :error="form.errors.temp_am"
                                         />
+                                        <div v-else>
+                                            <InputLabel for="temp_am" value="Temperature (°C)" />
+                                            <TextInput
+                                                id="temp_am"
+                                                v-model="form.temp_am"
+                                                type="number"
+                                                min="0"
+                                                step="0.1"
+                                                placeholder="0.0"
+                                                class="mt-1 block w-full"
+                                                :class="{ 'border-red-500': form.errors.temp_am }"
+                                            />
+                                            <InputError :message="form.errors.temp_am" class="mt-2" />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -255,6 +270,7 @@ const submit = () => {
                                             <InputError :message="form.errors.time_pm" class="mt-2" />
                                         </div>
                                         <NumericKeypadField
+                                            v-if="isTabletMode"
                                             id="temp_pm"
                                             v-model="form.temp_pm"
                                             label="Temperature (°C)"
@@ -265,6 +281,20 @@ const submit = () => {
                                             :max-integer-digits="18"
                                             :error="form.errors.temp_pm"
                                         />
+                                        <div v-else>
+                                            <InputLabel for="temp_pm" value="Temperature (°C)" />
+                                            <TextInput
+                                                id="temp_pm"
+                                                v-model="form.temp_pm"
+                                                type="number"
+                                                min="0"
+                                                step="0.1"
+                                                placeholder="0.0"
+                                                class="mt-1 block w-full"
+                                                :class="{ 'border-red-500': form.errors.temp_pm }"
+                                            />
+                                            <InputError :message="form.errors.temp_pm" class="mt-2" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
