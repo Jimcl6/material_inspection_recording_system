@@ -197,13 +197,15 @@ const itemConfigs = computed(() => selectedType.value?.item_configs || []);
 
 const selectedItemConfig = computed(() => itemConfigs.value.find(config => config.id === Number(form.item_config_id)) || null);
 
+const normalizeItemCode = (value: string | null | undefined): string => String(value || '').trim().toUpperCase();
+
 const typedItemConfig = computed(() => {
-    const itemCode = String(form.item_code || '').trim().toUpperCase();
+    const itemCode = normalizeItemCode(form.item_code);
     if (!itemCode) {
         return null;
     }
 
-    return itemConfigs.value.find(config => String(config.item_code).trim().toUpperCase() === itemCode) || null;
+    return itemConfigs.value.find(config => normalizeItemCode(config.item_code) === itemCode) || null;
 });
 
 const activeValidationRules = computed<Record<string, any>>(() => {
@@ -277,6 +279,23 @@ watch(() => form.item_config_id, () => {
     }
 });
 
+watch(() => form.item_code, newCode => {
+    const itemCode = normalizeItemCode(newCode);
+    if (!itemCode) {
+        form.item_config_id = null;
+        return;
+    }
+
+    if (selectedItemConfig.value && normalizeItemCode(selectedItemConfig.value.item_code) !== itemCode) {
+        form.item_config_id = null;
+        return;
+    }
+
+    if (!selectedItemConfig.value && typedItemConfig.value) {
+        form.item_config_id = typedItemConfig.value.id;
+    }
+});
+
 watch(activeValidationRules, rules => {
     if (rules.measurement_1_type !== 'not_recorded') {
         return;
@@ -299,6 +318,9 @@ const submit = () => {
         form.setError('checksheet_type_id', 'No active welding checksheet types are available.');
         return;
     }
+
+    form.item_code = String(form.item_code || '').trim();
+    form.item_name = String(form.item_name || '').trim();
 
     if (isEdit.value && props.checksheet) {
         form.put(route('welding-checksheets.update', props.checksheet.id));
