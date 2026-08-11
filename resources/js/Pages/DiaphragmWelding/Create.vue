@@ -70,7 +70,6 @@ const form = useForm({
 });
 
 const selectedItemConfig = ref<ItemCodeConfig | null>(null);
-const customItemCode = ref('');
 
 watch(() => form.item_code, (newCode) => {
     if (newCode) {
@@ -93,6 +92,8 @@ const validationInfo = computed(() => {
 });
 
 const submit = () => {
+    form.item_code = String(form.item_code || '').trim();
+    form.item_name = String(form.item_name || '').trim();
     form.post(route('diaphragm-welding.store'));
 };
 
@@ -150,11 +151,9 @@ const resetAllSamples = () => {
                                         </option>
                                     </select>
                                     <input 
-                                        v-if="!form.item_code"
                                         type="text"
-                                        v-model="customItemCode"
-                                        @blur="form.item_code = customItemCode"
-                                        placeholder="Or enter custom item code"
+                                        v-model="form.item_code"
+                                        placeholder="Type item code"
                                         class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                     />
                                     <p v-if="form.errors.item_code" class="mt-1 text-sm text-red-600">{{ form.errors.item_code }}</p>
