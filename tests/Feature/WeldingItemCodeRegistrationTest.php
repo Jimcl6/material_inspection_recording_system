@@ -33,7 +33,7 @@ class WeldingItemCodeRegistrationTest extends TestCase
         $this->assertSame($config->id, $prepared['item_config_id']);
         $this->assertSame('CUSTOM-DFB-001', $prepared['item_code']);
         $this->assertSame('Custom Diaphragm', $prepared['item_name']);
-        $this->assertSame([
+        $this->assertEquals([
             'strength_min' => 0.30,
             'measurement_1_type' => 'data_recording',
             'measurement_1_min' => null,

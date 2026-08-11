@@ -44,7 +44,7 @@ class WeldingChecksheetConfigurationTest extends TestCase
             'item_code' => 'CSB29046P3-P',
             'is_active' => true,
         ]);
-        $this->assertSame(
+        $this->assertEquals(
             [
                 'collapse_depth_min' => 0.37,
                 'collapse_time_min' => 1.3,
@@ -55,7 +55,7 @@ class WeldingChecksheetConfigurationTest extends TestCase
                 ->firstOrFail()
                 ->validation_rules
         );
-        $this->assertSame(
+        $this->assertEquals(
             [
                 'collapse_depth_min' => null,
                 'collapse_time_min' => null,

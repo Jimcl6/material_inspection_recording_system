@@ -452,6 +452,8 @@ class WeldingChecksheetController extends Controller
 
         if (! $itemConfig && ! empty($data['item_code'])) {
             $itemConfig = $this->registerItemConfig($data);
+        } elseif ($itemConfig && ! $itemConfig->is_active && ! empty($data['item_code'])) {
+            $itemConfig = $this->registerItemConfig($data);
         }
 
         if ($itemConfig) {
