@@ -446,6 +446,7 @@ class WeldingChecksheetController extends Controller
             }
         } elseif (! empty($data['item_code'])) {
             $itemConfig = WeldingItemConfig::where('checksheet_type_id', $data['checksheet_type_id'])
+                ->active()
                 ->where('item_code', $data['item_code'])
                 ->first();
         }
