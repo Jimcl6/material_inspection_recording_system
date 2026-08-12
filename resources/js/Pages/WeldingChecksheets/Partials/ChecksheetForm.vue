@@ -50,7 +50,7 @@ interface ChecksheetSample {
 }
 
 interface Checksheet {
-    id: number;
+    id?: number;
     checksheet_type_id: number;
     item_config_id?: number | null;
     item_code?: string | null;
@@ -156,9 +156,14 @@ const props = defineProps<{
     users: User[];
     types: ChecksheetType[];
     checksheet?: Checksheet;
+    formMode?: 'create' | 'edit' | 'duplicate';
+    sourceChecksheetId?: number | null;
 }>();
 
-const isEdit = computed(() => Boolean(props.checksheet?.id));
+const mode = computed(() => props.formMode || (props.checksheet?.id ? 'edit' : 'create'));
+const isEdit = computed(() => mode.value === 'edit');
+const isDuplicate = computed(() => mode.value === 'duplicate');
+const canAutoManageLetterCode = computed(() => !isEdit.value);
 const hasTypes = computed(() => props.types.length > 0);
 const firstType = props.types[0] || null;
 const { isTabletMode } = useTabletMode();
@@ -166,6 +171,15 @@ const currentStep = ref(0);
 const tabletSteps = ['Template', 'Production and material', 'Samples', 'Personnel and save'];
 const activeSampleKeypad = ref<ActiveSampleKeypad | null>(null);
 const lastSampleTriggerId = ref('');
+let letterCodeRequestId = 0;
+
+const dateInputValue = (value: string | null | undefined): string => {
+    if (!value) {
+        return new Date().toISOString().split('T')[0];
+    }
+
+    return String(value).split('T')[0];
+};
 
 const form = useForm({
     checksheet_type_id: props.checksheet?.checksheet_type_id || firstType?.id || null,
@@ -173,9 +187,9 @@ const form = useForm({
     item_code: props.checksheet?.item_code || '',
     item_name: props.checksheet?.item_name || '',
     month_year: props.checksheet?.month_year || '',
-    production_date: props.checksheet?.production_date || new Date().toISOString().split('T')[0],
+    production_date: dateInputValue(props.checksheet?.production_date),
     machine_no: props.checksheet?.machine_no || '',
-    letter_code: props.checksheet?.letter_code || '',
+    letter_code: props.checksheet?.letter_code || (canAutoManageLetterCode.value ? 'A' : ''),
     prod_qty: props.checksheet?.prod_qty ?? null,
     job_number: props.checksheet?.job_number || '',
     quantity: props.checksheet?.quantity ?? null,
@@ -265,6 +279,58 @@ const syncTemplateFields = (resetSamples = false) => {
     });
 };
 
+const clearMaterialFields = (): void => {
+    const type = selectedType.value;
+    if (!type) {
+        return;
+    }
+
+    const nextFields: Record<string, string> = {};
+    type.material_fields.forEach(field => {
+        nextFields[field.key] = '';
+    });
+    form.material_fields = nextFields;
+};
+
+const refreshLetterCode = async (): Promise<void> => {
+    if (!canAutoManageLetterCode.value || !form.checksheet_type_id || !form.production_date) {
+        return;
+    }
+
+    const requestId = ++letterCodeRequestId;
+    const url = new URL(route('welding-checksheets.next-letter-code'), window.location.origin);
+    url.searchParams.set('checksheet_type_id', String(form.checksheet_type_id));
+    url.searchParams.set('production_date', String(form.production_date));
+
+    const optionalParams: Record<string, string | number | null> = {
+        item_code: form.item_code || null,
+        machine_no: form.machine_no || null,
+        job_number: form.job_number || null,
+    };
+
+    Object.entries(optionalParams).forEach(([key, value]) => {
+        if (value !== null && value !== '') {
+            url.searchParams.set(key, String(value));
+        }
+    });
+
+    try {
+        const response = await fetch(url.toString(), {
+            headers: { Accept: 'application/json' },
+        });
+        if (!response.ok || requestId !== letterCodeRequestId) {
+            return;
+        }
+
+        const payload = await response.json();
+        if (payload?.letter_code) {
+            form.letter_code = payload.letter_code;
+        }
+    } catch {
+        // The server recalculates a missing letter during submit, so a failed preview is non-blocking.
+    }
+};
+
 watch(() => form.checksheet_type_id, () => {
     form.item_config_id = null;
     form.item_code = '';
@@ -307,6 +373,14 @@ watch(activeValidationRules, rules => {
     }
 });
 
+watch(
+    () => [form.checksheet_type_id, form.item_code, form.production_date, form.machine_no, form.job_number],
+    () => {
+        void refreshLetterCode();
+    },
+    { immediate: true }
+);
+
 if (!form.samples.length && firstType) {
     syncTemplateFields(true);
 } else {
@@ -329,6 +403,18 @@ const submit = () => {
 
     form.post(route('welding-checksheets.store'));
 };
+
+const submitLabel = computed(() => {
+    if (form.processing) {
+        return 'Saving...';
+    }
+
+    if (isEdit.value) {
+        return 'Update Checksheet';
+    }
+
+    return isDuplicate.value ? 'Create Duplicate' : 'Create Checksheet';
+});
 
 const validationSummary = computed(() => {
     const rules = activeValidationRules.value;
@@ -766,7 +852,13 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Letter Code</label>
-                        <input v-model="form.letter_code" type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        <input
+                            v-model="form.letter_code"
+                            type="text"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            :class="canAutoManageLetterCode ? 'bg-gray-50 text-gray-700' : ''"
+                            :readonly="canAutoManageLetterCode"
+                        />
                     </div>
                     <div>
                         <NumericKeypadField
@@ -824,7 +916,17 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
 
         <div v-if="selectedType?.material_fields?.length" v-show="!isTabletMode || currentStep === 1" class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
             <div class="p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Material Fields</h3>
+                <div class="mb-4 flex items-center justify-between gap-3">
+                    <h3 class="text-lg font-medium text-gray-900">Material Fields</h3>
+                    <button
+                        v-if="!isEdit"
+                        type="button"
+                        class="inline-flex items-center rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        @click="clearMaterialFields"
+                    >
+                        Clear Fields
+                    </button>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div v-for="field in selectedType.material_fields" :key="field.key">
                         <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
@@ -950,7 +1052,7 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                 Cancel
             </Link>
             <button type="submit" :disabled="form.processing || !hasTypes" class="px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50">
-                {{ form.processing ? 'Saving...' : (isEdit ? 'Update Checksheet' : 'Create Checksheet') }}
+                {{ submitLabel }}
             </button>
         </div>
     </form>

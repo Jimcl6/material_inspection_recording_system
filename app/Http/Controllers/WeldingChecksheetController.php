@@ -77,6 +77,36 @@ class WeldingChecksheetController extends Controller
         return Inertia::render('WeldingChecksheets/Create', $this->formOptions());
     }
 
+    public function duplicate(WeldingChecksheet $welding_checksheet)
+    {
+        $welding_checksheet->load(['type', 'itemConfig', 'samples']);
+
+        $duplicate = $welding_checksheet->toArray();
+        $duplicate['production_date'] = $welding_checksheet->production_date->format('Y-m-d');
+        $duplicate['letter_code'] = $this->nextLetterForData($duplicate);
+
+        return Inertia::render('WeldingChecksheets/Create', array_merge($this->formOptions(), [
+            'checksheet' => $duplicate,
+            'formMode' => 'duplicate',
+            'sourceChecksheetId' => $welding_checksheet->id,
+        ]));
+    }
+
+    public function nextLetterCode(Request $request)
+    {
+        $data = $request->validate([
+            'checksheet_type_id' => ['required', 'exists:welding_checksheet_types,id'],
+            'item_code' => ['nullable', 'string', 'max:50'],
+            'production_date' => ['required', 'date'],
+            'machine_no' => ['nullable', 'string', 'max:20'],
+            'job_number' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        return response()->json([
+            'letter_code' => $this->nextLetterForData($data),
+        ]);
+    }
+
     public function store(
         StoreWeldingChecksheetRequest $request,
         ApprovalWorkflowService $approvalWorkflowService,
@@ -86,6 +116,9 @@ class WeldingChecksheetController extends Controller
         $data = $this->prepareChecksheetData($request->validated());
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
+        if (empty($data['letter_code'])) {
+            $data['letter_code'] = $this->nextLetterForData($data);
+        }
         $data = array_merge($data, $approvalWorkflowService->initialState());
 
         $samples = $data['samples'] ?? [];
@@ -436,6 +469,12 @@ class WeldingChecksheetController extends Controller
     {
         $data['item_code'] = $this->cleanTextValue($data['item_code'] ?? null);
         $data['item_name'] = $this->cleanTextValue($data['item_name'] ?? null);
+        $data['machine_no'] = $this->cleanTextValue($data['machine_no'] ?? null);
+        $data['job_number'] = $this->cleanTextValue($data['job_number'] ?? null);
+        $data['letter_code'] = $this->cleanTextValue($data['letter_code'] ?? null);
+        if ($data['letter_code']) {
+            $data['letter_code'] = strtoupper($data['letter_code']);
+        }
 
         $itemConfig = null;
         if (! empty($data['item_config_id'])) {
@@ -466,6 +505,72 @@ class WeldingChecksheetController extends Controller
         $data['material_fields'] = $data['material_fields'] ?? [];
 
         return $data;
+    }
+
+    protected function nextLetterForData(array $data): string
+    {
+        $criteria = $this->letterSequenceCriteria($data);
+
+        $letters = WeldingChecksheet::query()
+            ->where($criteria)
+            ->whereNotNull('letter_code')
+            ->pluck('letter_code')
+            ->map(fn ($letter) => $this->letterToNumber((string) $letter))
+            ->filter(fn (?int $number) => $number !== null)
+            ->values();
+
+        if ($letters->isEmpty()) {
+            return 'A';
+        }
+
+        return $this->numberToLetter($letters->max() + 1);
+    }
+
+    protected function letterSequenceCriteria(array $data): array
+    {
+        return [
+            'checksheet_type_id' => (int) $data['checksheet_type_id'],
+            'item_code' => $this->cleanTextValue($data['item_code'] ?? null),
+            'production_date' => $this->normalizeProductionDate($data['production_date']),
+            'machine_no' => $this->cleanTextValue($data['machine_no'] ?? null),
+            'job_number' => $this->cleanTextValue($data['job_number'] ?? null),
+        ];
+    }
+
+    protected function normalizeProductionDate($value): string
+    {
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+
+        return date('Y-m-d', strtotime((string) $value));
+    }
+
+    protected function letterToNumber(string $letter): ?int
+    {
+        $letter = strtoupper(trim($letter));
+        if ($letter === '' || ! preg_match('/^[A-Z]+$/', $letter)) {
+            return null;
+        }
+
+        $number = 0;
+        foreach (str_split($letter) as $char) {
+            $number = ($number * 26) + (ord($char) - ord('A') + 1);
+        }
+
+        return $number;
+    }
+
+    protected function numberToLetter(int $number): string
+    {
+        $letter = '';
+        while ($number > 0) {
+            $number--;
+            $letter = chr(($number % 26) + ord('A')).$letter;
+            $number = intdiv($number, 26);
+        }
+
+        return $letter;
     }
 
     protected function registerItemConfig(array $data): WeldingItemConfig

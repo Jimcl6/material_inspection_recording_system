@@ -4,7 +4,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { route } from 'ziggy-js';
 import { usePermissions } from '@/Composables/usePermissions';
 
-const { canUpdate, approvalsEnabled } = usePermissions();
+const { canCreate, canUpdate, approvalsEnabled } = usePermissions();
 
 const props = defineProps<{
     checksheet: any;
@@ -23,6 +23,7 @@ const sampleValues = (sample: any): string[] => sample.sample_values || [];
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">Welding Checksheet Details</h2>
                 <div class="space-x-3">
+                    <Link v-if="canCreate('welding')" :href="route('welding-checksheets.duplicate', checksheet.id)" class="text-emerald-600 hover:text-emerald-800">Duplicate</Link>
                     <Link v-if="canUpdate('welding')" :href="route('welding-checksheets.edit', checksheet.id)" class="text-blue-600 hover:text-blue-800">Edit</Link>
                     <Link :href="route('welding-checksheets.index')" class="text-gray-600 hover:text-gray-800">&larr; Back to List</Link>
                 </div>

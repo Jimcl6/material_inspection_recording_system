@@ -7,6 +7,9 @@ import { route } from 'ziggy-js';
 defineProps<{
     users: any[];
     types: any[];
+    checksheet?: any;
+    formMode?: 'create' | 'duplicate';
+    sourceChecksheetId?: number;
 }>();
 </script>
 
@@ -25,7 +28,7 @@ defineProps<{
 
         <div class="py-6">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <ChecksheetForm :users="users" :types="types" />
+                <ChecksheetForm :users="users" :types="types" :checksheet="checksheet" :form-mode="formMode" :source-checksheet-id="sourceChecksheetId" />
             </div>
         </div>
     </AppLayout>

@@ -257,6 +257,13 @@ const tabletFacts = (checksheet: Checksheet) => [
                                 >
                                     Edit
                                 </Link>
+                                <Link
+                                    v-if="canCreate('welding')"
+                                    :href="route('welding-checksheets.duplicate', checksheet.id)"
+                                    class="inline-flex min-h-11 items-center rounded-lg border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+                                >
+                                    Duplicate
+                                </Link>
                                 <button
                                     v-if="canDelete('welding')"
                                     type="button"
@@ -327,6 +334,17 @@ const tabletFacts = (checksheet: Checksheet) => [
                                                 >
                                                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                    </svg>
+                                                </Link>
+                                                <Link
+                                                    v-if="canCreate('welding')"
+                                                    :href="route('welding-checksheets.duplicate', checksheet.id)"
+                                                    class="p-1 text-emerald-600 hover:text-emerald-900 rounded-full hover:bg-emerald-50"
+                                                    v-bind="{ title: 'Duplicate' }"
+                                                >
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8h10a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2v-8a2 2 0 012-2z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h0"></path>
                                                     </svg>
                                                 </Link>
                                                 <button
