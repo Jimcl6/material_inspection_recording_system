@@ -3,23 +3,26 @@ import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ChecksheetForm from './Partials/ChecksheetForm.vue';
 import { route } from 'ziggy-js';
+import { computed } from 'vue';
 
-defineProps<{
+const props = defineProps<{
     users: any[];
     types: any[];
     checksheet?: any;
     formMode?: 'create' | 'duplicate';
     sourceChecksheetId?: number;
 }>();
+
+const pageTitle = computed(() => props.formMode === 'duplicate' ? 'Duplicate Welding Checksheet' : 'Create Welding Checksheet');
 </script>
 
 <template>
-    <Head title="Create Welding Checksheet" />
+    <Head :title="pageTitle" />
 
     <AppLayout>
         <template #header>
             <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">Create Welding Checksheet</h2>
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ pageTitle }}</h2>
                 <Link :href="route('welding-checksheets.index')" class="text-gray-600 hover:text-gray-800">
                     &larr; Back to List
                 </Link>

@@ -3,6 +3,8 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, watch, computed } from 'vue';
 import { route } from 'ziggy-js';
+import TabletTextKeyboardField from '@/Components/TabletTextKeyboardField.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 interface User {
     id: number;
@@ -27,6 +29,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const { isTabletMode } = useTabletMode();
 
 const checkItemKeys = [
     'collapse_depth',
@@ -189,12 +192,22 @@ const resetAllSamples = () => {
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Lasermark Lot Number</label>
-                                    <input 
-                                        type="text"
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
+                                        id="lasermark_lot_number"
                                         v-model="form.lasermark_lot_number"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        label="Lasermark Lot Number"
+                                        dialog-title="Lasermark Lot Number"
+                                        placeholder="Tap to enter lot"
                                     />
+                                    <template v-else>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Lasermark Lot Number</label>
+                                        <input
+                                            type="text"
+                                            v-model="form.lasermark_lot_number"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        />
+                                    </template>
                                 </div>
 
                                 <div>
@@ -217,30 +230,60 @@ const resetAllSamples = () => {
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">DF Rubber Lot</label>
-                                    <input 
-                                        type="text"
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
+                                        id="df_rubber_lot"
                                         v-model="form.df_rubber_lot"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        label="DF Rubber Lot"
+                                        dialog-title="DF Rubber Lot"
+                                        placeholder="Tap to enter lot"
                                     />
+                                    <template v-else>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">DF Rubber Lot</label>
+                                        <input
+                                            type="text"
+                                            v-model="form.df_rubber_lot"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        />
+                                    </template>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Center Plate A Lot</label>
-                                    <input 
-                                        type="text"
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
+                                        id="center_plate_a_lot"
                                         v-model="form.center_plate_a_lot"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        label="Center Plate A Lot"
+                                        dialog-title="Center Plate A Lot"
+                                        placeholder="Tap to enter lot"
                                     />
+                                    <template v-else>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Center Plate A Lot</label>
+                                        <input
+                                            type="text"
+                                            v-model="form.center_plate_a_lot"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        />
+                                    </template>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Center Plate B Lot</label>
-                                    <input 
-                                        type="text"
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
+                                        id="center_plate_b_lot"
                                         v-model="form.center_plate_b_lot"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        label="Center Plate B Lot"
+                                        dialog-title="Center Plate B Lot"
+                                        placeholder="Tap to enter lot"
                                     />
+                                    <template v-else>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Center Plate B Lot</label>
+                                        <input
+                                            type="text"
+                                            v-model="form.center_plate_b_lot"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        />
+                                    </template>
                                 </div>
 
                                 <div>

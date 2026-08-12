@@ -33,6 +33,7 @@ const OPERATIONAL_ROUTES = new Set([
     'torque-records.approval',
     'welding-checksheets.index',
     'welding-checksheets.create',
+    'welding-checksheets.duplicate',
     'welding-checksheets.show',
     'welding-checksheets.edit',
     'welding-checksheets.approval',
@@ -43,7 +44,11 @@ const OPERATIONAL_ROUTES = new Set([
     'material-monitoring-checksheets.index',
     'material-monitoring-checksheets.create',
     'material-monitoring-checksheets.show',
-    'material-monitoring-checksheets.edit'
+    'material-monitoring-checksheets.edit',
+    'modification-logs.create',
+    'modification-logs.edit',
+    'batches.create',
+    'batches.edit'
 ]);
 
 const startTabletListener = (): void => {

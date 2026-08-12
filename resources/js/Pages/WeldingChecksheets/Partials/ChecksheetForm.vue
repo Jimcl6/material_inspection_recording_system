@@ -5,6 +5,7 @@ import { route } from 'ziggy-js';
 import TabletFormStepper from '@/Components/Tablet/TabletFormStepper.vue';
 import NumericKeypadDialog from '@/Components/NumericKeypadDialog.vue';
 import NumericKeypadField from '@/Components/NumericKeypadField.vue';
+import TabletTextKeyboardField from '@/Components/TabletTextKeyboardField.vue';
 import { useTabletMode } from '@/Composables/useTabletMode';
 
 interface User {
@@ -583,6 +584,10 @@ const isNumericSampleInput = (sample: ChecksheetSample): boolean => {
     return NUMERIC_SAMPLE_KEYS.has(sample.check_item_key) && !isSampleInputDisabled(sample);
 };
 
+const isLotMaterialField = (field: TemplateField): boolean => {
+    return /lot/i.test(`${field.key} ${field.label}`);
+};
+
 const sampleCellId = (rowIndex: number, sampleIndex: number): string => {
     return `welding-sample-${rowIndex}-${sampleIndex}`;
 };
@@ -929,8 +934,18 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div v-for="field in selectedType.material_fields" :key="field.key">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
-                        <input v-model="form.material_fields[field.key]" type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        <TabletTextKeyboardField
+                            v-if="isTabletMode && isLotMaterialField(field)"
+                            :id="`welding-material-${field.key}`"
+                            v-model="form.material_fields[field.key]"
+                            :label="field.label"
+                            :dialog-title="field.label"
+                            placeholder="Tap to enter lot"
+                        />
+                        <template v-else>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+                            <input v-model="form.material_fields[field.key]" type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        </template>
                     </div>
                 </div>
             </div>

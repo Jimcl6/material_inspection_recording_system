@@ -4,6 +4,7 @@ import { ref, computed } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import NumericKeypadField from '@/Components/NumericKeypadField.vue';
+import TabletTextKeyboardField from '@/Components/TabletTextKeyboardField.vue';
 import TabletFormStepper from '@/Components/Tablet/TabletFormStepper.vue';
 import { useTabletMode } from '@/Composables/useTabletMode';
 
@@ -177,19 +178,30 @@ const onBlur = (field: string) => {
 
                                 <!-- Supplier Lot Number -->
                                 <div>
-                                    <label for="supplier_lot_number" class="block text-sm font-medium text-gray-700">
-                                        Supplier Lot Number <span class="text-red-500">*</span>
-                                    </label>
-                                    <input
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
                                         id="supplier_lot_number"
                                         v-model="form.supplier_lot_number"
-                                        type="text"
-                                        required
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        label="Supplier Lot Number *"
+                                        dialog-title="Supplier Lot Number"
+                                        placeholder="Tap to enter lot"
+                                        :error="form.errors.supplier_lot_number"
                                     />
-                                    <p v-if="form.errors.supplier_lot_number" class="mt-1 text-sm text-red-600">
-                                        {{ form.errors.supplier_lot_number }}
-                                    </p>
+                                    <template v-else>
+                                        <label for="supplier_lot_number" class="block text-sm font-medium text-gray-700">
+                                            Supplier Lot Number <span class="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            id="supplier_lot_number"
+                                            v-model="form.supplier_lot_number"
+                                            type="text"
+                                            required
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        />
+                                        <p v-if="form.errors.supplier_lot_number" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.supplier_lot_number }}
+                                        </p>
+                                    </template>
                                 </div>
 
                                 <!-- Quantity -->

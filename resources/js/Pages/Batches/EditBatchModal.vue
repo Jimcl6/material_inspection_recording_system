@@ -29,8 +29,19 @@
               <input v-model="form.ItemCode" type="text" maxlength="50" class="form-control" />
             </div>
             <div class="col-12 col-md-4">
-              <label class="form-label">Material Lot Number</label>
-              <input v-model="form.MaterialLotNumber" type="text" maxlength="50" class="form-control" required />
+              <TabletTextKeyboardField
+                v-if="isTabletMode"
+                id="edit_batch_material_lot_number"
+                v-model="form.MaterialLotNumber"
+                label="Material Lot Number"
+                dialog-title="Material Lot Number"
+                placeholder="Tap to enter lot"
+                :error="form.errors.MaterialLotNumber"
+              />
+              <template v-else>
+                <label class="form-label">Material Lot Number</label>
+                <input v-model="form.MaterialLotNumber" type="text" maxlength="50" class="form-control" required />
+              </template>
             </div>
             <div class="col-6 col-md-3">
               <label class="form-label">Produce Qty</label>
@@ -69,12 +80,15 @@
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import { Modal } from 'bootstrap'
+import TabletTextKeyboardField from '@/Components/TabletTextKeyboardField.vue'
+import { useTabletMode } from '@/Composables/useTabletMode'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   batch: { type: Object, required: false },
 })
 const emit = defineEmits(['update:modelValue', 'updated'])
+const { isTabletMode } = useTabletMode()
 
 const modalEl = ref(null)
 let bsModal = null
