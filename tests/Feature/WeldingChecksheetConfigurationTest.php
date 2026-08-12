@@ -33,12 +33,39 @@ class WeldingChecksheetConfigurationTest extends TestCase
         $this->assertDatabaseHas('welding_checksheet_types', ['key' => 'casing_tank', 'is_active' => true]);
 
         $casingTankId = WeldingChecksheetType::where('key', 'casing_tank')->value('id');
-        $this->assertSame(3, WeldingItemConfig::where('checksheet_type_id', $casingTankId)->count());
+        $this->assertSame(22, WeldingItemConfig::where('checksheet_type_id', $casingTankId)->count());
         $this->assertDatabaseHas('welding_item_configs', [
             'checksheet_type_id' => $casingTankId,
             'item_code' => 'CSB29046P3',
             'is_active' => true,
         ]);
+        $this->assertDatabaseHas('welding_item_configs', [
+            'checksheet_type_id' => $casingTankId,
+            'item_code' => 'CSB29046P3-P',
+            'is_active' => true,
+        ]);
+        $this->assertEquals(
+            [
+                'collapse_depth_min' => 0.37,
+                'collapse_time_min' => 1.3,
+                'collapse_time_max' => 1.7,
+            ],
+            WeldingItemConfig::where('checksheet_type_id', $casingTankId)
+                ->where('item_code', 'CSB290053P')
+                ->firstOrFail()
+                ->validation_rules
+        );
+        $this->assertEquals(
+            [
+                'collapse_depth_min' => null,
+                'collapse_time_min' => null,
+                'collapse_time_max' => null,
+            ],
+            WeldingItemConfig::where('checksheet_type_id', $casingTankId)
+                ->where('item_code', 'CSB641001P')
+                ->firstOrFail()
+                ->validation_rules
+        );
 
         $diaphragmRules = WeldingItemConfig::whereHas('type', fn ($query) => $query->where('key', 'diaphragm'))
             ->where('item_code', 'DFB4803000')
@@ -195,6 +222,12 @@ class WeldingChecksheetConfigurationTest extends TestCase
     private function runRepairMigration(): void
     {
         $migration = require database_path('migrations/2026_07_21_000001_restore_missing_welding_checksheet_configuration.php');
+        $migration->up();
+
+        $migration = require database_path('migrations/2026_08_11_000001_add_uploaded_casing_tank_item_configs.php');
+        $migration->up();
+
+        $migration = require database_path('migrations/2026_08_12_000001_add_csb29046p3_textbox_item_code.php');
         $migration->up();
     }
 
