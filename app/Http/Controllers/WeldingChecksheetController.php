@@ -82,7 +82,7 @@ class WeldingChecksheetController extends Controller
         $welding_checksheet->load(['type', 'itemConfig', 'samples']);
 
         $duplicate = $welding_checksheet->toArray();
-        $duplicate['production_date'] = $welding_checksheet->production_date?->format('Y-m-d');
+        $duplicate['production_date'] = $welding_checksheet->production_date->format('Y-m-d');
         $duplicate['letter_code'] = $this->nextLetterForData($duplicate);
 
         return Inertia::render('WeldingChecksheets/Create', array_merge($this->formOptions(), [
