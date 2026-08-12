@@ -5,6 +5,7 @@ import { route } from 'ziggy-js';
 import TabletFormStepper from '@/Components/Tablet/TabletFormStepper.vue';
 import NumericKeypadDialog from '@/Components/NumericKeypadDialog.vue';
 import NumericKeypadField from '@/Components/NumericKeypadField.vue';
+import TabletTextKeyboardDialog from '@/Components/TabletTextKeyboardDialog.vue';
 import TabletTextKeyboardField from '@/Components/TabletTextKeyboardField.vue';
 import { useTabletMode } from '@/Composables/useTabletMode';
 
@@ -171,6 +172,7 @@ const { isTabletMode } = useTabletMode();
 const currentStep = ref(0);
 const tabletSteps = ['Template', 'Production and material', 'Samples', 'Personnel and save'];
 const activeSampleKeypad = ref<ActiveSampleKeypad | null>(null);
+const activeSampleTextKeyboard = ref<ActiveSampleKeypad | null>(null);
 const lastSampleTriggerId = ref('');
 let letterCodeRequestId = 0;
 
@@ -584,12 +586,12 @@ const isNumericSampleInput = (sample: ChecksheetSample): boolean => {
     return NUMERIC_SAMPLE_KEYS.has(sample.check_item_key) && !isSampleInputDisabled(sample);
 };
 
-const isLotMaterialField = (field: TemplateField): boolean => {
-    return /lot/i.test(`${field.key} ${field.label}`);
-};
-
 const sampleCellId = (rowIndex: number, sampleIndex: number): string => {
     return `welding-sample-${rowIndex}-${sampleIndex}`;
+};
+
+const sampleTextCellId = (rowIndex: number, sampleIndex: number): string => {
+    return `welding-sample-text-${rowIndex}-${sampleIndex}`;
 };
 
 const currentSampleCellId = (): string => {
@@ -598,6 +600,14 @@ const currentSampleCellId = (): string => {
     }
 
     return sampleCellId(activeSampleKeypad.value.rowIndex, activeSampleKeypad.value.sampleIndex);
+};
+
+const currentSampleTextCellId = (): string => {
+    if (!activeSampleTextKeyboard.value) {
+        return '';
+    }
+
+    return sampleTextCellId(activeSampleTextKeyboard.value.rowIndex, activeSampleTextKeyboard.value.sampleIndex);
 };
 
 const sampleButtonClass = (sample: ChecksheetSample, index: number): string[] => {
@@ -616,12 +626,28 @@ const activeSample = computed<ChecksheetSample | null>(() => {
     return form.samples[activeSampleKeypad.value.rowIndex] || null;
 });
 
+const activeSampleText = computed<ChecksheetSample | null>(() => {
+    if (!activeSampleTextKeyboard.value) {
+        return null;
+    }
+
+    return form.samples[activeSampleTextKeyboard.value.rowIndex] || null;
+});
+
 const activeSampleValue = computed(() => {
     if (!activeSampleKeypad.value || !activeSample.value) {
         return '';
     }
 
     return activeSample.value.sample_values[activeSampleKeypad.value.sampleIndex] || '';
+});
+
+const activeSampleTextValue = computed(() => {
+    if (!activeSampleTextKeyboard.value || !activeSampleText.value) {
+        return '';
+    }
+
+    return activeSampleText.value.sample_values[activeSampleTextKeyboard.value.sampleIndex] || '';
 });
 
 const activeSampleUnit = computed(() => {
@@ -637,6 +663,14 @@ const activeSampleTitle = computed(() => {
     }
 
     return `${activeSample.value.check_item_label} - Sample ${activeSampleKeypad.value.sampleIndex + 1}`;
+});
+
+const activeSampleTextTitle = computed(() => {
+    if (!activeSampleTextKeyboard.value || !activeSampleText.value) {
+        return 'Welding Sample';
+    }
+
+    return `${activeSampleText.value.check_item_label} - Sample ${activeSampleTextKeyboard.value.sampleIndex + 1}`;
 });
 
 const numericSampleCells = (): Array<{ rowIndex: number; sampleIndex: number }> => {
@@ -670,6 +704,7 @@ const nextSampleCell = computed(() => {
 });
 
 const showSampleKeypad = computed(() => activeSampleKeypad.value !== null);
+const showSampleTextKeyboard = computed(() => activeSampleTextKeyboard.value !== null);
 
 const openSampleKeypad = (rowIndex: number, sampleIndex: number): void => {
     const sample = form.samples[rowIndex];
@@ -687,6 +722,24 @@ const openSampleKeypad = (rowIndex: number, sampleIndex: number): void => {
 const closeSampleKeypad = (): void => {
     lastSampleTriggerId.value = currentSampleCellId();
     activeSampleKeypad.value = null;
+};
+
+const openSampleTextKeyboard = (rowIndex: number, sampleIndex: number): void => {
+    const sample = form.samples[rowIndex];
+    if (!sample || isNumericSampleInput(sample) || isSampleInputDisabled(sample)) {
+        return;
+    }
+
+    activeSampleTextKeyboard.value = {
+        rowIndex,
+        sampleIndex,
+        sessionKey: `${sample.check_item_key}-text-${sampleIndex}-${Date.now()}`,
+    };
+};
+
+const closeSampleTextKeyboard = (): void => {
+    lastSampleTriggerId.value = currentSampleTextCellId();
+    activeSampleTextKeyboard.value = null;
 };
 
 const restoreSampleFocus = (): void => {
@@ -723,6 +776,15 @@ const confirmSampleValueAndOpenNext = (value: string): void => {
     }
 
     openSampleKeypad(nextCell.rowIndex, nextCell.sampleIndex);
+};
+
+const confirmSampleTextValue = (value: string): void => {
+    if (!activeSampleTextKeyboard.value || !activeSampleText.value) {
+        return;
+    }
+
+    activeSampleText.value.sample_values[activeSampleTextKeyboard.value.sampleIndex] = value;
+    closeSampleTextKeyboard();
 };
 
 const sampleRequirementText = (sample: ChecksheetSample): string => {
@@ -816,14 +878,35 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Item Code Text</label>
-                        <input v-model="form.item_code" type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-                        <p v-if="form.errors.item_code" class="mt-1 text-sm text-red-600">{{ form.errors.item_code }}</p>
+                        <TabletTextKeyboardField
+                            v-if="isTabletMode"
+                            id="welding-item-code"
+                            v-model="form.item_code"
+                            label="Item Code Text"
+                            dialog-title="Item Code"
+                            placeholder="Tap to enter code"
+                            :error="form.errors.item_code"
+                        />
+                        <template v-else>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Item Code Text</label>
+                            <input v-model="form.item_code" type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                            <p v-if="form.errors.item_code" class="mt-1 text-sm text-red-600">{{ form.errors.item_code }}</p>
+                        </template>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
-                        <input v-model="form.item_name" type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        <TabletTextKeyboardField
+                            v-if="isTabletMode"
+                            id="welding-item-name"
+                            v-model="form.item_name"
+                            label="Item Name"
+                            dialog-title="Item Name"
+                            placeholder="Tap to enter item"
+                        />
+                        <template v-else>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                            <input v-model="form.item_name" type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        </template>
                     </div>
                 </div>
 
@@ -848,12 +931,32 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                         <p v-if="form.errors.production_date" class="mt-1 text-sm text-red-600">{{ form.errors.production_date }}</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Month/Year</label>
-                        <input v-model="form.month_year" type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        <TabletTextKeyboardField
+                            v-if="isTabletMode"
+                            id="welding-month-year"
+                            v-model="form.month_year"
+                            label="Month/Year"
+                            dialog-title="Month/Year"
+                            placeholder="Tap to enter month/year"
+                        />
+                        <template v-else>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Month/Year</label>
+                            <input v-model="form.month_year" type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        </template>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Machine No.</label>
-                        <input v-model="form.machine_no" type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        <TabletTextKeyboardField
+                            v-if="isTabletMode"
+                            id="welding-machine-no"
+                            v-model="form.machine_no"
+                            label="Machine No."
+                            dialog-title="Machine No."
+                            placeholder="Tap to enter machine"
+                        />
+                        <template v-else>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Machine No.</label>
+                            <input v-model="form.machine_no" type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        </template>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Letter Code</label>
@@ -881,8 +984,18 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                         </template>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Job Number</label>
-                        <input v-model="form.job_number" type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        <TabletTextKeyboardField
+                            v-if="isTabletMode"
+                            id="welding-job-number"
+                            v-model="form.job_number"
+                            label="Job Number"
+                            dialog-title="Job Number"
+                            placeholder="Tap to enter job"
+                        />
+                        <template v-else>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Job Number</label>
+                            <input v-model="form.job_number" type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        </template>
                     </div>
                     <div>
                         <NumericKeypadField
@@ -935,12 +1048,12 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div v-for="field in selectedType.material_fields" :key="field.key">
                         <TabletTextKeyboardField
-                            v-if="isTabletMode && isLotMaterialField(field)"
+                            v-if="isTabletMode"
                             :id="`welding-material-${field.key}`"
                             v-model="form.material_fields[field.key]"
                             :label="field.label"
                             :dialog-title="field.label"
-                            placeholder="Tap to enter lot"
+                            placeholder="Tap to enter value"
                         />
                         <template v-else>
                             <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
@@ -991,6 +1104,21 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                                             {{ sample.sample_values[index] || 'Tap' }}
                                         </span>
                                     </button>
+                                    <button
+                                        v-else-if="isTabletMode && !isSampleInputDisabled(sample)"
+                                        :id="sampleTextCellId(rowIndex, index)"
+                                        type="button"
+                                        class="flex min-h-[3.5rem] w-28 items-center justify-center rounded-md border px-2 text-center text-sm font-medium shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                                        :class="sampleButtonClass(sample, index)"
+                                        :aria-invalid="hasSampleInputError(sample, index)"
+                                        :title="sampleInputTitle(sample, index)"
+                                        aria-haspopup="dialog"
+                                        @click="openSampleTextKeyboard(rowIndex, index)"
+                                    >
+                                        <span :class="sample.sample_values[index] ? 'text-gray-900' : 'text-gray-400'">
+                                            {{ sample.sample_values[index] || 'Tap' }}
+                                        </span>
+                                    </button>
                                     <input
                                         v-else
                                         v-model="sample.sample_values[index]"
@@ -1022,6 +1150,15 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                     @confirm="confirmSampleValue"
                     @confirm-next="confirmSampleValueAndOpenNext"
                 />
+                <TabletTextKeyboardDialog
+                    :show="isTabletMode && showSampleTextKeyboard"
+                    :model-value="activeSampleTextValue"
+                    :title="activeSampleTextTitle"
+                    :session-key="activeSampleTextKeyboard?.sessionKey || ''"
+                    @close="closeSampleTextKeyboard"
+                    @closed="restoreSampleFocus"
+                    @confirm="confirmSampleTextValue"
+                />
             </div>
         </div>
 
@@ -1035,7 +1172,16 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             <option :value="null">Select operator</option>
                             <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
                         </select>
-                        <input v-model="form.operator_name_raw" type="text" placeholder="Raw operator name" class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        <TabletTextKeyboardField
+                            v-if="isTabletMode"
+                            id="welding-operator-raw"
+                            v-model="form.operator_name_raw"
+                            label="Raw Operator Name"
+                            dialog-title="Raw Operator Name"
+                            placeholder="Tap to enter operator"
+                            class="mt-2"
+                        />
+                        <input v-else v-model="form.operator_name_raw" type="text" placeholder="Raw operator name" class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Technician</label>
@@ -1043,7 +1189,16 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             <option :value="null">Select technician</option>
                             <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
                         </select>
-                        <input v-model="form.technician_name_raw" type="text" placeholder="Raw technician name" class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        <TabletTextKeyboardField
+                            v-if="isTabletMode"
+                            id="welding-technician-raw"
+                            v-model="form.technician_name_raw"
+                            label="Raw Technician Name"
+                            dialog-title="Raw Technician Name"
+                            placeholder="Tap to enter technician"
+                            class="mt-2"
+                        />
+                        <input v-else v-model="form.technician_name_raw" type="text" placeholder="Raw technician name" class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Checked By</label>
@@ -1051,7 +1206,16 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             <option :value="null">Select checker</option>
                             <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
                         </select>
-                        <input v-model="form.checked_by_name_raw" type="text" placeholder="Raw checker name" class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        <TabletTextKeyboardField
+                            v-if="isTabletMode"
+                            id="welding-checked-by-raw"
+                            v-model="form.checked_by_name_raw"
+                            label="Raw Checker Name"
+                            dialog-title="Raw Checker Name"
+                            placeholder="Tap to enter checker"
+                            class="mt-2"
+                        />
+                        <input v-else v-model="form.checked_by_name_raw" type="text" placeholder="Raw checker name" class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
                     </div>
                     <div class="md:col-span-3">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>

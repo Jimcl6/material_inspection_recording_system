@@ -26,42 +26,75 @@
                         <form @submit.prevent="submit">
                             <div class="grid grid-cols-1 gap-6">
                                 <div>
-                                    <label for="item_code" class="block text-sm font-medium text-gray-700">Item Code <span class="text-red-500">*</span></label>
-                                    <input
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
                                         id="item_code"
                                         v-model="form.item_code"
-                                        type="text"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        :class="{ 'border-red-500': form.errors.item_code }"
-                                        placeholder="e.g., RDB4600400"
+                                        label="Item Code *"
+                                        dialog-title="Item Code"
+                                        placeholder="Tap to enter code"
+                                        :error="form.errors.item_code"
                                     />
-                                    <p v-if="form.errors.item_code" class="mt-1 text-sm text-red-600">{{ form.errors.item_code }}</p>
+                                    <template v-else>
+                                        <label for="item_code" class="block text-sm font-medium text-gray-700">Item Code <span class="text-red-500">*</span></label>
+                                        <input
+                                            id="item_code"
+                                            v-model="form.item_code"
+                                            type="text"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                            :class="{ 'border-red-500': form.errors.item_code }"
+                                            placeholder="e.g., RDB4600400"
+                                        />
+                                        <p v-if="form.errors.item_code" class="mt-1 text-sm text-red-600">{{ form.errors.item_code }}</p>
+                                    </template>
                                 </div>
 
                                 <div>
-                                    <label for="item_name" class="block text-sm font-medium text-gray-700">Item Name <span class="text-red-500">*</span></label>
-                                    <input
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
                                         id="item_name"
                                         v-model="form.item_name"
-                                        type="text"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        :class="{ 'border-red-500': form.errors.item_name }"
-                                        placeholder="Item name"
+                                        label="Item Name *"
+                                        dialog-title="Item Name"
+                                        placeholder="Tap to enter item"
+                                        :error="form.errors.item_name"
                                     />
-                                    <p v-if="form.errors.item_name" class="mt-1 text-sm text-red-600">{{ form.errors.item_name }}</p>
+                                    <template v-else>
+                                        <label for="item_name" class="block text-sm font-medium text-gray-700">Item Name <span class="text-red-500">*</span></label>
+                                        <input
+                                            id="item_name"
+                                            v-model="form.item_name"
+                                            type="text"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                            :class="{ 'border-red-500': form.errors.item_name }"
+                                            placeholder="Item name"
+                                        />
+                                        <p v-if="form.errors.item_name" class="mt-1 text-sm text-red-600">{{ form.errors.item_name }}</p>
+                                    </template>
                                 </div>
 
                                 <div>
-                                    <label for="machine_no" class="block text-sm font-medium text-gray-700">Machine No. <span class="text-red-500">*</span></label>
-                                    <input
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
                                         id="machine_no"
                                         v-model="form.machine_no"
-                                        type="text"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        :class="{ 'border-red-500': form.errors.machine_no }"
-                                        placeholder="Machine number"
+                                        label="Machine No. *"
+                                        dialog-title="Machine No."
+                                        placeholder="Tap to enter machine"
+                                        :error="form.errors.machine_no"
                                     />
-                                    <p v-if="form.errors.machine_no" class="mt-1 text-sm text-red-600">{{ form.errors.machine_no }}</p>
+                                    <template v-else>
+                                        <label for="machine_no" class="block text-sm font-medium text-gray-700">Machine No. <span class="text-red-500">*</span></label>
+                                        <input
+                                            id="machine_no"
+                                            v-model="form.machine_no"
+                                            type="text"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                            :class="{ 'border-red-500': form.errors.machine_no }"
+                                            placeholder="Machine number"
+                                        />
+                                        <p v-if="form.errors.machine_no" class="mt-1 text-sm text-red-600">{{ form.errors.machine_no }}</p>
+                                    </template>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4">
@@ -125,6 +158,8 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import TabletTextKeyboardField from '@/Components/TabletTextKeyboardField.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 declare function route(name: string, params?: any): string;
 
@@ -147,6 +182,7 @@ const months = [
 ];
 
 const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
+const { isTabletMode } = useTabletMode();
 
 const form = useForm({
     item_code: '',

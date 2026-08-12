@@ -46,6 +46,16 @@
               <!-- Model Series & Date -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
+                  <TabletTextKeyboardField
+                    v-if="isTabletMode"
+                    id="model_series"
+                    v-model="form.model_series"
+                    label="Model Series *"
+                    dialog-title="Model Series"
+                    placeholder="Tap to enter model"
+                    :max-length="100"
+                  />
+                  <template v-else>
                   <label for="model_series" class="block text-sm font-medium text-gray-700">
                     Model Series <span class="text-red-500">*</span>
                   </label>
@@ -57,6 +67,7 @@
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
+                  </template>
                 </div>
                 <div>
                   <label for="date" class="block text-sm font-medium text-gray-700">
@@ -103,6 +114,16 @@
               <!-- Assignment Details -->
               <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
+                  <TabletTextKeyboardField
+                    v-if="isTabletMode"
+                    id="line_assigned"
+                    v-model="form.line_assigned"
+                    label="Line Assigned"
+                    dialog-title="Line Assigned"
+                    placeholder="Tap to enter line"
+                    :max-length="100"
+                  />
+                  <template v-else>
                   <label for="line_assigned" class="block text-sm font-medium text-gray-700">
                     Line Assigned
                   </label>
@@ -113,8 +134,19 @@
                     maxlength="100"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   />
+                  </template>
                 </div>
                 <div>
+                  <TabletTextKeyboardField
+                    v-if="isTabletMode"
+                    id="control_no"
+                    v-model="form.control_no"
+                    label="Control No"
+                    dialog-title="Control No"
+                    placeholder="Tap to enter control"
+                    :max-length="50"
+                  />
+                  <template v-else>
                   <label for="control_no" class="block text-sm font-medium text-gray-700">
                     Control No
                   </label>
@@ -125,8 +157,19 @@
                     maxlength="50"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   />
+                  </template>
                 </div>
                 <div>
+                  <TabletTextKeyboardField
+                    v-if="isTabletMode"
+                    id="process_assigned"
+                    v-model="form.process_assigned"
+                    label="Process Assigned"
+                    dialog-title="Process Assigned"
+                    placeholder="Tap to enter process"
+                    :max-length="100"
+                  />
+                  <template v-else>
                   <label for="process_assigned" class="block text-sm font-medium text-gray-700">
                     Process Assigned
                   </label>
@@ -137,8 +180,19 @@
                     maxlength="100"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   />
+                  </template>
                 </div>
                 <div>
+                  <TabletTextKeyboardField
+                    v-if="isTabletMode"
+                    id="person_in_charge"
+                    v-model="form.person_in_charge"
+                    label="Person in Charge"
+                    dialog-title="Person in Charge"
+                    placeholder="Tap to enter PIC"
+                    :max-length="100"
+                  />
+                  <template v-else>
                   <label for="person_in_charge" class="block text-sm font-medium text-gray-700">
                     Person in Charge
                   </label>
@@ -149,6 +203,7 @@
                     maxlength="100"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   />
+                  </template>
                 </div>
               </div>
 
@@ -275,6 +330,16 @@
               </div>
 
               <div class="md:w-1/2">
+                <TabletTextKeyboardField
+                  v-if="isTabletMode"
+                  id="checked_by"
+                  v-model="form.checked_by"
+                  label="Checked By *"
+                  dialog-title="Checked By"
+                  placeholder="Tap to enter checker"
+                  :max-length="100"
+                />
+                <template v-else>
                 <label for="checked_by" class="block text-sm font-medium text-gray-700">
                   Checked By <span class="text-red-500">*</span>
                 </label>
@@ -286,6 +351,7 @@
                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   required
                 />
+                </template>
               </div>
 
               <!-- Form Actions -->
@@ -316,6 +382,7 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Head, Link, useForm } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import NumericKeypadField from '@/Components/NumericKeypadField.vue'
+import TabletTextKeyboardField from '@/Components/TabletTextKeyboardField.vue'
 import { useTabletMode } from '@/Composables/useTabletMode'
 
 const props = defineProps({

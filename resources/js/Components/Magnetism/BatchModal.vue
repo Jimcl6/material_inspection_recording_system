@@ -94,29 +94,51 @@
                         </div>
 
                         <div>
-                            <label for="qr_code" class="block text-sm font-medium text-gray-700">QR Code <span class="text-red-500">*</span></label>
-                            <input
+                            <TabletTextKeyboardField
+                                v-if="isTabletMode"
                                 id="qr_code"
                                 v-model="form.qr_code"
-                                type="text"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                :class="{ 'border-red-500': form.errors.qr_code }"
-                                placeholder="e.g., 20251124P"
+                                label="QR Code *"
+                                dialog-title="QR Code"
+                                placeholder="Tap to enter QR"
+                                :error="form.errors.qr_code"
                             />
-                            <p v-if="form.errors.qr_code" class="mt-1 text-sm text-red-600">{{ form.errors.qr_code }}</p>
+                            <template v-else>
+                                <label for="qr_code" class="block text-sm font-medium text-gray-700">QR Code <span class="text-red-500">*</span></label>
+                                <input
+                                    id="qr_code"
+                                    v-model="form.qr_code"
+                                    type="text"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                    :class="{ 'border-red-500': form.errors.qr_code }"
+                                    placeholder="e.g., 20251124P"
+                                />
+                                <p v-if="form.errors.qr_code" class="mt-1 text-sm text-red-600">{{ form.errors.qr_code }}</p>
+                            </template>
                         </div>
 
                         <div>
-                            <label for="job_number" class="block text-sm font-medium text-gray-700">Job Number <span class="text-red-500">*</span></label>
-                            <input
+                            <TabletTextKeyboardField
+                                v-if="isTabletMode"
                                 id="job_number"
                                 v-model="form.job_number"
-                                type="text"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                :class="{ 'border-red-500': form.errors.job_number }"
-                                placeholder="e.g., 3J73799745-0"
+                                label="Job Number *"
+                                dialog-title="Job Number"
+                                placeholder="Tap to enter job"
+                                :error="form.errors.job_number"
                             />
-                            <p v-if="form.errors.job_number" class="mt-1 text-sm text-red-600">{{ form.errors.job_number }}</p>
+                            <template v-else>
+                                <label for="job_number" class="block text-sm font-medium text-gray-700">Job Number <span class="text-red-500">*</span></label>
+                                <input
+                                    id="job_number"
+                                    v-model="form.job_number"
+                                    type="text"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                    :class="{ 'border-red-500': form.errors.job_number }"
+                                    placeholder="e.g., 3J73799745-0"
+                                />
+                                <p v-if="form.errors.job_number" class="mt-1 text-sm text-red-600">{{ form.errors.job_number }}</p>
+                            </template>
                         </div>
 
                         <div>
