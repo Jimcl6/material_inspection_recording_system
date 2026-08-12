@@ -16,15 +16,15 @@ const isLast = computed(() => props.modelValue >= props.steps.length - 1);
 
 <template>
     <!-- eslint-disable vue/valid-v-for -- Known parser false positive for keyed Vue template loops. -->
-    <div class="sticky top-16 z-20 mb-8 rounded-xl border border-indigo-100 bg-white p-4 shadow-sm">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div class="tablet-form-stepper relative z-0 mb-10 rounded-lg border border-indigo-100 bg-white p-4 shadow-sm sm:p-5">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div class="min-w-0 flex-1">
                 <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600">
                     Step {{ modelValue + 1 }} of {{ steps.length }}
                 </p>
                 <p class="break-words text-base font-bold leading-snug text-gray-900">{{ steps[modelValue] }}</p>
             </div>
-            <div class="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
+            <div class="grid w-full grid-cols-2 gap-2 lg:w-auto lg:flex lg:shrink-0">
                 <button
                     type="button"
                     :disabled="modelValue === 0"
@@ -45,10 +45,10 @@ const isLast = computed(() => props.modelValue >= props.steps.length - 1);
         </div>
         <div class="mt-3 flex gap-1.5">
             <span
-                v-for="step in steps"
-                :key="step"
+                v-for="(step, index) in steps"
+                :key="`${step}-${index}`"
                 class="h-1.5 flex-1 rounded-full"
-                :class="steps.indexOf(step) <= modelValue ? 'bg-indigo-600' : 'bg-gray-200'"
+                :class="index <= modelValue ? 'bg-indigo-600' : 'bg-gray-200'"
             />
         </div>
     </div>
