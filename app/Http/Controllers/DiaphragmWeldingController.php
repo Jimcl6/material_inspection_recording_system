@@ -90,7 +90,7 @@ class DiaphragmWeldingController extends Controller
      */
     public function store(StoreDiaphragmWeldingRequest $request)
     {
-        $data = $request->validated();
+        $data = $this->prepareChecksheetData($request->validated());
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
         $data['status'] = 'pending';
@@ -160,7 +160,7 @@ class DiaphragmWeldingController extends Controller
      */
     public function update(UpdateDiaphragmWeldingRequest $request, DiaphragmWeldingChecksheet $diaphragmWelding)
     {
-        $data = $request->validated();
+        $data = $this->prepareChecksheetData($request->validated());
         $data['updated_by'] = Auth::id();
 
         // If status is changing to approved, set approved_at
@@ -194,6 +194,36 @@ class DiaphragmWeldingController extends Controller
 
         return redirect()->route('diaphragm-welding.index')
             ->with('success', 'Diaphragm welding checksheet updated successfully.');
+    }
+
+    protected function prepareChecksheetData(array $data): array
+    {
+        $data['item_code'] = $this->cleanTextValue($data['item_code'] ?? null);
+        $data['item_name'] = $this->cleanTextValue($data['item_name'] ?? null);
+
+        if (! empty($data['item_code'])) {
+            DiaphragmItemCode::firstOrCreate(
+                ['item_code' => $data['item_code']],
+                [
+                    'item_name' => $data['item_name'],
+                    'strength_min' => 0.30,
+                    'measurement_1_type' => 'data_recording',
+                    'measurement_1_min' => null,
+                    'measurement_1_max' => null,
+                    'circumference_diff_type' => 'data_recording',
+                    'circumference_diff_max' => null,
+                ]
+            );
+        }
+
+        return $data;
+    }
+
+    protected function cleanTextValue($value): ?string
+    {
+        $value = trim((string) ($value ?? ''));
+
+        return $value === '' ? null : $value;
     }
 
     /**

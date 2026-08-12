@@ -434,13 +434,25 @@ class WeldingChecksheetController extends Controller
 
     protected function prepareChecksheetData(array $data): array
     {
+        $data['item_code'] = $this->cleanTextValue($data['item_code'] ?? null);
+        $data['item_name'] = $this->cleanTextValue($data['item_name'] ?? null);
+
         $itemConfig = null;
         if (! empty($data['item_config_id'])) {
             $itemConfig = WeldingItemConfig::find($data['item_config_id']);
+            if ($itemConfig && ! empty($data['item_code']) && strcasecmp($itemConfig->item_code, $data['item_code']) !== 0) {
+                $itemConfig = null;
+                $data['item_config_id'] = null;
+            }
         } elseif (! empty($data['item_code'])) {
             $itemConfig = WeldingItemConfig::where('checksheet_type_id', $data['checksheet_type_id'])
+                ->active()
                 ->where('item_code', $data['item_code'])
                 ->first();
+        }
+
+        if (! $itemConfig && ! empty($data['item_code'])) {
+            $itemConfig = $this->registerItemConfig($data);
         }
 
         if ($itemConfig) {
@@ -452,6 +464,54 @@ class WeldingChecksheetController extends Controller
         $data['material_fields'] = $data['material_fields'] ?? [];
 
         return $data;
+    }
+
+    protected function registerItemConfig(array $data): WeldingItemConfig
+    {
+        $type = WeldingChecksheetType::find($data['checksheet_type_id']);
+        $config = WeldingItemConfig::firstOrNew([
+            'checksheet_type_id' => $data['checksheet_type_id'],
+            'item_code' => $data['item_code'],
+        ]);
+
+        if (! $config->exists) {
+            $config->item_name = $data['item_name'] ?? null;
+            $config->validation_rules = $this->defaultValidationRulesForType($type);
+        } elseif (! $config->item_name && ! empty($data['item_name'])) {
+            $config->item_name = $data['item_name'];
+        }
+
+        if (! $config->validation_rules) {
+            $config->validation_rules = $this->defaultValidationRulesForType($type);
+        }
+
+        $config->is_active = true;
+        $config->save();
+
+        return $config;
+    }
+
+    protected function defaultValidationRulesForType(?WeldingChecksheetType $type): ?array
+    {
+        if ($type?->key !== 'diaphragm') {
+            return null;
+        }
+
+        return [
+            'strength_min' => 0.30,
+            'measurement_1_type' => 'data_recording',
+            'measurement_1_min' => null,
+            'measurement_1_max' => null,
+            'circumference_diff_type' => 'data_recording',
+            'circumference_diff_max' => null,
+        ];
+    }
+
+    protected function cleanTextValue($value): ?string
+    {
+        $value = trim((string) ($value ?? ''));
+
+        return $value === '' ? null : $value;
     }
 
     protected function replaceSamples(WeldingChecksheet $checksheet, array $samples): void
