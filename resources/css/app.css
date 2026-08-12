@@ -21,7 +21,9 @@
     }
 }
 
-@media (min-width: 600px) and (max-width: 1280px) and (min-height: 600px) and (hover: none) and (pointer: coarse) {
+@media (min-width: 600px) and (max-width: 1600px) and (min-height: 600px) and (hover: none) and (pointer: coarse),
+    (display-mode: standalone) and (min-width: 540px) and (max-width: 1600px) and (any-pointer: coarse),
+    (display-mode: fullscreen) and (min-width: 540px) and (max-width: 1600px) and (any-pointer: coarse) {
     .tablet-operational input:not([type='checkbox']):not([type='radio']),
     .tablet-operational select,
     .tablet-operational textarea {
@@ -38,6 +40,15 @@
         grid-template-columns: minmax(0, 1fr) !important;
     }
 
+    .tablet-operational .tablet-form-stepper {
+        position: relative;
+        top: auto;
+    }
+
+    .tablet-operational .annealing-tablet-grid {
+        align-items: start;
+    }
+
     .annealing-tablet-grid[data-step='0'] > :nth-child(n + 7),
     .annealing-tablet-grid[data-step='1'] > :not(:nth-child(7)),
     .annealing-tablet-grid[data-step='2'] > :nth-child(-n + 7) {
@@ -45,7 +56,9 @@
     }
 }
 
-@media (min-width: 600px) and (max-width: 1280px) and (min-height: 600px) and (hover: none) and (pointer: coarse) and (orientation: landscape) {
+@media (min-width: 600px) and (max-width: 1600px) and (min-height: 600px) and (hover: none) and (pointer: coarse) and (orientation: landscape),
+    (display-mode: standalone) and (min-width: 540px) and (max-width: 1600px) and (any-pointer: coarse) and (orientation: landscape),
+    (display-mode: fullscreen) and (min-width: 540px) and (max-width: 1600px) and (any-pointer: coarse) and (orientation: landscape) {
     .tablet-operational .tablet-detail-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
