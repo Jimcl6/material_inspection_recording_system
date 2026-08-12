@@ -67,18 +67,30 @@
                         </div>
 
                         <div>
-                            <label for="material_lot_number" class="block text-sm font-medium text-gray-700">Material Lot Number <span class="text-red-500">*</span></label>
-                            <input
+                            <TabletTextKeyboardField
+                                v-if="isTabletMode"
                                 id="material_lot_number"
                                 v-model="form.material_lot_number"
-                                type="text"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                :class="{ 'border-red-500': form.errors.material_lot_number }"
-                                placeholder="e.g., 11172515A-208P"
+                                label="Material Lot Number *"
+                                dialog-title="Material Lot Number"
+                                placeholder="Tap to enter lot"
+                                :error="form.errors.material_lot_number"
                                 @blur="fetchLetterForLot"
                             />
+                            <template v-else>
+                                <label for="material_lot_number" class="block text-sm font-medium text-gray-700">Material Lot Number <span class="text-red-500">*</span></label>
+                                <input
+                                    id="material_lot_number"
+                                    v-model="form.material_lot_number"
+                                    type="text"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                    :class="{ 'border-red-500': form.errors.material_lot_number }"
+                                    placeholder="e.g., 11172515A-208P"
+                                    @blur="fetchLetterForLot"
+                                />
+                                <p v-if="form.errors.material_lot_number" class="mt-1 text-sm text-red-600">{{ form.errors.material_lot_number }}</p>
+                            </template>
                             <p v-if="isExistingLot" class="mt-1 text-sm text-blue-600">Using existing letter for this lot</p>
-                            <p v-if="form.errors.material_lot_number" class="mt-1 text-sm text-red-600">{{ form.errors.material_lot_number }}</p>
                         </div>
 
                         <div>
@@ -148,10 +160,13 @@
 import { useForm } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import axios from 'axios';
+import TabletTextKeyboardField from '@/Components/TabletTextKeyboardField.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 declare function route(name: string, params?: any): string;
 
 const isExistingLot = ref(false);
+const { isTabletMode } = useTabletMode();
 
 interface Batch {
     id: number;

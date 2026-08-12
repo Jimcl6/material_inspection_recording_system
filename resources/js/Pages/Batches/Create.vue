@@ -2,6 +2,8 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { watch, ref, reactive } from 'vue';
+import TabletTextKeyboardField from '@/Components/TabletTextKeyboardField.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 // Import route helper
 declare function route(name: string, params?: any): string;
@@ -21,6 +23,7 @@ const form = useForm({
   ItemName: '',
   ItemCode: '',
 });
+const { isTabletMode } = useTabletMode();
 
 // Default date to today on first load
 if (!form.ProductionDate) {
@@ -169,14 +172,25 @@ const submit = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Material Lot Number</label>
-                                        <input
+                                        <TabletTextKeyboardField
+                                            v-if="isTabletMode"
+                                            id="material_lot_number"
                                             v-model="form.MaterialLotNumber"
-                                            type="text"
-                                            maxlength="50"
-                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                            required
+                                            label="Material Lot Number"
+                                            dialog-title="Material Lot Number"
+                                            placeholder="Tap to enter lot"
+                                            :error="form.errors.MaterialLotNumber"
                                         />
+                                        <template v-else>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Material Lot Number</label>
+                                            <input
+                                                v-model="form.MaterialLotNumber"
+                                                type="text"
+                                                maxlength="50"
+                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                                required
+                                            />
+                                        </template>
                                     </div>
                                 </div>
                             </div>

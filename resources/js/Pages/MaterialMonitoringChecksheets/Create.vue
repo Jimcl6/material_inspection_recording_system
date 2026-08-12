@@ -3,6 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import NumericKeypadField from '@/Components/NumericKeypadField.vue';
+import TabletTextKeyboardField from '@/Components/TabletTextKeyboardField.vue';
 import { useTabletMode } from '@/Composables/useTabletMode';
 
 const props = defineProps({
@@ -68,6 +69,8 @@ const updateSubLotValue = (field, value) => {
     subLotValues.value[key] = value;
     form.sub_lot_numbers[key] = value;
 };
+
+const subLotKey = field => field.toLowerCase().replace(/\s+/g, '_');
 
 const submit = () => {
     console.log('Submitting form:', form.data());
@@ -187,13 +190,23 @@ const submit = () => {
 
                                 <!-- Main Lot Number -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Main Lot Number</label>
-                                    <input
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
+                                        id="main_lot_number"
                                         v-model="form.main_lot_number"
-                                        type="text"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        placeholder="e.g., P23-001"
+                                        label="Main Lot Number"
+                                        dialog-title="Main Lot Number"
+                                        placeholder="Tap to enter lot"
                                     />
+                                    <template v-else>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Main Lot Number</label>
+                                        <input
+                                            v-model="form.main_lot_number"
+                                            type="text"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                            placeholder="e.g., P23-001"
+                                        />
+                                    </template>
                                 </div>
 
                                 <!-- Produced Quantity -->
@@ -249,16 +262,27 @@ const submit = () => {
                             <div v-if="subLotFields.length > 0" class="space-y-4">
                                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                     <div v-for="field in subLotFields" :key="field">
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            {{ field }}
-                                        </label>
-                                        <input
-                                            :value="subLotValues[field.toLowerCase().replace(/\s+/g, '_')]"
-                                            @input="updateSubLotValue(field, $event.target.value)"
-                                            type="text"
-                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                            :placeholder="'Enter ' + field.toLowerCase() + 'Lot #'"
+                                        <TabletTextKeyboardField
+                                            v-if="isTabletMode"
+                                            :id="`sub_lot_${subLotKey(field)}`"
+                                            :model-value="subLotValues[subLotKey(field)]"
+                                            :label="field"
+                                            :dialog-title="field"
+                                            placeholder="Tap to enter lot"
+                                            @update:model-value="updateSubLotValue(field, $event)"
                                         />
+                                        <template v-else>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                {{ field }}
+                                            </label>
+                                            <input
+                                                :value="subLotValues[subLotKey(field)]"
+                                                type="text"
+                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                                :placeholder="'Enter ' + field.toLowerCase() + ' Lot #'"
+                                                @input="updateSubLotValue(field, $event.target.value)"
+                                            />
+                                        </template>
                                     </div>
                                 </div>
                             </div>

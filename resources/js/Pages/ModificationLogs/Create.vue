@@ -127,18 +127,29 @@
                     </div>
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                      Material Lot No
-                    </label>
-                    <input
+                    <TabletTextKeyboardField
+                      v-if="isTabletMode"
+                      id="material_lot_no"
                       v-model="form.material_lot_no"
-                      type="text"
-                      maxlength="255"
-                      class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                      label="Material Lot No"
+                      dialog-title="Material Lot No"
+                      placeholder="Tap to enter lot"
+                      :error="form.errors.material_lot_no"
                     />
-                    <div v-if="form.errors.material_lot_no" class="mt-1 text-sm text-red-600">
-                      {{ form.errors.material_lot_no }}
-                    </div>
+                    <template v-else>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Material Lot No
+                      </label>
+                      <input
+                        v-model="form.material_lot_no"
+                        type="text"
+                        maxlength="255"
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                      />
+                      <div v-if="form.errors.material_lot_no" class="mt-1 text-sm text-red-600">
+                        {{ form.errors.material_lot_no }}
+                      </div>
+                    </template>
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -333,6 +344,8 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, onMounted } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import TabletTextKeyboardField from '@/Components/TabletTextKeyboardField.vue';
+import { useTabletMode } from '@/Composables/useTabletMode';
 
 // Import route helper
 declare function route(name: string, params?: any): string;
@@ -374,6 +387,7 @@ const form = useForm({
     job_no_transfer_order: '',
     col_remarks: '',
 });
+const { isTabletMode } = useTabletMode();
 
 const submit = () => {
     form.post(route('modification-logs.store'), {
