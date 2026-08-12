@@ -343,9 +343,16 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
     Route::get('welding-checksheets/create', [WeldingChecksheetController::class, 'create'])
         ->middleware('module.permission:welding,create')
         ->name('welding-checksheets.create');
+    Route::get('welding-checksheets/next-letter-code', [WeldingChecksheetController::class, 'nextLetterCode'])
+        ->middleware('module.permission:welding,create')
+        ->name('welding-checksheets.next-letter-code');
     Route::post('welding-checksheets', [WeldingChecksheetController::class, 'store'])
         ->middleware('module.permission:welding,create')
         ->name('welding-checksheets.store');
+    Route::get('welding-checksheets/{welding_checksheet}/duplicate', [WeldingChecksheetController::class, 'duplicate'])
+        ->middleware('module.permission:welding,create')
+        ->whereNumber('welding_checksheet')
+        ->name('welding-checksheets.duplicate');
     Route::get('welding-checksheets/{welding_checksheet}', [WeldingChecksheetController::class, 'show'])
         ->middleware('module.permission:welding,view')
         ->whereNumber('welding_checksheet')
