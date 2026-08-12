@@ -174,14 +174,24 @@ const submit = () => {
 
                                 <!-- Item Block Code -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Item Block Code</label>
-                                    <input
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
+                                        id="item_block_code"
                                         v-model="form.item_block_code"
-                                        type="text"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        placeholder="e.g., ABC-123"
-                                        required
+                                        label="Item Block Code"
+                                        dialog-title="Item Block Code"
+                                        placeholder="Tap to enter code"
                                     />
+                                    <template v-else>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Item Block Code</label>
+                                        <input
+                                            v-model="form.item_block_code"
+                                            type="text"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                            placeholder="e.g., ABC-123"
+                                            required
+                                        />
+                                    </template>
                                 </div>
 
                                 <!-- Letter Code -->
@@ -245,24 +255,44 @@ const submit = () => {
 
                                 <!-- Operator -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Operator</label>
-                                    <input
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
+                                        id="operator"
                                         v-model="form.operator"
-                                        type="text"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        placeholder="Operator name"
+                                        label="Operator"
+                                        dialog-title="Operator"
+                                        placeholder="Tap to enter operator"
                                     />
+                                    <template v-else>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Operator</label>
+                                        <input
+                                            v-model="form.operator"
+                                            type="text"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                            placeholder="Operator name"
+                                        />
+                                    </template>
                                 </div>
 
                                 <!-- Job Number -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Job Number</label>
-                                    <input
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
+                                        id="job_number"
                                         v-model="form.job_number"
-                                        type="text"
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        placeholder="Job number"
+                                        label="Job Number"
+                                        dialog-title="Job Number"
+                                        placeholder="Tap to enter job"
                                     />
+                                    <template v-else>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Job Number</label>
+                                        <input
+                                            v-model="form.job_number"
+                                            type="text"
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                            placeholder="Job number"
+                                        />
+                                    </template>
                                 </div>
                             </div>
                         </div>

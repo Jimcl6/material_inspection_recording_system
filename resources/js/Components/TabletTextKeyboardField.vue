@@ -11,6 +11,8 @@ defineProps({
     modelValue: { type: [String, Number], default: '' },
     placeholder: { type: String, default: 'Tap to enter' },
     error: { type: String, default: '' },
+    allowSpace: { type: Boolean, default: true },
+    maxLength: { type: [Number, String], default: null },
 });
 
 const emit = defineEmits(['update:modelValue', 'blur']);
@@ -54,6 +56,8 @@ const confirmValue = value => {
             :show="showKeyboard"
             :model-value="modelValue"
             :title="dialogTitle"
+            :allow-space="allowSpace"
+            :max-length="maxLength"
             @close="closeKeyboard"
             @closed="restoreFocus"
             @confirm="confirmValue"

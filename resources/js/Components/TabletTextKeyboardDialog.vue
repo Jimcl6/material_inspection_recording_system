@@ -13,6 +13,9 @@ const props = defineProps({
     modelValue: { type: [String, Number], default: '' },
     title: { type: String, required: true },
     placeholder: { type: String, default: 'Tap keys to enter the lot number.' },
+    allowSpace: { type: Boolean, default: true },
+    maxLength: { type: [Number, String], default: null },
+    sessionKey: { type: String, default: '' },
 });
 
 const emit = defineEmits(['close', 'closed', 'confirm']);
@@ -26,14 +29,25 @@ const rows = [
 const draft = ref('');
 
 const displayValue = computed(() => draft.value || '-');
+const maxLengthValue = computed(() => {
+    if (props.maxLength === null || props.maxLength === '') return null;
+
+    const value = Number(props.maxLength);
+    return Number.isFinite(value) && value > 0 ? value : null;
+});
 
 const loadDraft = () => {
     draft.value = sanitizeValue(props.modelValue);
 };
 
-const sanitizeValue = value => String(value ?? '')
-    .toUpperCase()
-    .replace(/[^A-Z0-9-]/g, '');
+const sanitizeValue = value => {
+    const allowedPattern = props.allowSpace ? /[^A-Z0-9 -]/g : /[^A-Z0-9-]/g;
+    const sanitized = String(value ?? '')
+        .toUpperCase()
+        .replace(allowedPattern, '');
+
+    return maxLengthValue.value === null ? sanitized : sanitized.slice(0, maxLengthValue.value);
+};
 
 watch(
     () => props.show,
@@ -44,6 +58,7 @@ watch(
 );
 
 const appendKey = key => {
+    if (maxLengthValue.value !== null && draft.value.length >= maxLengthValue.value) return;
     draft.value += key;
 };
 
@@ -65,6 +80,9 @@ const handleKeydown = event => {
     if (/^[a-zA-Z0-9-]$/.test(event.key)) {
         event.preventDefault();
         appendKey(event.key.toUpperCase());
+    } else if (event.key === ' ' && props.allowSpace) {
+        event.preventDefault();
+        appendKey(' ');
     } else if (event.key === 'Backspace') {
         event.preventDefault();
         backspace();
@@ -147,6 +165,15 @@ const handleKeydown = event => {
                                 </div>
                                 <!-- eslint-enable vue/valid-v-for -->
                             </div>
+
+                            <button
+                                v-if="allowSpace"
+                                type="button"
+                                class="mt-3 min-h-[3.5rem] w-full rounded-xl border border-gray-300 bg-white px-4 text-base font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-indigo-100"
+                                @click="appendKey(' ')"
+                            >
+                                Space
+                            </button>
 
                             <div class="mt-4 grid grid-cols-3 gap-3">
                                 <button

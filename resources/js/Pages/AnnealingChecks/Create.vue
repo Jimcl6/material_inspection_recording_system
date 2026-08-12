@@ -139,24 +139,36 @@ const onBlur = (field: string) => {
                             >
                                 <!-- Item Code -->
                                 <div>
-                                    <label for="item_code" class="block text-sm font-medium text-gray-700">
-                                        Item Code <span class="text-red-500">*</span>
-                                    </label>
-                                    <input
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
                                         id="item_code"
                                         v-model="form.item_code"
-                                        type="text"
-                                        required
-                                        :class="{
-                                            'border-red-500': form.errors.item_code,
-                                            'border-gray-300': !form.errors.item_code
-                                        }"
-                                        class="mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        label="Item Code *"
+                                        dialog-title="Item Code"
+                                        placeholder="Tap to enter code"
+                                        :error="form.errors.item_code"
                                         @blur="onBlur('item_code')"
                                     />
-                                    <p v-if="form.errors.item_code" class="mt-1 text-sm text-red-600">
-                                        {{ form.errors.item_code }}
-                                    </p>
+                                    <template v-else>
+                                        <label for="item_code" class="block text-sm font-medium text-gray-700">
+                                            Item Code <span class="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            id="item_code"
+                                            v-model="form.item_code"
+                                            type="text"
+                                            required
+                                            :class="{
+                                                'border-red-500': form.errors.item_code,
+                                                'border-gray-300': !form.errors.item_code
+                                            }"
+                                            class="mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                            @blur="onBlur('item_code')"
+                                        />
+                                        <p v-if="form.errors.item_code" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.item_code }}
+                                        </p>
+                                    </template>
                                 </div>
 
                                 <!-- Receiving Date -->
@@ -251,19 +263,30 @@ const onBlur = (field: string) => {
 
                                 <!-- Machine Number -->
                                 <div>
-                                    <label for="machine_number" class="block text-sm font-medium text-gray-700">
-                                        Machine Number <span class="text-red-500">*</span>
-                                    </label>
-                                    <input
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
                                         id="machine_number"
                                         v-model="form.machine_number"
-                                        type="text"
-                                        required
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        label="Machine Number *"
+                                        dialog-title="Machine Number"
+                                        placeholder="Tap to enter machine"
+                                        :error="form.errors.machine_number"
                                     />
-                                    <p v-if="form.errors.machine_number" class="mt-1 text-sm text-red-600">
-                                        {{ form.errors.machine_number }}
-                                    </p>
+                                    <template v-else>
+                                        <label for="machine_number" class="block text-sm font-medium text-gray-700">
+                                            Machine Number <span class="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            id="machine_number"
+                                            v-model="form.machine_number"
+                                            type="text"
+                                            required
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        />
+                                        <p v-if="form.errors.machine_number" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.machine_number }}
+                                        </p>
+                                    </template>
                                 </div>
 
                                 <!-- Process Settings -->
@@ -316,19 +339,30 @@ const onBlur = (field: string) => {
 
                                     <!-- Damper Setting -->
                                     <div>
-                                        <label for="damper_setting" class="block text-sm font-medium text-gray-700">
-                                            Damper Setting
-                                        </label>
-                                        <input
+                                        <TabletTextKeyboardField
+                                            v-if="isTabletMode"
                                             id="damper_setting"
                                             v-model="form.damper_setting"
-                                            type="text"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                            placeholder="e.g., 50%"
+                                            label="Damper Setting"
+                                            dialog-title="Damper Setting"
+                                            placeholder="Tap to enter setting"
+                                            :error="form.errors.damper_setting"
                                         />
-                                        <p v-if="form.errors.damper_setting" class="mt-1 text-sm text-red-600">
-                                            {{ form.errors.damper_setting }}
-                                        </p>
+                                        <template v-else>
+                                            <label for="damper_setting" class="block text-sm font-medium text-gray-700">
+                                                Damper Setting
+                                            </label>
+                                            <input
+                                                id="damper_setting"
+                                                v-model="form.damper_setting"
+                                                type="text"
+                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                placeholder="e.g., 50%"
+                                            />
+                                            <p v-if="form.errors.damper_setting" class="mt-1 text-sm text-red-600">
+                                                {{ form.errors.damper_setting }}
+                                            </p>
+                                        </template>
                                     </div>
 
                                     <!-- Time In -->
@@ -366,54 +400,87 @@ const onBlur = (field: string) => {
 
                                 <!-- PIC -->
                                 <div>
-                                    <label for="pic_id" class="block text-sm font-medium text-gray-700">
-                                        Person In Charge <span class="text-red-500">*</span>
-                                    </label>
-                                    <input
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
                                         id="pic_id"
                                         v-model="form.pic_id"
-                                        type="text"
-                                        required
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        placeholder="Enter name of person in charge"
+                                        label="Person In Charge *"
+                                        dialog-title="Person In Charge"
+                                        placeholder="Tap to enter PIC"
+                                        :error="form.errors.pic_id"
                                     />
-                                    <p v-if="form.errors.pic_id" class="mt-1 text-sm text-red-600">
-                                        {{ form.errors.pic_id }}
-                                    </p>
+                                    <template v-else>
+                                        <label for="pic_id" class="block text-sm font-medium text-gray-700">
+                                            Person In Charge <span class="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            id="pic_id"
+                                            v-model="form.pic_id"
+                                            type="text"
+                                            required
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            placeholder="Enter name of person in charge"
+                                        />
+                                        <p v-if="form.errors.pic_id" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.pic_id }}
+                                        </p>
+                                    </template>
                                 </div>
 
                                 <!-- Checked By -->
                                 <div>
-                                    <label for="checked_by_id" class="block text-sm font-medium text-gray-700">
-                                        Checked By
-                                    </label>
-                                    <input
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
                                         id="checked_by_id"
                                         v-model="form.checked_by_id"
-                                        type="text"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        placeholder="Enter name of person who checked"
+                                        label="Checked By"
+                                        dialog-title="Checked By"
+                                        placeholder="Tap to enter checker"
+                                        :error="form.errors.checked_by_id"
                                     />
-                                    <p v-if="form.errors.checked_by_id" class="mt-1 text-sm text-red-600">
-                                        {{ form.errors.checked_by_id }}
-                                    </p>
+                                    <template v-else>
+                                        <label for="checked_by_id" class="block text-sm font-medium text-gray-700">
+                                            Checked By
+                                        </label>
+                                        <input
+                                            id="checked_by_id"
+                                            v-model="form.checked_by_id"
+                                            type="text"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            placeholder="Enter name of person who checked"
+                                        />
+                                        <p v-if="form.errors.checked_by_id" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.checked_by_id }}
+                                        </p>
+                                    </template>
                                 </div>
 
                                 <!-- Verified By -->
                                 <div>
-                                    <label for="verified_by_id" class="block text-sm font-medium text-gray-700">
-                                        Verified By
-                                    </label>
-                                    <input
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
                                         id="verified_by_id"
                                         v-model="form.verified_by_id"
-                                        type="text"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        placeholder="Enter name of person who verified"
+                                        label="Verified By"
+                                        dialog-title="Verified By"
+                                        placeholder="Tap to enter verifier"
+                                        :error="form.errors.verified_by_id"
                                     />
-                                    <p v-if="form.errors.verified_by_id" class="mt-1 text-sm text-red-600">
-                                        {{ form.errors.verified_by_id }}
-                                    </p>
+                                    <template v-else>
+                                        <label for="verified_by_id" class="block text-sm font-medium text-gray-700">
+                                            Verified By
+                                        </label>
+                                        <input
+                                            id="verified_by_id"
+                                            v-model="form.verified_by_id"
+                                            type="text"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            placeholder="Enter name of person who verified"
+                                        />
+                                        <p v-if="form.errors.verified_by_id" class="mt-1 text-sm text-red-600">
+                                            {{ form.errors.verified_by_id }}
+                                        </p>
+                                    </template>
                                 </div>
                             </div>
 

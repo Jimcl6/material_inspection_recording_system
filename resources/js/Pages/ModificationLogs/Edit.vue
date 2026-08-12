@@ -47,6 +47,17 @@
                     </div>
                   </div>
                   <div>
+                    <TabletTextKeyboardField
+                      v-if="isTabletMode"
+                      id="model_code"
+                      v-model="form.model_code"
+                      label="Model Code *"
+                      dialog-title="Model Code"
+                      placeholder="Tap to enter model"
+                      :max-length="100"
+                      :error="form.errors.model_code"
+                    />
+                    <template v-else>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                       Model Code <span class="text-red-500">*</span>
                     </label>
@@ -60,8 +71,20 @@
                     <div v-if="form.errors.model_code" class="mt-1 text-sm text-red-600">
                       {{ form.errors.model_code }}
                     </div>
+                    </template>
                   </div>
                   <div>
+                    <TabletTextKeyboardField
+                      v-if="isTabletMode"
+                      id="item_for_modification"
+                      v-model="form.item_for_modification"
+                      label="Item for Modification *"
+                      dialog-title="Item for Modification"
+                      placeholder="Tap to enter item"
+                      :max-length="255"
+                      :error="form.errors.item_for_modification"
+                    />
+                    <template v-else>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                       Item for Modification <span class="text-red-500">*</span>
                     </label>
@@ -75,6 +98,7 @@
                     <div v-if="form.errors.item_for_modification" class="mt-1 text-sm text-red-600">
                       {{ form.errors.item_for_modification }}
                     </div>
+                    </template>
                   </div>
                 </div>
                 <div class="mt-6">
@@ -99,6 +123,17 @@
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div>
+                    <TabletTextKeyboardField
+                      v-if="isTabletMode"
+                      id="col_from"
+                      v-model="form.col_from"
+                      label="From"
+                      dialog-title="From"
+                      placeholder="Tap to enter from"
+                      :max-length="255"
+                      :error="form.errors.col_from"
+                    />
+                    <template v-else>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                       From
                     </label>
@@ -111,8 +146,20 @@
                     <div v-if="form.errors.col_from" class="mt-1 text-sm text-red-600">
                       {{ form.errors.col_from }}
                     </div>
+                    </template>
                   </div>
                   <div>
+                    <TabletTextKeyboardField
+                      v-if="isTabletMode"
+                      id="col_to"
+                      v-model="form.col_to"
+                      label="To"
+                      dialog-title="To"
+                      placeholder="Tap to enter to"
+                      :max-length="255"
+                      :error="form.errors.col_to"
+                    />
+                    <template v-else>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                       To
                     </label>
@@ -125,6 +172,7 @@
                     <div v-if="form.errors.col_to" class="mt-1 text-sm text-red-600">
                       {{ form.errors.col_to }}
                     </div>
+                    </template>
                   </div>
                   <div>
                     <TabletTextKeyboardField
@@ -152,6 +200,17 @@
                     </template>
                   </div>
                   <div>
+                    <TabletTextKeyboardField
+                      v-if="isTabletMode"
+                      id="job_no_transfer_order"
+                      v-model="form.job_no_transfer_order"
+                      label="Job No / Transfer Order"
+                      dialog-title="Job No / Transfer Order"
+                      placeholder="Tap to enter job"
+                      :max-length="255"
+                      :error="form.errors.job_no_transfer_order"
+                    />
+                    <template v-else>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                       Job No / Transfer Order
                     </label>
@@ -164,6 +223,7 @@
                     <div v-if="form.errors.job_no_transfer_order" class="mt-1 text-sm text-red-600">
                       {{ form.errors.job_no_transfer_order }}
                     </div>
+                    </template>
                   </div>
                 </div>
               </div>
@@ -175,6 +235,17 @@
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
+                    <TabletTextKeyboardField
+                      v-if="isTabletMode"
+                      id="start_serial"
+                      v-model="form.start_serial"
+                      label="Start Serial"
+                      dialog-title="Start Serial"
+                      placeholder="Tap to enter start serial"
+                      :max-length="255"
+                      :error="form.errors.start_serial"
+                    />
+                    <template v-else>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                       Start Serial
                     </label>
@@ -187,8 +258,20 @@
                     <div v-if="form.errors.start_serial" class="mt-1 text-sm text-red-600">
                       {{ form.errors.start_serial }}
                     </div>
+                    </template>
                   </div>
                   <div>
+                    <TabletTextKeyboardField
+                      v-if="isTabletMode"
+                      id="end_serial"
+                      v-model="form.end_serial"
+                      label="End Serial"
+                      dialog-title="End Serial"
+                      placeholder="Tap to enter end serial"
+                      :max-length="255"
+                      :error="form.errors.end_serial"
+                    />
+                    <template v-else>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                       End Serial
                     </label>
@@ -201,6 +284,7 @@
                     <div v-if="form.errors.end_serial" class="mt-1 text-sm text-red-600">
                       {{ form.errors.end_serial }}
                     </div>
+                    </template>
                   </div>
                 </div>
               </div>
@@ -212,6 +296,17 @@
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div>
+                    <TabletTextKeyboardField
+                      v-if="isTabletMode"
+                      id="recorded_by"
+                      v-model="form.recorded_by"
+                      label="Recorded By *"
+                      dialog-title="Recorded By"
+                      placeholder="Tap to enter recorder"
+                      :max-length="255"
+                      :error="form.errors.recorded_by"
+                    />
+                    <template v-else>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                       Recorded By <span class="text-red-500">*</span>
                     </label>
@@ -225,8 +320,20 @@
                     <div v-if="form.errors.recorded_by" class="mt-1 text-sm text-red-600">
                       {{ form.errors.recorded_by }}
                     </div>
+                    </template>
                   </div>
                   <div>
+                    <TabletTextKeyboardField
+                      v-if="isTabletMode"
+                      id="source_of_info"
+                      v-model="form.source_of_info"
+                      label="Source of Info"
+                      dialog-title="Source of Info"
+                      placeholder="Tap to enter source"
+                      :max-length="255"
+                      :error="form.errors.source_of_info"
+                    />
+                    <template v-else>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                       Source of Info
                     </label>
@@ -239,8 +346,20 @@
                     <div v-if="form.errors.source_of_info" class="mt-1 text-sm text-red-600">
                       {{ form.errors.source_of_info }}
                     </div>
+                    </template>
                   </div>
                   <div>
+                    <TabletTextKeyboardField
+                      v-if="isTabletMode"
+                      id="approved_by"
+                      v-model="form.approved_by"
+                      label="Approved By"
+                      dialog-title="Approved By"
+                      placeholder="Tap to enter approver"
+                      :max-length="255"
+                      :error="form.errors.approved_by"
+                    />
+                    <template v-else>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                       Approved By
                     </label>
@@ -253,6 +372,7 @@
                     <div v-if="form.errors.approved_by" class="mt-1 text-sm text-red-600">
                       {{ form.errors.approved_by }}
                     </div>
+                    </template>
                   </div>
                 </div>
               </div>
@@ -264,6 +384,17 @@
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div>
+                    <TabletTextKeyboardField
+                      v-if="isTabletMode"
+                      id="col_4m"
+                      v-model="form.col_4m"
+                      label="4M"
+                      dialog-title="4M"
+                      placeholder="Tap to enter 4M"
+                      :max-length="50"
+                      :error="form.errors.col_4m"
+                    />
+                    <template v-else>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                       4M
                     </label>
@@ -276,8 +407,20 @@
                     <div v-if="form.errors.col_4m" class="mt-1 text-sm text-red-600">
                       {{ form.errors.col_4m }}
                     </div>
+                    </template>
                   </div>
                   <div>
+                    <TabletTextKeyboardField
+                      v-if="isTabletMode"
+                      id="col_line"
+                      v-model="form.col_line"
+                      label="Line"
+                      dialog-title="Line"
+                      placeholder="Tap to enter line"
+                      :max-length="50"
+                      :error="form.errors.col_line"
+                    />
+                    <template v-else>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                       Line
                     </label>
@@ -290,6 +433,7 @@
                     <div v-if="form.errors.col_line" class="mt-1 text-sm text-red-600">
                       {{ form.errors.col_line }}
                     </div>
+                    </template>
                   </div>
                 </div>
                 <div class="mt-6">

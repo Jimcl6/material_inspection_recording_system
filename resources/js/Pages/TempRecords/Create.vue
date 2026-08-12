@@ -8,6 +8,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue'
 import TextInput from '@/Components/TextInput.vue'
 import Card from '@/Components/Card.vue'
 import NumericKeypadField from '@/Components/NumericKeypadField.vue'
+import TabletTextKeyboardField from '@/Components/TabletTextKeyboardField.vue'
 import ModelTypeRadioGroup from '@/Components/ModelTypeRadioGroup.vue'
 import SectionTitle from '@/Components/SectionTitle.vue'
 import TabletFormStepper from '@/Components/Tablet/TabletFormStepper.vue'
@@ -109,16 +110,27 @@ const submit = () => {
                                 </div>
 
                                 <div>
-                                    <InputLabel for="model_series" value="Model Series *" />
-                                    <TextInput
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
                                         id="model_series"
-                                        type="text"
                                         v-model="form.model_series"
-                                        class="mt-1 block w-full"
-                                        :class="{ 'border-red-500': form.errors.model_series }"
-                                        required
+                                        label="Model Series *"
+                                        dialog-title="Model Series"
+                                        placeholder="Tap to enter model"
+                                        :error="form.errors.model_series"
                                     />
-                                    <InputError :message="form.errors.model_series" class="mt-2" />
+                                    <template v-else>
+                                        <InputLabel for="model_series" value="Model Series *" />
+                                        <TextInput
+                                            id="model_series"
+                                            type="text"
+                                            v-model="form.model_series"
+                                            class="mt-1 block w-full"
+                                            :class="{ 'border-red-500': form.errors.model_series }"
+                                            required
+                                        />
+                                        <InputError :message="form.errors.model_series" class="mt-2" />
+                                    </template>
                                 </div>
 
                                 <ModelTypeRadioGroup
@@ -131,15 +143,26 @@ const submit = () => {
                                 />
 
                                 <div>
-                                    <InputLabel for="line_assigned" value="Line Assigned" />
-                                    <TextInput
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
                                         id="line_assigned"
-                                        type="text"
                                         v-model="form.line_assigned"
-                                        class="mt-1 block w-full"
-                                        :class="{ 'border-red-500': form.errors.line_assigned }"
+                                        label="Line Assigned"
+                                        dialog-title="Line Assigned"
+                                        placeholder="Tap to enter line"
+                                        :error="form.errors.line_assigned"
                                     />
-                                    <InputError :message="form.errors.line_assigned" class="mt-2" />
+                                    <template v-else>
+                                        <InputLabel for="line_assigned" value="Line Assigned" />
+                                        <TextInput
+                                            id="line_assigned"
+                                            type="text"
+                                            v-model="form.line_assigned"
+                                            class="mt-1 block w-full"
+                                            :class="{ 'border-red-500': form.errors.line_assigned }"
+                                        />
+                                        <InputError :message="form.errors.line_assigned" class="mt-2" />
+                                    </template>
                                 </div>
                             </div>
                         </Card>
@@ -151,15 +174,26 @@ const submit = () => {
                             </template>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <InputLabel for="control_no" value="Control Number" />
-                                    <TextInput
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
                                         id="control_no"
-                                        type="text"
                                         v-model="form.control_no"
-                                        class="mt-1 block w-full"
-                                        :class="{ 'border-red-500': form.errors.control_no }"
+                                        label="Control Number"
+                                        dialog-title="Control Number"
+                                        placeholder="Tap to enter control"
+                                        :error="form.errors.control_no"
                                     />
-                                    <InputError :message="form.errors.control_no" class="mt-2" />
+                                    <template v-else>
+                                        <InputLabel for="control_no" value="Control Number" />
+                                        <TextInput
+                                            id="control_no"
+                                            type="text"
+                                            v-model="form.control_no"
+                                            class="mt-1 block w-full"
+                                            :class="{ 'border-red-500': form.errors.control_no }"
+                                        />
+                                        <InputError :message="form.errors.control_no" class="mt-2" />
+                                    </template>
                                 </div>
 
                                 <div>
@@ -179,27 +213,49 @@ const submit = () => {
                                 </div>
 
                                 <div>
-                                    <InputLabel for="process_assigned" value="Process Assigned" />
-                                    <TextInput
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
                                         id="process_assigned"
-                                        type="text"
                                         v-model="form.process_assigned"
-                                        class="mt-1 block w-full"
-                                        :class="{ 'border-red-500': form.errors.process_assigned }"
+                                        label="Process Assigned"
+                                        dialog-title="Process Assigned"
+                                        placeholder="Tap to enter process"
+                                        :error="form.errors.process_assigned"
                                     />
-                                    <InputError :message="form.errors.process_assigned" class="mt-2" />
+                                    <template v-else>
+                                        <InputLabel for="process_assigned" value="Process Assigned" />
+                                        <TextInput
+                                            id="process_assigned"
+                                            type="text"
+                                            v-model="form.process_assigned"
+                                            class="mt-1 block w-full"
+                                            :class="{ 'border-red-500': form.errors.process_assigned }"
+                                        />
+                                        <InputError :message="form.errors.process_assigned" class="mt-2" />
+                                    </template>
                                 </div>
 
                                 <div>
-                                    <InputLabel for="person_in_charge" value="Person In Charge" />
-                                    <TextInput
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
                                         id="person_in_charge"
-                                        type="text"
                                         v-model="form.person_in_charge"
-                                        class="mt-1 block w-full"
-                                        :class="{ 'border-red-500': form.errors.person_in_charge }"
+                                        label="Person In Charge"
+                                        dialog-title="Person In Charge"
+                                        placeholder="Tap to enter PIC"
+                                        :error="form.errors.person_in_charge"
                                     />
-                                    <InputError :message="form.errors.person_in_charge" class="mt-2" />
+                                    <template v-else>
+                                        <InputLabel for="person_in_charge" value="Person In Charge" />
+                                        <TextInput
+                                            id="person_in_charge"
+                                            type="text"
+                                            v-model="form.person_in_charge"
+                                            class="mt-1 block w-full"
+                                            :class="{ 'border-red-500': form.errors.person_in_charge }"
+                                        />
+                                        <InputError :message="form.errors.person_in_charge" class="mt-2" />
+                                    </template>
                                 </div>
                             </div>
                         </Card>
@@ -320,16 +376,26 @@ const submit = () => {
                                 </div>
 
                                 <div class="w-full md:w-1/2">
-                                    <InputLabel for="checked_by" value="Checked By" />
-                                    <TextInput
+                                    <TabletTextKeyboardField
+                                        v-if="isTabletMode"
                                         id="checked_by"
-                                        type="text"
                                         v-model="form.checked_by"
-                                        class="mt-1 block w-full"
-                                        :class="{ 'border-red-500': form.errors.checked_by }"
+                                        label="Checked By"
+                                        dialog-title="Checked By"
+                                        placeholder="Tap to enter checker"
+                                        :error="form.errors.checked_by"
                                     />
-                                    <InputError :message="form.errors.checked_by" class="mt-2" />
-                                    <InputError :message="form.errors.checked_by" class="mt-2" />
+                                    <template v-else>
+                                        <InputLabel for="checked_by" value="Checked By" />
+                                        <TextInput
+                                            id="checked_by"
+                                            type="text"
+                                            v-model="form.checked_by"
+                                            class="mt-1 block w-full"
+                                            :class="{ 'border-red-500': form.errors.checked_by }"
+                                        />
+                                        <InputError :message="form.errors.checked_by" class="mt-2" />
+                                    </template>
                                 </div>
                             </div>
                         </Card>
