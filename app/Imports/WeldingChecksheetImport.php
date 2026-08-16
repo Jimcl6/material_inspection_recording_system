@@ -154,9 +154,9 @@ class WeldingChecksheetImport
         $record['operator_id'] = $this->findUserIdByName($record['operator_name_raw']);
         $record['checked_by_id'] = $this->findUserIdByName($record['checked_by_name_raw']);
         $record['material_fields'] = [
-            'tank' => $this->getCellValue($sheet, 'K'.$startRow),
-            'cd_partition' => $this->getCellValue($sheet, 'L'.$startRow),
-            'vcr' => $this->getCellValue($sheet, 'M'.$startRow),
+            'air_valve' => $this->getCellValue($sheet, 'M'.$startRow),
+            'casing' => $this->getCellValue($sheet, 'K'.$startRow),
+            'valve_cover' => $this->getCellValue($sheet, 'L'.$startRow),
         ];
 
         $record['samples'] = $this->parseSamples($sheet, $startRow, $type, ['S', 'T', 'U', 'V', 'W']);

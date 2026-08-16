@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { route } from 'ziggy-js';
 import { usePermissions } from '@/Composables/usePermissions';
+import { computed } from 'vue';
 
 const { canCreate, canUpdate, approvalsEnabled } = usePermissions();
 
@@ -13,6 +14,16 @@ const props = defineProps<{
 const formatDate = (value?: string): string => value ? new Date(value).toLocaleDateString() : 'N/A';
 const materialFields = () => props.checksheet.material_fields || {};
 const sampleValues = (sample: any): string[] => sample.sample_values || [];
+const materialFieldLabels = computed<Record<string, string>>(() => {
+    return Object.fromEntries(
+        (props.checksheet.type?.material_fields || []).map((field: any) => [field.key, field.label])
+    );
+});
+
+const materialFieldLabel = (key: string): string => {
+    return materialFieldLabels.value[key]
+        || key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
 </script>
 
 <template>
@@ -53,7 +64,7 @@ const sampleValues = (sample: any): string[] => sample.sample_values || [];
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Materials</h3>
                         <dl class="tablet-detail-grid grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                             <div v-for="(value, key) in materialFields()" :key="key">
-                                <dt class="font-medium text-gray-500">{{ String(key).replaceAll('_', ' ') }}</dt>
+                                <dt class="font-medium text-gray-500">{{ materialFieldLabel(String(key)) }}</dt>
                                 <dd>{{ value || 'N/A' }}</dd>
                             </div>
                         </dl>
