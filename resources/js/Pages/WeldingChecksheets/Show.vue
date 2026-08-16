@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { route } from 'ziggy-js';
 import { usePermissions } from '@/Composables/usePermissions';
+import { computed, ref } from 'vue';
+import DuplicateSequenceModal from './Partials/DuplicateSequenceModal.vue';
+
+type DuplicateSequenceMode = 'next_letter' | 'same_letter_new_run';
 
 const { canCreate, canUpdate, approvalsEnabled } = usePermissions();
 
@@ -10,9 +14,18 @@ const props = defineProps<{
     checksheet: any;
 }>();
 
+const showDuplicatePrompt = ref(false);
 const formatDate = (value?: string): string => value ? new Date(value).toLocaleDateString() : 'N/A';
 const materialFields = () => props.checksheet.material_fields || {};
 const sampleValues = (sample: any): string[] => sample.sample_values || [];
+const duplicateRecordLabel = computed(() => props.checksheet.item_code || `Record #${props.checksheet.id}`);
+
+const duplicateWithSequence = (mode: DuplicateSequenceMode) => {
+    showDuplicatePrompt.value = false;
+    router.get(route('welding-checksheets.duplicate', props.checksheet.id), {
+        sequence_mode: mode,
+    });
+};
 </script>
 
 <template>
@@ -23,7 +36,7 @@ const sampleValues = (sample: any): string[] => sample.sample_values || [];
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">Welding Checksheet Details</h2>
                 <div class="space-x-3">
-                    <Link v-if="canCreate('welding')" :href="route('welding-checksheets.duplicate', checksheet.id)" class="text-emerald-600 hover:text-emerald-800">Duplicate</Link>
+                    <button v-if="canCreate('welding')" type="button" class="text-emerald-600 hover:text-emerald-800" @click="showDuplicatePrompt = true">Duplicate</button>
                     <Link v-if="canUpdate('welding')" :href="route('welding-checksheets.edit', checksheet.id)" class="text-blue-600 hover:text-blue-800">Edit</Link>
                     <Link :href="route('welding-checksheets.index')" class="text-gray-600 hover:text-gray-800">&larr; Back to List</Link>
                 </div>
@@ -98,5 +111,12 @@ const sampleValues = (sample: any): string[] => sample.sample_values || [];
                 </div>
             </div>
         </div>
+
+        <DuplicateSequenceModal
+            :show="showDuplicatePrompt"
+            :record-label="duplicateRecordLabel"
+            @close="showDuplicatePrompt = false"
+            @select="duplicateWithSequence"
+        />
     </AppLayout>
 </template>
