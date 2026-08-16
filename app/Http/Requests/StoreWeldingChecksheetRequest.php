@@ -141,7 +141,7 @@ class StoreWeldingChecksheetRequest extends FormRequest
 
         if ($this->filled('production_date') && strtotime((string) $this->input('production_date')) !== false) {
             $productionDate = date('Y-m-d', strtotime((string) $this->input('production_date')));
-            if ($source->production_date?->format('Y-m-d') !== $productionDate) {
+            if ($source->production_date->format('Y-m-d') !== $productionDate) {
                 $validator->errors()->add('production_date', 'Keep the same Production Date when using the same Letter Code.');
             }
         }
