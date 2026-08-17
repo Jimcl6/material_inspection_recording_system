@@ -33,6 +33,19 @@ class WeldingChecksheetConfigurationTest extends TestCase
         $this->assertDatabaseHas('welding_checksheet_types', ['key' => 'casing_tank', 'is_active' => true]);
 
         $casingTankId = WeldingChecksheetType::where('key', 'casing_tank')->value('id');
+        $casingTank = WeldingChecksheetType::findOrFail($casingTankId);
+        $this->assertEquals(
+            [
+                ['key' => 'air_valve', 'label' => 'Airvalve', 'type' => 'text'],
+                ['key' => 'casing', 'label' => 'Casing', 'type' => 'text'],
+                ['key' => 'valve_cover', 'label' => 'Valve Cover', 'type' => 'text'],
+            ],
+            $casingTank->material_fields
+        );
+        $this->assertEquals(
+            ['air_valve' => 'M', 'casing' => 'K', 'valve_cover' => 'L'],
+            $casingTank->import_config['material_columns']
+        );
         $this->assertSame(22, WeldingItemConfig::where('checksheet_type_id', $casingTankId)->count());
         $this->assertDatabaseHas('welding_item_configs', [
             'checksheet_type_id' => $casingTankId,
@@ -114,6 +127,91 @@ class WeldingChecksheetConfigurationTest extends TestCase
         $this->assertSame($itemUpdatedAt, $itemConfig->getRawOriginal('updated_at'));
     }
 
+    public function test_casing_tank_material_field_rename_migration_updates_type_and_existing_records(): void
+    {
+        $this->runRepairMigration();
+
+        $casingTank = WeldingChecksheetType::where('key', 'casing_tank')->firstOrFail();
+        $casingTank->update([
+            'material_fields' => [
+                ['key' => 'tank', 'label' => 'Tank', 'type' => 'text'],
+                ['key' => 'cd_partition', 'label' => 'CD Partition', 'type' => 'text'],
+                ['key' => 'vcr', 'label' => 'VCR', 'type' => 'text'],
+            ],
+            'import_config' => [
+                'data_start_row' => 10,
+                'record_span' => 5,
+                'material_columns' => ['tank' => 'K', 'cd_partition' => 'L', 'vcr' => 'M'],
+                'sample_columns' => ['S', 'T', 'U', 'V', 'W'],
+                'format' => 'casing_tank',
+            ],
+        ]);
+
+        $now = now();
+        $casingChecksheetId = DB::table('welding_checksheets')->insertGetId([
+            'checksheet_type_id' => $casingTank->id,
+            'item_code' => 'CSB-OLD-MATERIALS',
+            'production_date' => '2026-08-14',
+            'material_fields' => json_encode([
+                'tank' => 'CASING-LOT',
+                'cd_partition' => 'VALVE-COVER-LOT',
+                'vcr' => 'AIR-VALVE-LOT',
+                'extra' => 'KEEP-ME',
+            ], JSON_THROW_ON_ERROR),
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        $diaphragm = WeldingChecksheetType::where('key', 'diaphragm')->firstOrFail();
+        $diaphragmChecksheetId = DB::table('welding_checksheets')->insertGetId([
+            'checksheet_type_id' => $diaphragm->id,
+            'item_code' => 'DFB-UNCHANGED',
+            'production_date' => '2026-08-14',
+            'material_fields' => json_encode(['vcr' => 'DO-NOT-TOUCH'], JSON_THROW_ON_ERROR),
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        $this->runMaterialRenameMigration();
+        $this->runMaterialRenameMigration();
+
+        $casingTank->refresh();
+        $this->assertEquals(
+            [
+                ['key' => 'air_valve', 'label' => 'Airvalve', 'type' => 'text'],
+                ['key' => 'casing', 'label' => 'Casing', 'type' => 'text'],
+                ['key' => 'valve_cover', 'label' => 'Valve Cover', 'type' => 'text'],
+            ],
+            $casingTank->material_fields
+        );
+        $this->assertEquals(
+            ['air_valve' => 'M', 'casing' => 'K', 'valve_cover' => 'L'],
+            $casingTank->import_config['material_columns']
+        );
+
+        $renamedFields = json_decode(
+            DB::table('welding_checksheets')->where('id', $casingChecksheetId)->value('material_fields'),
+            true,
+            flags: JSON_THROW_ON_ERROR
+        );
+
+        $this->assertSame('AIR-VALVE-LOT', $renamedFields['air_valve']);
+        $this->assertSame('CASING-LOT', $renamedFields['casing']);
+        $this->assertSame('VALVE-COVER-LOT', $renamedFields['valve_cover']);
+        $this->assertSame('KEEP-ME', $renamedFields['extra']);
+        $this->assertArrayNotHasKey('vcr', $renamedFields);
+        $this->assertArrayNotHasKey('tank', $renamedFields);
+        $this->assertArrayNotHasKey('cd_partition', $renamedFields);
+
+        $diaphragmFields = json_decode(
+            DB::table('welding_checksheets')->where('id', $diaphragmChecksheetId)->value('material_fields'),
+            true,
+            flags: JSON_THROW_ON_ERROR
+        );
+
+        $this->assertSame(['vcr' => 'DO-NOT-TOUCH'], $diaphragmFields);
+    }
+
     public function test_import_page_receives_both_active_canonical_types(): void
     {
         $this->runRepairMigration();
@@ -147,6 +245,17 @@ class WeldingChecksheetConfigurationTest extends TestCase
             $response
                 ->assertOk()
                 ->assertJson(['success' => true]);
+
+            if ($key === 'casing_tank') {
+                $this->assertSame(
+                    [
+                        'air_valve' => 'AIR-VALVE-CELL',
+                        'casing' => 'CASING-CELL',
+                        'valve_cover' => 'VALVE-COVER-CELL',
+                    ],
+                    $response->json('preview.new_records.0.material_fields')
+                );
+            }
 
             $tempPath = session('welding_import.file');
             if ($tempPath) {
@@ -231,6 +340,12 @@ class WeldingChecksheetConfigurationTest extends TestCase
         $migration->up();
     }
 
+    private function runMaterialRenameMigration(): void
+    {
+        $migration = require database_path('migrations/2026_08_14_000001_rename_casing_tank_material_fields.php');
+        $migration->up();
+    }
+
     private function weldingWorkbookUpload(string $key): UploadedFile
     {
         $spreadsheet = new Spreadsheet;
@@ -242,6 +357,12 @@ class WeldingChecksheetConfigurationTest extends TestCase
         $sheet->setCellValue('N10', 100);
         $sheet->setCellValue('O10', 'JOB-'.$key);
         $sheet->setCellValue('P10', 100);
+
+        if ($key === 'casing_tank') {
+            $sheet->setCellValue('K10', 'CASING-CELL');
+            $sheet->setCellValue('L10', 'VALVE-COVER-CELL');
+            $sheet->setCellValue('M10', 'AIR-VALVE-CELL');
+        }
 
         $path = tempnam(sys_get_temp_dir(), 'welding-import-').'.xlsx';
         IOFactory::createWriter($spreadsheet, 'Xlsx')->save($path);

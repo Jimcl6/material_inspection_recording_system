@@ -18,6 +18,17 @@ const showDuplicatePrompt = ref(false);
 const formatDate = (value?: string): string => value ? new Date(value).toLocaleDateString() : 'N/A';
 const materialFields = () => props.checksheet.material_fields || {};
 const sampleValues = (sample: any): string[] => sample.sample_values || [];
+const materialFieldLabels = computed<Record<string, string>>(() => {
+    return Object.fromEntries(
+        (props.checksheet.type?.material_fields || []).map((field: any) => [field.key, field.label])
+    );
+});
+
+const materialFieldLabel = (key: string): string => {
+    return materialFieldLabels.value[key]
+        || key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
+
 const duplicateRecordLabel = computed(() => props.checksheet.item_code || `Record #${props.checksheet.id}`);
 
 const duplicateWithSequence = (mode: DuplicateSequenceMode) => {
@@ -66,7 +77,7 @@ const duplicateWithSequence = (mode: DuplicateSequenceMode) => {
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Materials</h3>
                         <dl class="tablet-detail-grid grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                             <div v-for="(value, key) in materialFields()" :key="key">
-                                <dt class="font-medium text-gray-500">{{ String(key).replaceAll('_', ' ') }}</dt>
+                                <dt class="font-medium text-gray-500">{{ materialFieldLabel(String(key)) }}</dt>
                                 <dd>{{ value || 'N/A' }}</dd>
                             </div>
                         </dl>
