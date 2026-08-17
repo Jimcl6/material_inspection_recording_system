@@ -435,7 +435,7 @@ const submitLabel = computed(() => {
         return 'Update Checksheet';
     }
 
-    return isDuplicate.value ? 'Create Duplicate' : 'Create Checksheet';
+    return isDuplicate.value ? 'Submit' : 'Create Checksheet';
 });
 
 const validationSummary = computed(() => {

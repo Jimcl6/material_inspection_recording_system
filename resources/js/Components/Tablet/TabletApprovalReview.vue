@@ -5,12 +5,15 @@ import { route } from 'ziggy-js';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline';
 
 type Fact = { label: string; value: unknown };
+type DetailItem = { label: string; value: unknown };
+type DetailSection = { title: string; items: DetailItem[] };
 
 const props = defineProps<{
     records: any[];
     titleFor: (record: any) => unknown;
     subtitleFor?: (record: any) => unknown;
     factsFor: (record: any) => Fact[];
+    detailsFor?: (record: any) => DetailSection[];
     showRouteName: string;
     notes: string;
     processing?: boolean;
@@ -61,6 +64,18 @@ const displayValue = (value: unknown): string =>
                     <dd class="mt-1 text-sm font-semibold text-gray-900">{{ displayValue(fact.value) }}</dd>
                 </div>
             </dl>
+
+            <div v-if="detailsFor" class="mt-5 space-y-4 border-t border-gray-200 pt-4">
+                <section v-for="section in detailsFor(currentRecord)" :key="section.title">
+                    <h4 class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ section.title }}</h4>
+                    <dl class="mt-2 space-y-2">
+                        <div v-for="item in section.items" :key="`${section.title}-${item.label}`" class="grid grid-cols-2 gap-3 text-sm">
+                            <dt class="text-gray-500">{{ item.label }}</dt>
+                            <dd class="break-words font-semibold text-gray-900">{{ displayValue(item.value) }}</dd>
+                        </div>
+                    </dl>
+                </section>
+            </div>
 
             <Link
                 :href="route(showRouteName, currentRecord.id)"
