@@ -84,7 +84,7 @@ class WeldingChecksheetDuplicateTest extends TestCase
     public function test_duplicate_form_preserves_samples_and_assigns_next_letter_code(): void
     {
         $type = $this->createType();
-        $source = $this->createChecksheet($type, ['letter_code' => 'A']);
+        $source = $this->createChecksheet($type, ['letter_code' => 'A', 'prod_qty' => 100]);
         $source->samples()->create([
             'check_item_key' => 'appearance',
             'check_item_label' => 'Appearance',
@@ -103,7 +103,122 @@ class WeldingChecksheetDuplicateTest extends TestCase
         $this->assertSame('duplicate', $props['formMode']);
         $this->assertSame($source->id, $props['sourceChecksheetId']);
         $this->assertSame('B', $props['checksheet']['letter_code']);
+        $this->assertSame('next_letter', $props['duplicateSequenceMode']);
+        $this->assertSame(100, $props['checksheet']['prod_qty']);
+        $this->assertSame('JOB-100', $props['checksheet']['job_number']);
         $this->assertSame(['P', '/', 'P', '', 'P'], $props['checksheet']['samples'][0]['sample_values']);
+    }
+
+    public function test_duplicate_form_can_keep_same_letter_and_clear_new_run_details(): void
+    {
+        $type = $this->createType();
+        $source = $this->createChecksheet($type, [
+            'letter_code' => 'A',
+            'job_number' => 'JOB-100',
+            'prod_qty' => 100,
+        ]);
+
+        $response = $this->withoutMiddleware(CheckModulePermission::class)
+            ->actingAs(User::factory()->create())
+            ->get(route('welding-checksheets.duplicate', [
+                'welding_checksheet' => $source,
+                'sequence_mode' => 'same_letter_new_run',
+            ]));
+
+        $response->assertOk();
+
+        $props = $response->viewData('page')['props'];
+        $this->assertSame('duplicate', $props['formMode']);
+        $this->assertSame('same_letter_new_run', $props['duplicateSequenceMode']);
+        $this->assertSame($source->id, $props['sourceChecksheetId']);
+        $this->assertSame('A', $props['checksheet']['letter_code']);
+        $this->assertSame('', $props['checksheet']['job_number']);
+        $this->assertNull($props['checksheet']['prod_qty']);
+        $this->assertSame('JOB-100', $props['sourceJobNumber']);
+        $this->assertSame(100, $props['sourceProdQty']);
+        $this->assertSame('A', $props['sourceLetterCode']);
+    }
+
+    public function test_same_letter_new_run_store_reuses_letter_with_new_job_number_and_prod_qty(): void
+    {
+        $type = $this->createType();
+        $source = $this->createChecksheet($type, [
+            'letter_code' => 'A',
+            'job_number' => 'JOB-100',
+            'prod_qty' => 100,
+        ]);
+
+        $this->withoutMiddleware(CheckModulePermission::class)
+            ->actingAs(User::factory()->create())
+            ->post(route('welding-checksheets.store'), $this->payload($type, [
+                'letter_code' => 'A',
+                'job_number' => 'JOB-200',
+                'prod_qty' => 150,
+                'duplicate_sequence_mode' => 'same_letter_new_run',
+                'source_checksheet_id' => $source->id,
+            ]))
+            ->assertRedirect(route('welding-checksheets.index'));
+
+        $this->assertDatabaseHas('welding_checksheets', [
+            'checksheet_type_id' => $type->id,
+            'item_code' => 'WELD-001',
+            'production_date' => '2026-08-12',
+            'machine_no' => 'M-01',
+            'letter_code' => 'A',
+            'job_number' => 'JOB-200',
+            'prod_qty' => 150,
+        ]);
+    }
+
+    public function test_same_letter_new_run_store_requires_changed_job_number_and_prod_qty(): void
+    {
+        $type = $this->createType();
+        $source = $this->createChecksheet($type, [
+            'letter_code' => 'A',
+            'job_number' => 'JOB-100',
+            'prod_qty' => 100,
+        ]);
+
+        $this->withoutMiddleware(CheckModulePermission::class)
+            ->actingAs(User::factory()->create())
+            ->from(route('welding-checksheets.duplicate', [
+                'welding_checksheet' => $source,
+                'sequence_mode' => 'same_letter_new_run',
+            ]))
+            ->post(route('welding-checksheets.store'), $this->payload($type, [
+                'letter_code' => 'A',
+                'job_number' => 'JOB-100',
+                'prod_qty' => 100,
+                'duplicate_sequence_mode' => 'same_letter_new_run',
+                'source_checksheet_id' => $source->id,
+            ]))
+            ->assertSessionHasErrors(['job_number', 'prod_qty']);
+    }
+
+    public function test_same_letter_new_run_store_requires_same_production_date(): void
+    {
+        $type = $this->createType();
+        $source = $this->createChecksheet($type, [
+            'letter_code' => 'A',
+            'job_number' => 'JOB-100',
+            'prod_qty' => 100,
+        ]);
+
+        $this->withoutMiddleware(CheckModulePermission::class)
+            ->actingAs(User::factory()->create())
+            ->from(route('welding-checksheets.duplicate', [
+                'welding_checksheet' => $source,
+                'sequence_mode' => 'same_letter_new_run',
+            ]))
+            ->post(route('welding-checksheets.store'), $this->payload($type, [
+                'production_date' => '2026-08-13',
+                'letter_code' => 'A',
+                'job_number' => 'JOB-200',
+                'prod_qty' => 150,
+                'duplicate_sequence_mode' => 'same_letter_new_run',
+                'source_checksheet_id' => $source->id,
+            ]))
+            ->assertSessionHasErrors(['production_date']);
     }
 
     private function createType(): WeldingChecksheetType
@@ -131,6 +246,7 @@ class WeldingChecksheetDuplicateTest extends TestCase
             'production_date' => '2026-08-12',
             'machine_no' => 'M-01',
             'letter_code' => null,
+            'prod_qty' => 100,
             'job_number' => 'JOB-100',
             'material_fields' => [
                 'material_lot' => 'MAT-1',
@@ -157,6 +273,7 @@ class WeldingChecksheetDuplicateTest extends TestCase
             'production_date' => '2026-08-12',
             'machine_no' => 'M-01',
             'letter_code' => 'A',
+            'prod_qty' => 100,
             'job_number' => 'JOB-100',
             'material_fields' => [
                 'material_lot' => 'MAT-1',

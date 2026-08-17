@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, useForm } from '@inertiajs/vue3';
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import TabletFormStepper from '@/Components/Tablet/TabletFormStepper.vue';
 import NumericKeypadDialog from '@/Components/NumericKeypadDialog.vue';
@@ -160,12 +160,19 @@ const props = defineProps<{
     checksheet?: Checksheet;
     formMode?: 'create' | 'edit' | 'duplicate';
     sourceChecksheetId?: number | null;
+    duplicateSequenceMode?: 'next_letter' | 'same_letter_new_run';
+    sourceJobNumber?: string | null;
+    sourceProdQty?: number | null;
+    sourceLetterCode?: string | null;
 }>();
 
 const mode = computed(() => props.formMode || (props.checksheet?.id ? 'edit' : 'create'));
 const isEdit = computed(() => mode.value === 'edit');
 const isDuplicate = computed(() => mode.value === 'duplicate');
+const duplicateSequenceMode = computed(() => props.duplicateSequenceMode || 'next_letter');
+const isSameLetterNewRun = computed(() => isDuplicate.value && duplicateSequenceMode.value === 'same_letter_new_run');
 const canAutoManageLetterCode = computed(() => !isEdit.value);
+const canRefreshLetterCode = computed(() => canAutoManageLetterCode.value && !isSameLetterNewRun.value);
 const hasTypes = computed(() => props.types.length > 0);
 const firstType = props.types[0] || null;
 const { isTabletMode } = useTabletMode();
@@ -197,6 +204,8 @@ const form = useForm({
     job_number: props.checksheet?.job_number || '',
     quantity: props.checksheet?.quantity ?? null,
     temperature: props.checksheet?.temperature ?? null,
+    duplicate_sequence_mode: props.formMode === 'duplicate' ? duplicateSequenceMode.value : null,
+    source_checksheet_id: props.sourceChecksheetId || null,
     material_fields: props.checksheet?.material_fields || {},
     operator_id: props.checksheet?.operator_id || null,
     technician_id: props.checksheet?.technician_id || null,
@@ -296,7 +305,7 @@ const clearMaterialFields = (): void => {
 };
 
 const refreshLetterCode = async (): Promise<void> => {
-    if (!canAutoManageLetterCode.value || !form.checksheet_type_id || !form.production_date) {
+    if (!canRefreshLetterCode.value || !form.checksheet_type_id || !form.production_date) {
         return;
     }
 
@@ -389,6 +398,16 @@ if (!form.samples.length && firstType) {
 } else {
     syncTemplateFields(false);
 }
+
+onMounted(() => {
+    if (!isSameLetterNewRun.value) {
+        return;
+    }
+
+    nextTick(() => {
+        document.getElementById('welding-job-number')?.focus();
+    });
+});
 
 const submit = () => {
     if (!hasTypes.value) {
@@ -924,6 +943,9 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
         <div v-show="!isTabletMode || currentStep === 1" class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
             <div class="p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Production Details</h3>
+                <div v-if="isSameLetterNewRun" class="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+                    Letter Code {{ props.sourceLetterCode || form.letter_code || 'N/A' }} will stay the same. Enter the new Job Number and Prod Qty for this run.
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Production Date *</label>
@@ -968,7 +990,7 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             :readonly="canAutoManageLetterCode"
                         />
                     </div>
-                    <div>
+                    <div :class="isSameLetterNewRun ? 'rounded-md ring-2 ring-emerald-200 ring-offset-2' : ''">
                         <NumericKeypadField
                             v-if="isTabletMode"
                             id="welding-prod-qty"
@@ -976,14 +998,23 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             label="Prod Qty"
                             dialog-title="Production Quantity"
                             :decimal-places="0"
+                            :error="form.errors.prod_qty"
                             @update:model-value="form.prod_qty = $event === '' ? null : Number($event)"
                         />
                         <template v-else>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Prod Qty</label>
-                            <input v-model="form.prod_qty" type="number" min="0" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                            <input
+                                id="welding-prod-qty"
+                                v-model="form.prod_qty"
+                                type="number"
+                                min="0"
+                                class="w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                :class="form.errors.prod_qty ? 'border-red-500' : 'border-gray-300'"
+                            />
+                            <p v-if="form.errors.prod_qty" class="mt-1 text-sm text-red-600">{{ form.errors.prod_qty }}</p>
                         </template>
                     </div>
-                    <div>
+                    <div :class="isSameLetterNewRun ? 'rounded-md ring-2 ring-emerald-200 ring-offset-2' : ''">
                         <TabletTextKeyboardField
                             v-if="isTabletMode"
                             id="welding-job-number"
@@ -991,10 +1022,18 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             label="Job Number"
                             dialog-title="Job Number"
                             placeholder="Tap to enter job"
+                            :error="form.errors.job_number"
                         />
                         <template v-else>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Job Number</label>
-                            <input v-model="form.job_number" type="text" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                            <input
+                                id="welding-job-number"
+                                v-model="form.job_number"
+                                type="text"
+                                class="w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                :class="form.errors.job_number ? 'border-red-500' : 'border-gray-300'"
+                            />
+                            <p v-if="form.errors.job_number" class="mt-1 text-sm text-red-600">{{ form.errors.job_number }}</p>
                         </template>
                     </div>
                     <div>

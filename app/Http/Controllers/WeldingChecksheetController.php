@@ -77,18 +77,31 @@ class WeldingChecksheetController extends Controller
         return Inertia::render('WeldingChecksheets/Create', $this->formOptions());
     }
 
-    public function duplicate(WeldingChecksheet $welding_checksheet)
+    public function duplicate(Request $request, WeldingChecksheet $welding_checksheet)
     {
         $welding_checksheet->load(['type', 'itemConfig', 'samples']);
+        $sequenceMode = in_array($request->input('sequence_mode'), ['next_letter', 'same_letter_new_run'], true)
+            ? $request->input('sequence_mode')
+            : 'next_letter';
 
         $duplicate = $welding_checksheet->toArray();
         $duplicate['production_date'] = $welding_checksheet->production_date->format('Y-m-d');
-        $duplicate['letter_code'] = $this->nextLetterForData($duplicate);
+        if ($sequenceMode === 'same_letter_new_run') {
+            $duplicate['letter_code'] = $welding_checksheet->letter_code;
+            $duplicate['job_number'] = '';
+            $duplicate['prod_qty'] = null;
+        } else {
+            $duplicate['letter_code'] = $this->nextLetterForData($duplicate);
+        }
 
         return Inertia::render('WeldingChecksheets/Create', array_merge($this->formOptions(), [
             'checksheet' => $duplicate,
             'formMode' => 'duplicate',
             'sourceChecksheetId' => $welding_checksheet->id,
+            'duplicateSequenceMode' => $sequenceMode,
+            'sourceJobNumber' => $welding_checksheet->job_number,
+            'sourceProdQty' => $welding_checksheet->prod_qty,
+            'sourceLetterCode' => $welding_checksheet->letter_code,
         ]));
     }
 
@@ -467,6 +480,8 @@ class WeldingChecksheetController extends Controller
 
     protected function prepareChecksheetData(array $data): array
     {
+        unset($data['duplicate_sequence_mode'], $data['source_checksheet_id']);
+
         $data['item_code'] = $this->cleanTextValue($data['item_code'] ?? null);
         $data['item_name'] = $this->cleanTextValue($data['item_name'] ?? null);
         $data['machine_no'] = $this->cleanTextValue($data['machine_no'] ?? null);

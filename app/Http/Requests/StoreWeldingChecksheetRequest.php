@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\WeldingChecksheet;
 use App\Models\WeldingChecksheetType;
 use App\Models\WeldingItemConfig;
 use Illuminate\Foundation\Http\FormRequest;
@@ -40,6 +41,8 @@ class StoreWeldingChecksheetRequest extends FormRequest
             'job_number' => ['nullable', 'string', 'max:50'],
             'quantity' => ['nullable', 'integer', 'min:0'],
             'temperature' => ['nullable', 'numeric'],
+            'duplicate_sequence_mode' => ['nullable', Rule::in(['next_letter', 'same_letter_new_run'])],
+            'source_checksheet_id' => ['nullable', 'exists:welding_checksheets,id'],
             'material_fields' => ['nullable', 'array'],
             'material_fields.*' => ['nullable', 'string', 'max:255'],
             'operator_id' => ['nullable', 'exists:users,id'],
@@ -78,6 +81,7 @@ class StoreWeldingChecksheetRequest extends FormRequest
             }
 
             $this->validateConfiguredItems($validator, $type, $itemConfig);
+            $this->validateSameLetterNewRun($validator);
         });
     }
 
@@ -110,6 +114,44 @@ class StoreWeldingChecksheetRequest extends FormRequest
 
         if ($type->key === 'casing_tank') {
             $this->validateCasingTankRules($validator, $samples, $rules);
+        }
+    }
+
+    protected function validateSameLetterNewRun(Validator $validator): void
+    {
+        if ($this->input('duplicate_sequence_mode') !== 'same_letter_new_run') {
+            return;
+        }
+
+        if (! $this->filled('job_number')) {
+            $validator->errors()->add('job_number', 'Enter the Job Number for this run.');
+        }
+
+        if ($this->input('prod_qty') === null || $this->input('prod_qty') === '') {
+            $validator->errors()->add('prod_qty', 'Enter the Prod Qty for this run.');
+        }
+
+        $source = $this->filled('source_checksheet_id')
+            ? WeldingChecksheet::query()->find($this->input('source_checksheet_id'))
+            : null;
+
+        if (! $source) {
+            return;
+        }
+
+        if ($this->filled('production_date') && strtotime((string) $this->input('production_date')) !== false) {
+            $productionDate = date('Y-m-d', strtotime((string) $this->input('production_date')));
+            if ($source->production_date->format('Y-m-d') !== $productionDate) {
+                $validator->errors()->add('production_date', 'Keep the same Production Date when using the same Letter Code.');
+            }
+        }
+
+        if (strcasecmp(trim((string) $source->job_number), trim((string) $this->input('job_number'))) === 0) {
+            $validator->errors()->add('job_number', 'Enter the new Job Number for this run.');
+        }
+
+        if ($source->prod_qty !== null && (int) $source->prod_qty === (int) $this->input('prod_qty')) {
+            $validator->errors()->add('prod_qty', 'Enter the new Prod Qty for this run.');
         }
     }
 
