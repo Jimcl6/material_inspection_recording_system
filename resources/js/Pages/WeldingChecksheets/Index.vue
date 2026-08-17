@@ -8,6 +8,9 @@ import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
 import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
 import TabletRecordList from '@/Components/Tablet/TabletRecordList.vue';
 import { useTabletMode } from '@/Composables/useTabletMode';
+import DuplicateSequenceModal from './Partials/DuplicateSequenceModal.vue';
+
+type DuplicateSequenceMode = 'next_letter' | 'same_letter_new_run';
 
 const { canCreate, canUpdate, canDelete, canImport, canExport, approvalsEnabled } = usePermissions();
 const { toggleExpanded, isExpanded } = useSingleExpandedRow();
@@ -56,6 +59,7 @@ const dateFrom = ref(props.filters.date_from || '');
 const dateTo = ref(props.filters.date_to || '');
 const status = ref(props.filters.status || '');
 const filtersOpen = ref(false);
+const duplicateTarget = ref<Checksheet | null>(null);
 const activeFilterCount = computed(() =>
     [search, typeId, itemCode, machineNo, dateFrom, dateTo, status]
         .filter((value) => value.value !== '' && value.value !== null && value.value !== undefined)
@@ -89,6 +93,30 @@ const confirmDelete = (checksheet: Checksheet) => {
     if (confirm(`Delete welding checksheet ${checksheet.item_code || checksheet.id}?`)) {
         router.delete(route('welding-checksheets.destroy', checksheet.id));
     }
+};
+
+const openDuplicatePrompt = (checksheet: Checksheet) => {
+    duplicateTarget.value = checksheet;
+};
+
+const duplicateRecordLabel = computed(() => {
+    if (!duplicateTarget.value) {
+        return null;
+    }
+
+    return duplicateTarget.value.item_code || `Record #${duplicateTarget.value.id}`;
+});
+
+const duplicateWithSequence = (mode: DuplicateSequenceMode) => {
+    if (!duplicateTarget.value) {
+        return;
+    }
+
+    const id = duplicateTarget.value.id;
+    duplicateTarget.value = null;
+    router.get(route('welding-checksheets.duplicate', id), {
+        sequence_mode: mode,
+    });
 };
 
 const formatDate = (value: string): string => value ? new Date(value).toLocaleDateString() : '';
@@ -257,13 +285,14 @@ const tabletFacts = (checksheet: Checksheet) => [
                                 >
                                     Edit
                                 </Link>
-                                <Link
+                                <button
                                     v-if="canCreate('welding')"
-                                    :href="route('welding-checksheets.duplicate', checksheet.id)"
+                                    type="button"
                                     class="inline-flex min-h-11 items-center rounded-lg border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+                                    @click="openDuplicatePrompt(checksheet)"
                                 >
                                     Duplicate
-                                </Link>
+                                </button>
                                 <button
                                     v-if="canDelete('welding')"
                                     type="button"
@@ -336,17 +365,18 @@ const tabletFacts = (checksheet: Checksheet) => [
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                                     </svg>
                                                 </Link>
-                                                <Link
+                                                <button
                                                     v-if="canCreate('welding')"
-                                                    :href="route('welding-checksheets.duplicate', checksheet.id)"
+                                                    type="button"
                                                     class="p-1 text-emerald-600 hover:text-emerald-900 rounded-full hover:bg-emerald-50"
-                                                    v-bind="{ title: 'Duplicate' }"
+                                                    title="Duplicate"
+                                                    @click="openDuplicatePrompt(checksheet)"
                                                 >
                                                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8h10a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2v-8a2 2 0 012-2z"></path>
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h0"></path>
                                                     </svg>
-                                                </Link>
+                                                </button>
                                                 <button
                                                     v-if="canDelete('welding')"
                                                     @click="confirmDelete(checksheet)"
@@ -400,5 +430,12 @@ const tabletFacts = (checksheet: Checksheet) => [
                 </div>
             </div>
         </div>
+
+        <DuplicateSequenceModal
+            :show="duplicateTarget !== null"
+            :record-label="duplicateRecordLabel"
+            @close="duplicateTarget = null"
+            @select="duplicateWithSequence"
+        />
     </AppLayout>
 </template>
