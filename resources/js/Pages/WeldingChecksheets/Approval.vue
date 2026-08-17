@@ -206,6 +206,7 @@ const tabletDetailSections = (checksheet: PendingChecksheet): DetailSection[] =>
 </script>
 
 <template>
+    <!-- eslint-disable vue/valid-v-for -- Known parser false positive for keyed Vue template loops. -->
     <Head title="Approve Welding Checksheets" />
 
     <AppLayout>
@@ -369,13 +370,14 @@ const tabletDetailSections = (checksheet: PendingChecksheet): DetailSection[] =>
                                             <Link
                                                 v-if="link.url"
                                                 :href="link.url"
-                                                v-html="link.label"
                                                 class="px-4 py-2 border rounded-md text-sm font-medium"
                                                 :class="{
                                                     'bg-indigo-50 border-indigo-500 text-indigo-600': link.active,
                                                     'bg-white border-gray-300 text-gray-500 hover:bg-gray-50': !link.active
                                                 }"
-                                            />
+                                            >
+                                                <span v-html="link.label" />
+                                            </Link>
                                         </template>
                                     </div>
                                 </div>
@@ -386,4 +388,5 @@ const tabletDetailSections = (checksheet: PendingChecksheet): DetailSection[] =>
             </div>
         </div>
     </AppLayout>
+    <!-- eslint-enable vue/valid-v-for -->
 </template>
