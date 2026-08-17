@@ -386,10 +386,20 @@ class WeldingChecksheetController extends Controller
     public function approval()
     {
         return Inertia::render('WeldingChecksheets/Approval', [
-            'pendingChecksheets' => WeldingChecksheet::with(['type', 'createdBy', 'operator'])
+            'pendingChecksheets' => WeldingChecksheet::with([
+                'type',
+                'itemConfig',
+                'samples',
+                'createdBy',
+                'operator',
+                'technician',
+                'checkedBy',
+            ])
                 ->where('status', 'pending')
-                ->latest()
-                ->get(),
+                ->orderByDesc('production_date')
+                ->orderByDesc('id')
+                ->paginate(1)
+                ->withQueryString(),
             'user' => Auth::user(),
         ]);
     }
