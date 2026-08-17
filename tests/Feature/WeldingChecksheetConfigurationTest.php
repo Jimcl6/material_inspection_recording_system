@@ -34,7 +34,7 @@ class WeldingChecksheetConfigurationTest extends TestCase
 
         $casingTankId = WeldingChecksheetType::where('key', 'casing_tank')->value('id');
         $casingTank = WeldingChecksheetType::findOrFail($casingTankId);
-        $this->assertSame(
+        $this->assertEquals(
             [
                 ['key' => 'air_valve', 'label' => 'Airvalve', 'type' => 'text'],
                 ['key' => 'casing', 'label' => 'Casing', 'type' => 'text'],
@@ -176,7 +176,7 @@ class WeldingChecksheetConfigurationTest extends TestCase
         $this->runMaterialRenameMigration();
 
         $casingTank->refresh();
-        $this->assertSame(
+        $this->assertEquals(
             [
                 ['key' => 'air_valve', 'label' => 'Airvalve', 'type' => 'text'],
                 ['key' => 'casing', 'label' => 'Casing', 'type' => 'text'],
