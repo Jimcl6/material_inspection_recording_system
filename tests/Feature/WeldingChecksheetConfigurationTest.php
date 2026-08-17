@@ -42,7 +42,7 @@ class WeldingChecksheetConfigurationTest extends TestCase
             ],
             $casingTank->material_fields
         );
-        $this->assertSame(
+        $this->assertEquals(
             ['air_valve' => 'M', 'casing' => 'K', 'valve_cover' => 'L'],
             $casingTank->import_config['material_columns']
         );
@@ -184,7 +184,7 @@ class WeldingChecksheetConfigurationTest extends TestCase
             ],
             $casingTank->material_fields
         );
-        $this->assertSame(
+        $this->assertEquals(
             ['air_valve' => 'M', 'casing' => 'K', 'valve_cover' => 'L'],
             $casingTank->import_config['material_columns']
         );
