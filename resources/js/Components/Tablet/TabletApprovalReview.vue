@@ -27,10 +27,16 @@ const emit = defineEmits<{
 }>();
 
 const currentIndex = ref(0);
+const showDetails = ref(false);
 const currentRecord = computed(() => props.records[currentIndex.value] ?? null);
 
 watch(() => props.records.length, (length) => {
     currentIndex.value = Math.min(currentIndex.value, Math.max(0, length - 1));
+    showDetails.value = false;
+});
+
+watch(currentIndex, () => {
+    showDetails.value = false;
 });
 
 const displayValue = (value: unknown): string =>
@@ -65,7 +71,17 @@ const displayValue = (value: unknown): string =>
                 </div>
             </dl>
 
-            <div v-if="detailsFor" class="mt-5 space-y-4 border-t border-gray-200 pt-4">
+            <button
+                v-if="detailsFor"
+                type="button"
+                class="mt-5 inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                :aria-expanded="showDetails"
+                @click="showDetails = !showDetails"
+            >
+                {{ showDetails ? 'Hide encoded details' : 'Show encoded details' }}
+            </button>
+
+            <div v-if="detailsFor && showDetails" class="mt-5 space-y-4 border-t border-gray-200 pt-4">
                 <section v-for="section in detailsFor(currentRecord)" :key="section.title">
                     <h4 class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ section.title }}</h4>
                     <dl class="mt-2 space-y-2">
