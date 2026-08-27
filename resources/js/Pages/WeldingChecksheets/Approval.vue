@@ -2,9 +2,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
-import TabletApprovalReview from '@/Components/Tablet/TabletApprovalReview.vue';
 import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
-import { useTabletMode } from '@/Composables/useTabletMode';
 import { computed, ref } from 'vue';
 import { route } from 'ziggy-js';
 
@@ -71,8 +69,6 @@ const props = defineProps<{
 
 const selectedIds = ref<number[]>([]);
 const notes = ref('');
-const tabletBulkMode = ref(false);
-const { isTabletMode } = useTabletMode();
 const { toggleExpanded, isExpanded } = useSingleExpandedRow();
 const pageSizeOptions = [10, 25, 50];
 const pageSize = ref(String(props.pendingChecksheets.per_page ?? 10));
@@ -148,17 +144,6 @@ const materialFieldLabel = (checksheet: PendingChecksheet, key: string): string 
 
 const sampleValues = (sample: Sample): unknown[] => sample.sample_values ?? [];
 
-const sampleSummary = (sample: Sample): string => {
-    const values = sampleValues(sample)
-        .map((value, index) => `S${index + 1}: ${displayValue(value)}`)
-        .join(', ');
-
-    return [
-        sample.requirement_text ? `Requirement: ${sample.requirement_text}` : null,
-        values || null,
-    ].filter(Boolean).join(' | ') || 'N/A';
-};
-
 const quantityValue = (checksheet: PendingChecksheet): unknown => checksheet.prod_qty ?? checksheet.quantity;
 
 const recordDetailSections = (checksheet: PendingChecksheet): DetailSection[] => [
@@ -194,33 +179,6 @@ const recordDetailSections = (checksheet: PendingChecksheet): DetailSection[] =>
     },
 ];
 
-const tabletDetailSections = (checksheet: PendingChecksheet): DetailSection[] => [
-    ...recordDetailSections(checksheet),
-    {
-        title: 'Materials',
-        items: materialEntries(checksheet).length
-            ? materialEntries(checksheet).map(([key, value]) => ({ label: materialFieldLabel(checksheet, key), value }))
-            : [{ label: 'Materials', value: 'No material fields encoded' }],
-    },
-    {
-        title: 'Samples',
-        items: checksheet.samples?.length
-            ? checksheet.samples.map(sample => ({
-                label: sample.check_item_label || 'Sample',
-                value: sampleSummary(sample),
-            }))
-            : [{ label: 'Samples', value: 'No samples encoded' }],
-    },
-    {
-        title: 'Remarks',
-        items: [
-            { label: 'Remarks', value: checksheet.remarks },
-            { label: 'Source File', value: checksheet.source_file },
-            { label: 'Source Sheet', value: checksheet.source_sheet },
-            { label: 'Source Row', value: checksheet.source_row },
-        ],
-    },
-];
 </script>
 
 <template>
@@ -241,47 +199,6 @@ const tabletDetailSections = (checksheet: PendingChecksheet): DetailSection[] =>
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
-                        <div v-if="isTabletMode && !tabletBulkMode" class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                            <div>
-                                <h3 class="text-lg font-medium text-gray-900">Pending Checksheets</h3>
-                                <p class="text-sm text-gray-500">
-                                    Showing {{ pendingChecksheets.from || 0 }} to {{ pendingChecksheets.to || 0 }} of {{ totalPending }} record(s) awaiting review.
-                                </p>
-                            </div>
-                            <div class="w-full sm:w-40">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Rows per page</label>
-                                <select
-                                    v-model="pageSize"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                    @change="updatePageSize"
-                                >
-                                    <option v-for="option in pageSizeOptions" :key="option" :value="String(option)">
-                                        {{ option }}
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <TabletApprovalReview
-                            v-if="isTabletMode && !tabletBulkMode"
-                            v-model:notes="notes"
-                            :records="pendingRecords"
-                            :title-for="(checksheet) => checksheet.item_code || `Record #${checksheet.id}`"
-                            :subtitle-for="(checksheet) => checksheet.type?.name"
-                            :facts-for="(checksheet) => [
-                                { label: 'Date', value: formatDate(checksheet.production_date) },
-                                { label: 'Machine', value: checksheet.machine_no },
-                                { label: 'Job number', value: checksheet.job_number },
-                                { label: 'Operator', value: checksheet.operator?.name || checksheet.operator_name_raw },
-                            ]"
-                            :details-for="tabletDetailSections"
-                            show-route-name="welding-checksheets.show"
-                            :processing="approveForm.processing"
-                            @approve="(checksheet) => submitOne(checksheet, 'approve')"
-                            @reject="(checksheet) => submitOne(checksheet, 'reject')"
-                            @bulk="tabletBulkMode = true"
-                        />
-                        <template v-else>
                             <div class="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                                 <div>
                                     <h3 class="text-lg font-medium text-gray-900">Pending Checksheets</h3>
@@ -470,7 +387,6 @@ const tabletDetailSections = (checksheet: PendingChecksheet): DetailSection[] =>
                                     </div>
                                 </div>
                             </div>
-                        </template>
                     </div>
                 </div>
             </div>

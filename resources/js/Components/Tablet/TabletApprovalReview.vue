@@ -5,15 +5,12 @@ import { route } from 'ziggy-js';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline';
 
 type Fact = { label: string; value: unknown };
-type DetailItem = { label: string; value: unknown };
-type DetailSection = { title: string; items: DetailItem[] };
 
 const props = defineProps<{
     records: any[];
     titleFor: (record: any) => unknown;
     subtitleFor?: (record: any) => unknown;
     factsFor: (record: any) => Fact[];
-    detailsFor?: (record: any) => DetailSection[];
     showRouteName: string;
     notes: string;
     processing?: boolean;
@@ -27,16 +24,10 @@ const emit = defineEmits<{
 }>();
 
 const currentIndex = ref(0);
-const showDetails = ref(false);
 const currentRecord = computed(() => props.records[currentIndex.value] ?? null);
 
 watch(() => props.records.length, (length) => {
     currentIndex.value = Math.min(currentIndex.value, Math.max(0, length - 1));
-    showDetails.value = false;
-});
-
-watch(currentIndex, () => {
-    showDetails.value = false;
 });
 
 const displayValue = (value: unknown): string =>
@@ -70,28 +61,6 @@ const displayValue = (value: unknown): string =>
                     <dd class="mt-1 text-sm font-semibold text-gray-900">{{ displayValue(fact.value) }}</dd>
                 </div>
             </dl>
-
-            <button
-                v-if="detailsFor"
-                type="button"
-                class="mt-5 inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                :aria-expanded="showDetails"
-                @click="showDetails = !showDetails"
-            >
-                {{ showDetails ? 'Hide encoded details' : 'Show encoded details' }}
-            </button>
-
-            <div v-if="detailsFor && showDetails" class="mt-5 space-y-4 border-t border-gray-200 pt-4">
-                <section v-for="section in detailsFor(currentRecord)" :key="section.title">
-                    <h4 class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ section.title }}</h4>
-                    <dl class="mt-2 space-y-2">
-                        <div v-for="item in section.items" :key="`${section.title}-${item.label}`" class="grid grid-cols-2 gap-3 text-sm">
-                            <dt class="text-gray-500">{{ item.label }}</dt>
-                            <dd class="break-words font-semibold text-gray-900">{{ displayValue(item.value) }}</dd>
-                        </div>
-                    </dl>
-                </section>
-            </div>
 
             <Link
                 :href="route(showRouteName, currentRecord.id)"
