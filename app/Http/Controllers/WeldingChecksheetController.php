@@ -385,6 +385,9 @@ class WeldingChecksheetController extends Controller
 
     public function approval()
     {
+        $perPage = (int) request()->input('per_page', 10);
+        $perPage = in_array($perPage, [10, 25, 50], true) ? $perPage : 10;
+
         return Inertia::render('WeldingChecksheets/Approval', [
             'pendingChecksheets' => WeldingChecksheet::with([
                 'type',
@@ -398,7 +401,7 @@ class WeldingChecksheetController extends Controller
                 ->where('status', 'pending')
                 ->orderByDesc('production_date')
                 ->orderByDesc('id')
-                ->paginate(1)
+                ->paginate($perPage)
                 ->withQueryString(),
             'user' => Auth::user(),
         ]);

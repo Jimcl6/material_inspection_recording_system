@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import TabletApprovalReview from '@/Components/Tablet/TabletApprovalReview.vue';
-import { useTabletMode } from '@/Composables/useTabletMode';
+import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
+import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
 import { computed, ref } from 'vue';
 import { route } from 'ziggy-js';
 
@@ -55,6 +55,9 @@ interface PaginationLink {
 interface Paginated<T> {
     data: T[];
     links: PaginationLink[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
     from: number | null;
     to: number | null;
     total: number;
@@ -66,8 +69,9 @@ const props = defineProps<{
 
 const selectedIds = ref<number[]>([]);
 const notes = ref('');
-const tabletBulkMode = ref(false);
-const { isTabletMode } = useTabletMode();
+const { toggleExpanded, isExpanded } = useSingleExpandedRow();
+const pageSizeOptions = [10, 25, 50];
+const pageSize = ref(String(props.pendingChecksheets.per_page ?? 10));
 
 const approveForm = useForm({
     checksheet_ids: [] as number[],
@@ -80,6 +84,16 @@ const allSelected = computed(() => pendingRecords.value.length > 0 && selectedId
 
 const toggleAll = () => {
     selectedIds.value = allSelected.value ? [] : pendingRecords.value.map(checksheet => checksheet.id);
+};
+
+const updatePageSize = () => {
+    selectedIds.value = [];
+    router.get(route('welding-checksheets.approval'), {
+        per_page: pageSize.value,
+    }, {
+        preserveScroll: true,
+        replace: true,
+    });
 };
 
 const submit = (action: 'approve' | 'reject') => {
@@ -130,17 +144,6 @@ const materialFieldLabel = (checksheet: PendingChecksheet, key: string): string 
 
 const sampleValues = (sample: Sample): unknown[] => sample.sample_values ?? [];
 
-const sampleSummary = (sample: Sample): string => {
-    const values = sampleValues(sample)
-        .map((value, index) => `S${index + 1}: ${displayValue(value)}`)
-        .join(', ');
-
-    return [
-        sample.requirement_text ? `Requirement: ${sample.requirement_text}` : null,
-        values || null,
-    ].filter(Boolean).join(' | ') || 'N/A';
-};
-
 const quantityValue = (checksheet: PendingChecksheet): unknown => checksheet.prod_qty ?? checksheet.quantity;
 
 const recordDetailSections = (checksheet: PendingChecksheet): DetailSection[] => [
@@ -176,33 +179,6 @@ const recordDetailSections = (checksheet: PendingChecksheet): DetailSection[] =>
     },
 ];
 
-const tabletDetailSections = (checksheet: PendingChecksheet): DetailSection[] => [
-    ...recordDetailSections(checksheet),
-    {
-        title: 'Materials',
-        items: materialEntries(checksheet).length
-            ? materialEntries(checksheet).map(([key, value]) => ({ label: materialFieldLabel(checksheet, key), value }))
-            : [{ label: 'Materials', value: 'No material fields encoded' }],
-    },
-    {
-        title: 'Samples',
-        items: checksheet.samples?.length
-            ? checksheet.samples.map(sample => ({
-                label: sample.check_item_label || 'Sample',
-                value: sampleSummary(sample),
-            }))
-            : [{ label: 'Samples', value: 'No samples encoded' }],
-    },
-    {
-        title: 'Remarks',
-        items: [
-            { label: 'Remarks', value: checksheet.remarks },
-            { label: 'Source File', value: checksheet.source_file },
-            { label: 'Source Sheet', value: checksheet.source_sheet },
-            { label: 'Source Row', value: checksheet.source_row },
-        ],
-    },
-];
 </script>
 
 <template>
@@ -223,32 +199,24 @@ const tabletDetailSections = (checksheet: PendingChecksheet): DetailSection[] =>
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
-                        <TabletApprovalReview
-                            v-if="isTabletMode && !tabletBulkMode"
-                            v-model:notes="notes"
-                            :records="pendingRecords"
-                            :title-for="(checksheet) => checksheet.item_code || `Record #${checksheet.id}`"
-                            :subtitle-for="(checksheet) => checksheet.type?.name"
-                            :facts-for="(checksheet) => [
-                                { label: 'Date', value: formatDate(checksheet.production_date) },
-                                { label: 'Machine', value: checksheet.machine_no },
-                                { label: 'Job number', value: checksheet.job_number },
-                                { label: 'Operator', value: checksheet.operator?.name || checksheet.operator_name_raw },
-                            ]"
-                            :details-for="tabletDetailSections"
-                            show-route-name="welding-checksheets.show"
-                            :processing="approveForm.processing"
-                            @approve="(checksheet) => submitOne(checksheet, 'approve')"
-                            @reject="(checksheet) => submitOne(checksheet, 'reject')"
-                            @bulk="tabletBulkMode = true"
-                        />
-                        <template v-else>
                             <div class="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                                 <div>
                                     <h3 class="text-lg font-medium text-gray-900">Pending Checksheets</h3>
                                     <p class="text-sm text-gray-500">
                                         Showing {{ pendingChecksheets.from || 0 }} to {{ pendingChecksheets.to || 0 }} of {{ totalPending }} record(s) awaiting review.
                                     </p>
+                                </div>
+                                <div class="w-full md:w-40">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Rows per page</label>
+                                    <select
+                                        v-model="pageSize"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        @change="updatePageSize"
+                                    >
+                                        <option v-for="option in pageSizeOptions" :key="option" :value="String(option)">
+                                            {{ option }}
+                                        </option>
+                                    </select>
                                 </div>
                                 <div class="flex-1 md:max-w-md">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Approval Notes</label>
@@ -265,97 +233,134 @@ const tabletDetailSections = (checksheet: PendingChecksheet): DetailSection[] =>
                                 <span class="text-sm font-medium text-gray-700">Select all records on this page</span>
                             </div>
 
-                            <div v-if="pendingRecords.length" class="space-y-5">
-                                <article v-for="checksheet in pendingRecords" :key="checksheet.id" class="rounded-md border border-gray-200 bg-white shadow-sm">
-                                    <div class="flex flex-col gap-4 border-b border-gray-200 px-5 py-4 lg:flex-row lg:items-start lg:justify-between">
-                                        <div class="flex gap-3">
-                                            <input v-model="selectedIds" :value="checksheet.id" type="checkbox" class="mt-1 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" />
-                                            <div>
-                                                <p class="text-xs font-semibold uppercase tracking-wider text-yellow-700">Pending review</p>
-                                                <h4 class="mt-1 text-base font-semibold text-gray-900">
-                                                    {{ checksheet.item_code || `Record #${checksheet.id}` }}
-                                                </h4>
-                                                <p class="text-sm text-gray-500">
-                                                    {{ checksheet.type?.name || 'N/A' }} · {{ formatDate(checksheet.production_date) }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex flex-wrap items-center gap-2">
-                                            <Link :href="route('welding-checksheets.show', checksheet.id)" class="px-3 py-2 text-sm font-medium text-indigo-700 hover:text-indigo-900">
-                                                View
-                                            </Link>
-                                            <button @click="submitOne(checksheet, 'reject')" :disabled="approveForm.processing" class="px-3 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 disabled:opacity-50">Reject</button>
-                                            <button @click="submitOne(checksheet, 'approve')" :disabled="approveForm.processing" class="px-3 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 disabled:opacity-50">Approve</button>
-                                        </div>
-                                    </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="w-10 px-3 py-3">
+                                                <span class="sr-only">Details</span>
+                                            </th>
+                                            <th class="w-10 px-3 py-3">
+                                                <span class="sr-only">Select</span>
+                                            </th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Type</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Item Code</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Machine</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Job Number</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Operator</th>
+                                            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200 bg-white">
+                                        <template v-for="checksheet in pendingRecords" :key="checksheet.id">
+                                            <tr
+                                                class="cursor-pointer hover:bg-gray-50"
+                                                :class="{ 'bg-indigo-50/40': isExpanded(checksheet.id) }"
+                                                @click="toggleExpanded(checksheet.id)"
+                                            >
+                                                <td class="px-3 py-4 whitespace-nowrap">
+                                                    <button
+                                                        type="button"
+                                                        class="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                        :aria-expanded="isExpanded(checksheet.id)"
+                                                        :title="isExpanded(checksheet.id) ? 'Hide details' : 'Show details'"
+                                                        @click.stop="toggleExpanded(checksheet.id)"
+                                                    >
+                                                        <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-90': isExpanded(checksheet.id) }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                        </svg>
+                                                    </button>
+                                                </td>
+                                                <td class="px-3 py-4 whitespace-nowrap">
+                                                    <input
+                                                        v-model="selectedIds"
+                                                        :value="checksheet.id"
+                                                        type="checkbox"
+                                                        class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                                        @click.stop
+                                                    />
+                                                </td>
+                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{{ formatDate(checksheet.production_date) }}</td>
+                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{{ checksheet.type?.name || 'N/A' }}</td>
+                                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ checksheet.item_code || 'N/A' }}</td>
+                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{{ checksheet.machine_no || 'N/A' }}</td>
+                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{{ checksheet.job_number || 'N/A' }}</td>
+                                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{{ checksheet.operator?.name || checksheet.operator_name_raw || 'N/A' }}</td>
+                                                <td class="px-4 py-4 whitespace-nowrap text-right text-sm" @click.stop>
+                                                    <div class="flex flex-wrap items-center justify-end gap-2">
+                                                        <Link :href="route('welding-checksheets.show', checksheet.id)" class="px-3 py-2 text-sm font-medium text-indigo-700 hover:text-indigo-900">
+                                                            View
+                                                        </Link>
+                                                        <button @click="submitOne(checksheet, 'reject')" :disabled="approveForm.processing" class="px-3 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 disabled:opacity-50">Reject</button>
+                                                        <button @click="submitOne(checksheet, 'approve')" :disabled="approveForm.processing" class="px-3 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 disabled:opacity-50">Approve</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr v-if="isExpanded(checksheet.id)" class="bg-gray-50">
+                                                <td colspan="9" class="px-4 py-4">
+                                                    <div class="space-y-5">
+                                                        <RecordDetailPanel :sections="recordDetailSections(checksheet)" />
 
-                                    <div class="grid grid-cols-1 gap-5 px-5 py-5 lg:grid-cols-3">
-                                        <section v-for="section in recordDetailSections(checksheet)" :key="section.title">
-                                            <h5 class="text-xs font-semibold uppercase text-gray-500">{{ section.title }}</h5>
-                                            <dl class="mt-3 space-y-2">
-                                                <div v-for="item in section.items" :key="`${section.title}-${item.label}`" class="grid grid-cols-3 gap-3 text-sm">
-                                                    <dt class="text-gray-500">{{ item.label }}</dt>
-                                                    <dd class="col-span-2 break-words font-medium text-gray-900">{{ displayValue(item.value) }}</dd>
-                                                </div>
-                                            </dl>
-                                        </section>
-                                    </div>
+                                                        <div class="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+                                                            <h5 class="text-xs font-semibold uppercase text-gray-500">Materials</h5>
+                                                            <dl v-if="materialEntries(checksheet).length" class="mt-3 grid grid-cols-1 gap-3 text-sm md:grid-cols-2 lg:grid-cols-4">
+                                                                <div v-for="[key, value] in materialEntries(checksheet)" :key="key">
+                                                                    <dt class="font-medium text-gray-500">{{ materialFieldLabel(checksheet, key) }}</dt>
+                                                                    <dd class="mt-1 break-words text-gray-900">{{ displayValue(value) }}</dd>
+                                                                </div>
+                                                            </dl>
+                                                            <p v-else class="mt-3 text-sm text-gray-500">No material fields encoded.</p>
+                                                        </div>
 
-                                    <div class="border-t border-gray-200 px-5 py-5">
-                                        <h5 class="text-xs font-semibold uppercase text-gray-500">Materials</h5>
-                                        <dl v-if="materialEntries(checksheet).length" class="mt-3 grid grid-cols-1 gap-3 text-sm md:grid-cols-2 lg:grid-cols-4">
-                                            <div v-for="[key, value] in materialEntries(checksheet)" :key="key">
-                                                <dt class="font-medium text-gray-500">{{ materialFieldLabel(checksheet, key) }}</dt>
-                                                <dd class="mt-1 break-words text-gray-900">{{ displayValue(value) }}</dd>
-                                            </div>
-                                        </dl>
-                                        <p v-else class="mt-3 text-sm text-gray-500">No material fields encoded.</p>
-                                    </div>
+                                                        <div class="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+                                                            <h5 class="text-xs font-semibold uppercase text-gray-500">Samples</h5>
+                                                            <div v-if="checksheet.samples?.length" class="mt-3 overflow-x-auto">
+                                                                <table class="min-w-full divide-y divide-gray-200">
+                                                                    <thead class="bg-gray-50">
+                                                                        <tr>
+                                                                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Check Item</th>
+                                                                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Requirement</th>
+                                                                            <th v-for="index in 5" :key="index" class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Sample {{ index }}</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody class="divide-y divide-gray-200 bg-white">
+                                                                        <tr v-for="sample in checksheet.samples" :key="sample.id">
+                                                                            <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ displayValue(sample.check_item_label) }}</td>
+                                                                            <td class="px-4 py-3 text-sm text-gray-500">{{ displayValue(sample.requirement_text) }}</td>
+                                                                            <td v-for="index in 5" :key="index" class="px-4 py-3 text-center text-sm text-gray-700">
+                                                                                {{ displayValue(sampleValues(sample)[index - 1]) }}
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                            <p v-else class="mt-3 text-sm text-gray-500">No samples encoded.</p>
+                                                        </div>
 
-                                    <div class="border-t border-gray-200 px-5 py-5">
-                                        <h5 class="text-xs font-semibold uppercase text-gray-500">Samples</h5>
-                                        <div v-if="checksheet.samples?.length" class="mt-3 overflow-x-auto">
-                                            <table class="min-w-full divide-y divide-gray-200">
-                                                <thead class="bg-gray-50">
-                                                    <tr>
-                                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Check Item</th>
-                                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Requirement</th>
-                                                        <th v-for="index in 5" :key="index" class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Sample {{ index }}</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody class="divide-y divide-gray-200 bg-white">
-                                                    <tr v-for="sample in checksheet.samples" :key="sample.id">
-                                                        <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ displayValue(sample.check_item_label) }}</td>
-                                                        <td class="px-4 py-3 text-sm text-gray-500">{{ displayValue(sample.requirement_text) }}</td>
-                                                        <td v-for="index in 5" :key="index" class="px-4 py-3 text-center text-sm text-gray-700">
-                                                            {{ displayValue(sampleValues(sample)[index - 1]) }}
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <p v-else class="mt-3 text-sm text-gray-500">No samples encoded.</p>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 gap-4 border-t border-gray-200 px-5 py-5 text-sm md:grid-cols-4">
-                                        <div class="md:col-span-2">
-                                            <dt class="font-medium text-gray-500">Remarks</dt>
-                                            <dd class="mt-1 break-words text-gray-900">{{ displayValue(checksheet.remarks) }}</dd>
-                                        </div>
-                                        <div>
-                                            <dt class="font-medium text-gray-500">Source Sheet</dt>
-                                            <dd class="mt-1 break-words text-gray-900">{{ displayValue(checksheet.source_sheet) }}</dd>
-                                        </div>
-                                        <div>
-                                            <dt class="font-medium text-gray-500">Source Row</dt>
-                                            <dd class="mt-1 break-words text-gray-900">{{ displayValue(checksheet.source_row) }}</dd>
-                                        </div>
-                                    </div>
-                                </article>
-                            </div>
-
-                            <div v-else class="py-10 text-center text-sm text-gray-500">
-                                No pending welding checksheets.
+                                                        <div class="grid grid-cols-1 gap-4 rounded-md border border-gray-200 bg-white p-4 text-sm shadow-sm md:grid-cols-4">
+                                                            <div class="md:col-span-2">
+                                                                <dt class="font-medium text-gray-500">Remarks</dt>
+                                                                <dd class="mt-1 break-words text-gray-900">{{ displayValue(checksheet.remarks) }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="font-medium text-gray-500">Source Sheet</dt>
+                                                                <dd class="mt-1 break-words text-gray-900">{{ displayValue(checksheet.source_sheet) }}</dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt class="font-medium text-gray-500">Source Row</dt>
+                                                                <dd class="mt-1 break-words text-gray-900">{{ displayValue(checksheet.source_row) }}</dd>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                        <tr v-if="!pendingRecords.length">
+                                            <td colspan="9" class="px-6 py-8 text-center text-sm text-gray-500">No pending welding checksheets.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
 
                             <div class="mt-5" v-if="pendingChecksheets.links && pendingChecksheets.links.length > 3">
@@ -382,7 +387,6 @@ const tabletDetailSections = (checksheet: PendingChecksheet): DetailSection[] =>
                                     </div>
                                 </div>
                             </div>
-                        </template>
                     </div>
                 </div>
             </div>
