@@ -149,7 +149,101 @@ class ApprovalActivityLoggingTest extends TestCase
         $this->assertSame('Torque approved', $activity->properties['notes']);
     }
 
-    private function approver(): User
+    public function test_approval_actions_stamp_logged_in_approver_as_visible_checker(): void
+    {
+        config(['features.approvals' => true]);
+
+        $approver = $this->approver('Approval Stamp Tester');
+        $originalChecker = User::factory()->create(['name' => 'Original Checker']);
+
+        $annealingCheck = $this->annealingCheck($approver, [
+            'item_code' => 'AN-STAMP-001',
+            'checked_by_id' => $originalChecker->id,
+        ]);
+        $weldingChecksheet = $this->weldingChecksheet($approver, [
+            'checked_by_id' => $originalChecker->id,
+            'checked_by_name_raw' => 'Imported Checker Name',
+        ]);
+        $temperatureRecord = $this->temperatureRecord([
+            'model_series' => 'TMP-STAMP-001',
+            'checked_by' => 'Original Temperature Checker',
+        ]);
+        $torqueRecord = $this->torqueRecord([
+            'model_series' => 'TRQ-STAMP-001',
+            'checked_by' => 'Original Torque Checker',
+        ]);
+
+        $this->actingAs($approver)->post(route('annealing-checks.bulk-approve'), [
+            'check_ids' => [$annealingCheck->id],
+        ])->assertRedirect(route('annealing-checks.approval'));
+
+        $this->actingAs($approver)->post(route('welding-checksheets.bulk-approve'), [
+            'checksheet_ids' => [$weldingChecksheet->id],
+        ])->assertRedirect(route('welding-checksheets.approval'));
+
+        $this->actingAs($approver)->post(route('temp-records.bulk-approve'), [
+            'record_ids' => [$temperatureRecord->id],
+        ])->assertRedirect(route('temp-records.approval'));
+
+        $this->actingAs($approver)->post(route('torque-records.bulk-approve'), [
+            'record_ids' => [$torqueRecord->id],
+        ])->assertRedirect(route('torque-records.approval'));
+
+        $this->assertSame($approver->id, $annealingCheck->refresh()->checked_by_id);
+        $this->assertSame($approver->id, $weldingChecksheet->refresh()->checked_by_id);
+        $this->assertSame('Imported Checker Name', $weldingChecksheet->checked_by_name_raw);
+        $this->assertSame($approver->name, $temperatureRecord->refresh()->checked_by);
+        $this->assertSame($approver->name, $torqueRecord->refresh()->checked_by);
+    }
+
+    public function test_rejection_actions_do_not_stamp_logged_in_approver_as_visible_checker(): void
+    {
+        config(['features.approvals' => true]);
+
+        $approver = $this->approver('Approval Reject Tester');
+        $originalChecker = User::factory()->create(['name' => 'Original Reject Checker']);
+
+        $annealingCheck = $this->annealingCheck($approver, [
+            'item_code' => 'AN-REJECT-001',
+            'checked_by_id' => $originalChecker->id,
+        ]);
+        $weldingChecksheet = $this->weldingChecksheet($approver, [
+            'checked_by_id' => $originalChecker->id,
+            'checked_by_name_raw' => 'Original Reject Raw',
+        ]);
+        $temperatureRecord = $this->temperatureRecord([
+            'model_series' => 'TMP-REJECT-001',
+            'checked_by' => 'Original Temperature Reject Checker',
+        ]);
+        $torqueRecord = $this->torqueRecord([
+            'model_series' => 'TRQ-REJECT-001',
+            'checked_by' => 'Original Torque Reject Checker',
+        ]);
+
+        $this->actingAs($approver)->post(route('annealing-checks.bulk-reject'), [
+            'check_ids' => [$annealingCheck->id],
+        ])->assertRedirect(route('annealing-checks.approval'));
+
+        $this->actingAs($approver)->post(route('welding-checksheets.bulk-reject'), [
+            'checksheet_ids' => [$weldingChecksheet->id],
+        ])->assertRedirect(route('welding-checksheets.approval'));
+
+        $this->actingAs($approver)->post(route('temp-records.bulk-reject'), [
+            'record_ids' => [$temperatureRecord->id],
+        ])->assertRedirect(route('temp-records.approval'));
+
+        $this->actingAs($approver)->post(route('torque-records.bulk-reject'), [
+            'record_ids' => [$torqueRecord->id],
+        ])->assertRedirect(route('torque-records.approval'));
+
+        $this->assertSame($originalChecker->id, $annealingCheck->refresh()->checked_by_id);
+        $this->assertSame($originalChecker->id, $weldingChecksheet->refresh()->checked_by_id);
+        $this->assertSame('Original Reject Raw', $weldingChecksheet->checked_by_name_raw);
+        $this->assertSame('Original Temperature Reject Checker', $temperatureRecord->refresh()->checked_by);
+        $this->assertSame('Original Torque Reject Checker', $torqueRecord->refresh()->checked_by);
+    }
+
+    private function approver(string $name = 'Approval Activity Tester'): User
     {
         $role = Role::updateOrCreate(
             ['slug' => 'super_admin'],
@@ -162,7 +256,7 @@ class ApprovalActivityLoggingTest extends TestCase
         );
 
         $user = User::create([
-            'name' => 'Approval Activity Tester',
+            'name' => $name,
             'email' => 'approval-activity-'.uniqid().'@example.test',
             'password' => bcrypt('password'),
             'role_id' => $role->id,
@@ -192,7 +286,34 @@ class ApprovalActivityLoggingTest extends TestCase
         ], $overrides));
     }
 
-    private function weldingChecksheet(User $user): WeldingChecksheet
+    private function temperatureRecord(array $overrides = []): TempRecord
+    {
+        return TempRecord::create(array_merge([
+            'date' => '2026-06-26',
+            'model_series' => 'TMP-ACT',
+            'equipment_type' => 'Soldering Iron',
+            'control_no' => 'TMP-CN-ACT',
+            'temp_am' => '25',
+            'status' => 'pending',
+            'submitted_at' => now(),
+        ], $overrides));
+    }
+
+    private function torqueRecord(array $overrides = []): TorqueRecord
+    {
+        return TorqueRecord::create(array_merge([
+            'date' => '2026-06-26',
+            'model_series' => 'TRQ-ACT',
+            'driver_model' => 'Electric',
+            'line_assigned' => 'Line 1',
+            'screw_type' => 'M4',
+            'torque_am' => '10',
+            'status' => 'pending',
+            'submitted_at' => now(),
+        ], $overrides));
+    }
+
+    private function weldingChecksheet(User $user, array $overrides = []): WeldingChecksheet
     {
         $type = WeldingChecksheetType::updateOrCreate(
             ['key' => 'activity-test'],
@@ -203,13 +324,13 @@ class ApprovalActivityLoggingTest extends TestCase
             ]
         );
 
-        return WeldingChecksheet::create([
+        return WeldingChecksheet::create(array_merge([
             'checksheet_type_id' => $type->id,
             'item_code' => 'WLD-ACT-001',
             'production_date' => '2026-06-26',
             'status' => 'pending',
             'submitted_at' => now(),
             'created_by' => $user->id,
-        ]);
+        ], $overrides));
     }
 }
