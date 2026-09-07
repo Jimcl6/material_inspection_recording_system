@@ -449,7 +449,9 @@ class AnnealingCheckController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $checks = AnnealingCheck::whereIn('id', $request->check_ids)->get();
+        $checks = AnnealingCheck::whereIn('id', $request->check_ids)
+            ->where('status', 'pending')
+            ->get();
 
         foreach ($checks as $check) {
             $previousStatus = $check->status;
@@ -458,6 +460,7 @@ class AnnealingCheckController extends Controller
                 'status' => 'approved',
                 'approved_at' => now(),
                 'approval_notes' => $request->notes,
+                'checked_by_id' => Auth::id(),
                 'updated_by' => Auth::id(),
             ]);
 
