@@ -225,6 +225,35 @@ const selectedItemConfig = computed(() => itemConfigs.value.find(config => confi
 
 const normalizeItemCode = (value: string | null | undefined): string => String(value || '').trim().toUpperCase();
 
+const extractEmployeeBadgeName = (value: string | null | undefined): string | null => {
+    const rawValue = String(value ?? '').trim();
+    const commaParts = rawValue.split(',').map(part => part.trim());
+
+    if (commaParts.length === 3 && commaParts.every(part => part !== '')) {
+        return commaParts[1];
+    }
+
+    const badgeMatch = rawValue.match(/^(?=\S*\d)[A-Z0-9-]+\s+(.+)\s+(regular|contractual|probationary)$/i);
+
+    return badgeMatch?.[1]?.trim() || null;
+};
+
+const normalizeOperatorNameRaw = (): void => {
+    const badgeName = extractEmployeeBadgeName(form.operator_name_raw);
+
+    if (badgeName) {
+        form.operator_name_raw = badgeName;
+    }
+};
+
+const normalizeTechnicianNameRaw = (): void => {
+    const badgeName = extractEmployeeBadgeName(form.technician_name_raw);
+
+    if (badgeName) {
+        form.technician_name_raw = badgeName;
+    }
+};
+
 const typedItemConfig = computed(() => {
     const itemCode = normalizeItemCode(form.item_code);
     if (!itemCode) {
@@ -417,6 +446,8 @@ const submit = () => {
 
     form.item_code = String(form.item_code || '').trim();
     form.item_name = String(form.item_name || '').trim();
+    normalizeOperatorNameRaw();
+    normalizeTechnicianNameRaw();
 
     if (isEdit.value && props.checksheet) {
         form.put(route('welding-checksheets.update', props.checksheet.id));
@@ -1219,8 +1250,18 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             dialog-title="Raw Operator Name"
                             placeholder="Tap to enter operator"
                             class="mt-2"
+                            @blur="normalizeOperatorNameRaw"
                         />
-                        <input v-else v-model="form.operator_name_raw" type="text" placeholder="Raw operator name" class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        <input
+                            v-else
+                            v-model="form.operator_name_raw"
+                            type="text"
+                            placeholder="Raw operator name"
+                            class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            @blur="normalizeOperatorNameRaw"
+                            @change="normalizeOperatorNameRaw"
+                            @keyup.enter="normalizeOperatorNameRaw"
+                        />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Technician</label>
@@ -1236,8 +1277,18 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             dialog-title="Raw Technician Name"
                             placeholder="Tap to enter technician"
                             class="mt-2"
+                            @blur="normalizeTechnicianNameRaw"
                         />
-                        <input v-else v-model="form.technician_name_raw" type="text" placeholder="Raw technician name" class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                        <input
+                            v-else
+                            v-model="form.technician_name_raw"
+                            type="text"
+                            placeholder="Raw technician name"
+                            class="mt-2 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            @blur="normalizeTechnicianNameRaw"
+                            @change="normalizeTechnicianNameRaw"
+                            @keyup.enter="normalizeTechnicianNameRaw"
+                        />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Checked By</label>
