@@ -11,6 +11,7 @@ use App\Services\DuplicateRecordGuard;
 use App\Support\ModelTypeOptions;
 use App\Support\SpreadsheetImportSecurity;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -241,6 +242,7 @@ class TorqueRecordController extends Controller
                 'status' => 'approved',
                 'approved_at' => now(),
                 'approval_notes' => $data['notes'] ?? null,
+                'checked_by' => Auth::user()->name,
             ]);
 
             ActivityService::logApprove($record, [

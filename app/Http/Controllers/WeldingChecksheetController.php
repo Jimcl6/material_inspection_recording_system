@@ -414,7 +414,10 @@ class WeldingChecksheetController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $checksheets = WeldingChecksheet::whereIn('id', $request->input('checksheet_ids'))->get();
+        $checksheets = WeldingChecksheet::whereIn('id', $request->input('checksheet_ids'))
+            ->where('status', 'pending')
+            ->get();
+
         foreach ($checksheets as $checksheet) {
             $previousStatus = $checksheet->status;
 
@@ -422,6 +425,7 @@ class WeldingChecksheetController extends Controller
                 'status' => 'approved',
                 'approved_at' => now(),
                 'approval_notes' => $request->input('notes'),
+                'checked_by_id' => Auth::id(),
                 'updated_by' => Auth::id(),
             ]);
 
