@@ -50,8 +50,8 @@ const emit = defineEmits<{
                     class="w-full rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-left transition hover:border-emerald-300 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     @click="emit('select', 'same_letter_new_run')"
                 >
-                    <span class="block text-sm font-semibold text-emerald-900">Same letter, new run details</span>
-                    <span class="mt-1 block text-sm text-emerald-700">Keeps Letter Code, then clears Job Number and Prod Qty for entry.</span>
+                    <span class="block text-sm font-semibold text-emerald-900">Same letter, new job number</span>
+                    <span class="mt-1 block text-sm text-emerald-700">Keeps Letter Code, lot fields, and Prod Qty, then clears Job Number for entry.</span>
                 </button>
             </div>
 

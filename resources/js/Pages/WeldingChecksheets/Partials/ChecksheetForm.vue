@@ -975,7 +975,7 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
             <div class="p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Production Details</h3>
                 <div v-if="isSameLetterNewRun" class="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
-                    Letter Code {{ props.sourceLetterCode || form.letter_code || 'N/A' }} will stay the same. Enter the new Job Number and Prod Qty for this run.
+                    Letter Code {{ props.sourceLetterCode || form.letter_code || 'N/A' }} will stay the same. Enter the new Job Number for this run.
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
@@ -1021,7 +1021,7 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             :readonly="canAutoManageLetterCode"
                         />
                     </div>
-                    <div :class="isSameLetterNewRun ? 'rounded-md ring-2 ring-emerald-200 ring-offset-2' : ''">
+                    <div>
                         <NumericKeypadField
                             v-if="isTabletMode"
                             id="welding-prod-qty"

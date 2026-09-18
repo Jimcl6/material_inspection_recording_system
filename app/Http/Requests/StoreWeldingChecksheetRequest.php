@@ -127,10 +127,6 @@ class StoreWeldingChecksheetRequest extends FormRequest
             $validator->errors()->add('job_number', 'Enter the Job Number for this run.');
         }
 
-        if ($this->input('prod_qty') === null || $this->input('prod_qty') === '') {
-            $validator->errors()->add('prod_qty', 'Enter the Prod Qty for this run.');
-        }
-
         $source = $this->filled('source_checksheet_id')
             ? WeldingChecksheet::query()->find($this->input('source_checksheet_id'))
             : null;
@@ -148,10 +144,6 @@ class StoreWeldingChecksheetRequest extends FormRequest
 
         if (strcasecmp(trim((string) $source->job_number), trim((string) $this->input('job_number'))) === 0) {
             $validator->errors()->add('job_number', 'Enter the new Job Number for this run.');
-        }
-
-        if ($source->prod_qty !== null && (int) $source->prod_qty === (int) $this->input('prod_qty')) {
-            $validator->errors()->add('prod_qty', 'Enter the new Prod Qty for this run.');
         }
     }
 

@@ -109,7 +109,7 @@ class WeldingChecksheetDuplicateTest extends TestCase
         $this->assertSame(['P', '/', 'P', '', 'P'], $props['checksheet']['samples'][0]['sample_values']);
     }
 
-    public function test_duplicate_form_can_keep_same_letter_and_clear_new_run_details(): void
+    public function test_duplicate_form_can_keep_same_letter_and_clear_job_number_only(): void
     {
         $type = $this->createType();
         $source = $this->createChecksheet($type, [
@@ -133,13 +133,17 @@ class WeldingChecksheetDuplicateTest extends TestCase
         $this->assertSame($source->id, $props['sourceChecksheetId']);
         $this->assertSame('A', $props['checksheet']['letter_code']);
         $this->assertSame('', $props['checksheet']['job_number']);
-        $this->assertNull($props['checksheet']['prod_qty']);
+        $this->assertSame(100, $props['checksheet']['prod_qty']);
+        $this->assertEquals([
+            'material_lot' => 'MAT-1',
+            'rubber_lot' => 'RUB-1',
+        ], $props['checksheet']['material_fields']);
         $this->assertSame('JOB-100', $props['sourceJobNumber']);
         $this->assertSame(100, $props['sourceProdQty']);
         $this->assertSame('A', $props['sourceLetterCode']);
     }
 
-    public function test_same_letter_new_run_store_reuses_letter_with_new_job_number_and_prod_qty(): void
+    public function test_same_letter_new_run_store_reuses_letter_with_new_job_number_and_copied_prod_qty(): void
     {
         $type = $this->createType();
         $source = $this->createChecksheet($type, [
@@ -153,7 +157,7 @@ class WeldingChecksheetDuplicateTest extends TestCase
             ->post(route('welding-checksheets.store'), $this->payload($type, [
                 'letter_code' => 'A',
                 'job_number' => 'JOB-200',
-                'prod_qty' => 150,
+                'prod_qty' => 100,
                 'duplicate_sequence_mode' => 'same_letter_new_run',
                 'source_checksheet_id' => $source->id,
             ]))
@@ -166,11 +170,11 @@ class WeldingChecksheetDuplicateTest extends TestCase
             'machine_no' => 'M-01',
             'letter_code' => 'A',
             'job_number' => 'JOB-200',
-            'prod_qty' => 150,
+            'prod_qty' => 100,
         ]);
     }
 
-    public function test_same_letter_new_run_store_requires_changed_job_number_and_prod_qty(): void
+    public function test_same_letter_new_run_store_requires_changed_job_number(): void
     {
         $type = $this->createType();
         $source = $this->createChecksheet($type, [
@@ -192,7 +196,34 @@ class WeldingChecksheetDuplicateTest extends TestCase
                 'duplicate_sequence_mode' => 'same_letter_new_run',
                 'source_checksheet_id' => $source->id,
             ]))
-            ->assertSessionHasErrors(['job_number', 'prod_qty']);
+            ->assertSessionHasErrors(['job_number'])
+            ->assertSessionDoesntHaveErrors(['prod_qty']);
+    }
+
+    public function test_same_letter_new_run_store_requires_job_number(): void
+    {
+        $type = $this->createType();
+        $source = $this->createChecksheet($type, [
+            'letter_code' => 'A',
+            'job_number' => 'JOB-100',
+            'prod_qty' => 100,
+        ]);
+
+        $this->withoutMiddleware(CheckModulePermission::class)
+            ->actingAs(User::factory()->create())
+            ->from(route('welding-checksheets.duplicate', [
+                'welding_checksheet' => $source,
+                'sequence_mode' => 'same_letter_new_run',
+            ]))
+            ->post(route('welding-checksheets.store'), $this->payload($type, [
+                'letter_code' => 'A',
+                'job_number' => '',
+                'prod_qty' => 100,
+                'duplicate_sequence_mode' => 'same_letter_new_run',
+                'source_checksheet_id' => $source->id,
+            ]))
+            ->assertSessionHasErrors(['job_number'])
+            ->assertSessionDoesntHaveErrors(['prod_qty']);
     }
 
     public function test_same_letter_new_run_store_requires_same_production_date(): void
