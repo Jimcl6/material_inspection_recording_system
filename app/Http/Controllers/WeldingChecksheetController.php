@@ -89,7 +89,6 @@ class WeldingChecksheetController extends Controller
         if ($sequenceMode === 'same_letter_new_run') {
             $duplicate['letter_code'] = $welding_checksheet->letter_code;
             $duplicate['job_number'] = '';
-            $duplicate['prod_qty'] = null;
         } else {
             $duplicate['letter_code'] = $this->nextLetterForData($duplicate);
         }
