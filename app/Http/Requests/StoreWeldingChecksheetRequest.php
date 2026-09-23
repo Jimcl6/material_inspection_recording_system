@@ -82,6 +82,7 @@ class StoreWeldingChecksheetRequest extends FormRequest
 
             $this->validateConfiguredItems($validator, $type, $itemConfig);
             $this->validateSameLetterNewRun($validator);
+            $this->validateNextLetterLotChanges($validator);
         });
     }
 
@@ -144,6 +145,51 @@ class StoreWeldingChecksheetRequest extends FormRequest
 
         if (strcasecmp(trim((string) $source->job_number), trim((string) $this->input('job_number'))) === 0) {
             $validator->errors()->add('job_number', 'Enter the new Job Number for this run.');
+        }
+    }
+
+    protected function validateNextLetterLotChanges(Validator $validator): void
+    {
+        if ($this->input('duplicate_sequence_mode') !== 'next_letter') {
+            return;
+        }
+
+        $source = $this->filled('source_checksheet_id')
+            ? WeldingChecksheet::query()->with('type')->find($this->input('source_checksheet_id'))
+            : null;
+
+        if (! $source) {
+            $validator->errors()->add('source_checksheet_id', 'The source checksheet is required for a Next Letter copy.');
+
+            return;
+        }
+
+        $submittedQuantity = $this->input('quantity');
+        $normalizedQuantity = $submittedQuantity === null || $submittedQuantity === ''
+            ? null
+            : (int) $submittedQuantity;
+
+        if ($normalizedQuantity === $source->quantity) {
+            $validator->errors()->add('quantity', 'Change the Lot Quantity before continuing.');
+        }
+
+        $configuredLotFieldKeys = collect($source->type?->material_fields ?? [])
+            ->pluck('key')
+            ->filter()
+            ->values();
+
+        if ($configuredLotFieldKeys->isEmpty()) {
+            return;
+        }
+
+        $submittedLotFields = $this->input('material_fields', []);
+        $sourceLotFields = $source->material_fields ?? [];
+        $hasChangedLotField = $configuredLotFieldKeys->contains(function (string $key) use ($submittedLotFields, $sourceLotFields) {
+            return trim((string) ($submittedLotFields[$key] ?? '')) !== trim((string) ($sourceLotFields[$key] ?? ''));
+        });
+
+        if (! $hasChangedLotField) {
+            $validator->errors()->add('material_fields', 'Change at least one Lot Field before continuing.');
         }
     }
 
