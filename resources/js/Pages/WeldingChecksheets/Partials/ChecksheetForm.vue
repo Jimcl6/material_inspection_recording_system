@@ -1033,7 +1033,7 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             @update:model-value="form.prod_qty = $event === '' ? null : Number($event)"
                         />
                         <template v-else>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Prod Qty</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Job Order Quantity</label>
                             <input
                                 id="welding-prod-qty"
                                 v-model="form.prod_qty"
@@ -1056,7 +1056,7 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             :error="form.errors.job_number"
                         />
                         <template v-else>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Job Number</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Job Order #</label>
                             <input
                                 id="welding-job-number"
                                 v-model="form.job_number"
@@ -1078,7 +1078,7 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             @update:model-value="form.quantity = $event === '' ? null : Number($event)"
                         />
                         <template v-else>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Lot Quantity</label>
                             <input v-model="form.quantity" type="number" min="0" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
                         </template>
                     </div>
