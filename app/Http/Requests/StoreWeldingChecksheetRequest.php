@@ -173,7 +173,13 @@ class StoreWeldingChecksheetRequest extends FormRequest
             $validator->errors()->add('quantity', 'Change the Lot Quantity before continuing.');
         }
 
-        $configuredLotFieldKeys = collect($source->type?->material_fields ?? [])
+        $sourceType = $source->type;
+
+        if (! $sourceType instanceof WeldingChecksheetType) {
+            return;
+        }
+
+        $configuredLotFieldKeys = collect($sourceType->material_fields ?? [])
             ->pluck('key')
             ->filter()
             ->values();
