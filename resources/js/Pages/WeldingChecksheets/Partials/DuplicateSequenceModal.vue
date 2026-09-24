@@ -42,7 +42,7 @@ const emit = defineEmits<{
                     @click="emit('select', 'next_letter')"
                 >
                     <span class="block text-sm font-semibold text-indigo-900">Next letter for this run</span>
-                    <span class="mt-1 block text-sm text-indigo-700">Keeps Job Number and Prod Qty, then assigns the next Letter Code.</span>
+                    <span class="mt-1 block text-sm text-indigo-700">Assigns the next Letter Code, then asks you to update Lot Quantity and at least one Lot Field.</span>
                 </button>
 
                 <button

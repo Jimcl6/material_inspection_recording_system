@@ -84,7 +84,7 @@ class WeldingChecksheetDuplicateTest extends TestCase
     public function test_duplicate_form_preserves_samples_and_assigns_next_letter_code(): void
     {
         $type = $this->createType();
-        $source = $this->createChecksheet($type, ['letter_code' => 'A', 'prod_qty' => 100]);
+        $source = $this->createChecksheet($type, ['letter_code' => 'A', 'prod_qty' => 100, 'quantity' => 50]);
         $source->samples()->create([
             'check_item_key' => 'appearance',
             'check_item_label' => 'Appearance',
@@ -105,6 +105,7 @@ class WeldingChecksheetDuplicateTest extends TestCase
         $this->assertSame('B', $props['checksheet']['letter_code']);
         $this->assertSame('next_letter', $props['duplicateSequenceMode']);
         $this->assertSame(100, $props['checksheet']['prod_qty']);
+        $this->assertSame(50, $props['checksheet']['quantity']);
         $this->assertSame('JOB-100', $props['checksheet']['job_number']);
         $this->assertSame(['P', '/', 'P', '', 'P'], $props['checksheet']['samples'][0]['sample_values']);
     }
@@ -141,6 +142,70 @@ class WeldingChecksheetDuplicateTest extends TestCase
         $this->assertSame('JOB-100', $props['sourceJobNumber']);
         $this->assertSame(100, $props['sourceProdQty']);
         $this->assertSame('A', $props['sourceLetterCode']);
+    }
+
+    public function test_next_letter_store_requires_changed_lot_quantity_and_at_least_one_lot_field(): void
+    {
+        $type = $this->createType();
+        $source = $this->createChecksheet($type, [
+            'letter_code' => 'A',
+            'quantity' => 50,
+        ]);
+        $duplicatePayload = [
+            'letter_code' => 'B',
+            'quantity' => 50,
+            'duplicate_sequence_mode' => 'next_letter',
+            'source_checksheet_id' => $source->id,
+        ];
+
+        $this->withoutMiddleware(CheckModulePermission::class)
+            ->actingAs(User::factory()->create())
+            ->post(route('welding-checksheets.store'), $this->payload($type, $duplicatePayload))
+            ->assertSessionHasErrors(['quantity', 'material_fields']);
+
+        $this->post(route('welding-checksheets.store'), $this->payload($type, array_merge($duplicatePayload, [
+            'quantity' => 51,
+        ])))
+            ->assertSessionHasErrors(['material_fields'])
+            ->assertSessionDoesntHaveErrors(['quantity']);
+
+        $this->post(route('welding-checksheets.store'), $this->payload($type, array_merge($duplicatePayload, [
+            'material_fields' => [
+                'material_lot' => 'MAT-2',
+                'rubber_lot' => 'RUB-1',
+            ],
+        ])))
+            ->assertSessionHasErrors(['quantity'])
+            ->assertSessionDoesntHaveErrors(['material_fields']);
+    }
+
+    public function test_next_letter_store_accepts_changed_lot_quantity_and_one_changed_lot_field(): void
+    {
+        $type = $this->createType();
+        $source = $this->createChecksheet($type, [
+            'letter_code' => 'A',
+            'quantity' => 50,
+        ]);
+
+        $this->withoutMiddleware(CheckModulePermission::class)
+            ->actingAs(User::factory()->create())
+            ->post(route('welding-checksheets.store'), $this->payload($type, [
+                'letter_code' => 'B',
+                'quantity' => 51,
+                'material_fields' => [
+                    'material_lot' => 'MAT-2',
+                    'rubber_lot' => 'RUB-1',
+                ],
+                'duplicate_sequence_mode' => 'next_letter',
+                'source_checksheet_id' => $source->id,
+            ]))
+            ->assertRedirect(route('welding-checksheets.index'));
+
+        $this->assertDatabaseHas('welding_checksheets', [
+            'checksheet_type_id' => $type->id,
+            'letter_code' => 'B',
+            'quantity' => 51,
+        ]);
     }
 
     public function test_same_letter_new_run_store_reuses_letter_with_new_job_number_and_copied_prod_qty(): void

@@ -171,13 +171,16 @@ const isEdit = computed(() => mode.value === 'edit');
 const isDuplicate = computed(() => mode.value === 'duplicate');
 const duplicateSequenceMode = computed(() => props.duplicateSequenceMode || 'next_letter');
 const isSameLetterNewRun = computed(() => isDuplicate.value && duplicateSequenceMode.value === 'same_letter_new_run');
+const isNextLetterDuplicate = computed(() => isDuplicate.value && duplicateSequenceMode.value === 'next_letter');
 const canAutoManageLetterCode = computed(() => !isEdit.value);
 const canRefreshLetterCode = computed(() => canAutoManageLetterCode.value && !isSameLetterNewRun.value);
 const hasTypes = computed(() => props.types.length > 0);
 const firstType = props.types[0] || null;
 const { isTabletMode } = useTabletMode();
-const currentStep = ref(0);
+const currentStep = ref(isNextLetterDuplicate.value ? 1 : 0);
 const tabletSteps = ['Template', 'Production and material', 'Samples', 'Personnel and save'];
+const sourceMaterialFields = { ...(props.checksheet?.material_fields || {}) };
+const sourceLotQuantity = props.checksheet?.quantity ?? null;
 const activeSampleKeypad = ref<ActiveSampleKeypad | null>(null);
 const activeSampleTextKeyboard = ref<ActiveSampleKeypad | null>(null);
 const lastSampleTriggerId = ref('');
@@ -218,6 +221,44 @@ const form = useForm({
 });
 
 const selectedType = computed(() => props.types.find(type => type.id === Number(form.checksheet_type_id)) || firstType);
+
+const normalizedLotFieldValue = (value: string | null | undefined): string => String(value ?? '').trim();
+const normalizedLotQuantity = (value: number | string | null | undefined): number | null => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? numericValue : null;
+};
+const requiresLotFieldChange = computed(() => isNextLetterDuplicate.value && Boolean(selectedType.value?.material_fields?.length));
+const hasChangedLotField = computed(() => !requiresLotFieldChange.value || selectedType.value!.material_fields.some(field => (
+    normalizedLotFieldValue(form.material_fields?.[field.key])
+        !== normalizedLotFieldValue(sourceMaterialFields[field.key])
+)));
+const hasChangedLotQuantity = computed(() => (
+    !isNextLetterDuplicate.value
+    || normalizedLotQuantity(form.quantity) !== normalizedLotQuantity(sourceLotQuantity)
+));
+const canAdvanceNextLetterLotStep = computed(() => hasChangedLotField.value && hasChangedLotQuantity.value);
+const nextStepDisabled = computed(() => (
+    currentStep.value === 1
+    && isNextLetterDuplicate.value
+    && !canAdvanceNextLetterLotStep.value
+));
+const nextStepDisabledMessage = computed(() => {
+    if (!nextStepDisabled.value) {
+        return '';
+    }
+
+    if (!hasChangedLotQuantity.value && !hasChangedLotField.value) {
+        return 'Change the Lot Quantity and at least one Lot Field before continuing.';
+    }
+
+    return !hasChangedLotQuantity.value
+        ? 'Change the Lot Quantity before continuing.'
+        : 'Change at least one Lot Field before continuing.';
+});
 
 const itemConfigs = computed(() => selectedType.value?.item_configs || []);
 
@@ -902,7 +943,13 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
 
 <template>
     <form @submit.prevent="submit">
-        <TabletFormStepper v-if="isTabletMode" v-model="currentStep" :steps="tabletSteps" />
+        <TabletFormStepper
+            v-if="isTabletMode"
+            v-model="currentStep"
+            :steps="tabletSteps"
+            :next-disabled="nextStepDisabled"
+            :next-disabled-message="nextStepDisabledMessage"
+        />
         <fieldset :disabled="!hasTypes" class="m-0 min-w-0 border-0 p-0">
         <div v-show="!isTabletMode || currentStep === 0" class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
             <div class="p-6">
@@ -974,8 +1021,15 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
         <div v-show="!isTabletMode || currentStep === 1" class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
             <div class="p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Production Details</h3>
+                <div v-if="isNextLetterDuplicate" class="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                    <p class="font-medium">Before continuing, update the Lot Quantity and at least one Lot Field.</p>
+                    <ul class="mt-2 space-y-1">
+                        <li>{{ hasChangedLotQuantity ? 'Complete:' : 'Required:' }} Lot Quantity changed</li>
+                        <li v-if="requiresLotFieldChange">{{ hasChangedLotField ? 'Complete:' : 'Required:' }} At least one Lot Field changed</li>
+                    </ul>
+                </div>
                 <div v-if="isSameLetterNewRun" class="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
-                    Letter Code {{ props.sourceLetterCode || form.letter_code || 'N/A' }} will stay the same. Enter the new Job Number for this run.
+                    Letter Code {{ props.sourceLetterCode || form.letter_code || 'N/A' }} will stay the same. Enter the new Job Order # for this run.
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
@@ -1026,7 +1080,7 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             v-if="isTabletMode"
                             id="welding-prod-qty"
                             :model-value="form.prod_qty ?? ''"
-                            label="Prod Qty"
+                            label="Job Order Quantity"
                             dialog-title="Production Quantity"
                             :decimal-places="0"
                             :error="form.errors.prod_qty"
@@ -1050,8 +1104,8 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             v-if="isTabletMode"
                             id="welding-job-number"
                             v-model="form.job_number"
-                            label="Job Number"
-                            dialog-title="Job Number"
+                            label="Job Order #"
+                            dialog-title="Job Order #"
                             placeholder="Tap to enter job"
                             :error="form.errors.job_number"
                         />
@@ -1072,14 +1126,22 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                             v-if="isTabletMode"
                             id="welding-quantity"
                             :model-value="form.quantity ?? ''"
-                            label="Quantity"
+                            label="Lot Quantity"
                             dialog-title="Checksheet Quantity"
                             :decimal-places="0"
+                            :error="form.errors.quantity"
                             @update:model-value="form.quantity = $event === '' ? null : Number($event)"
                         />
                         <template v-else>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Lot Quantity</label>
-                            <input v-model="form.quantity" type="number" min="0" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                            <input
+                                v-model="form.quantity"
+                                type="number"
+                                min="0"
+                                class="w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                :class="form.errors.quantity ? 'border-red-500' : 'border-gray-300'"
+                            />
+                            <p v-if="form.errors.quantity" class="mt-1 text-sm text-red-600">{{ form.errors.quantity }}</p>
                         </template>
                     </div>
                     <div>
@@ -1115,6 +1177,7 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
                         Clear Fields
                     </button>
                 </div>
+                <p v-if="form.errors.material_fields" class="mb-4 text-sm text-red-600">{{ form.errors.material_fields }}</p>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div v-for="field in selectedType.material_fields" :key="field.key">
                         <TabletTextKeyboardField

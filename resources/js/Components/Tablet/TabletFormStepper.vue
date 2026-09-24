@@ -2,10 +2,15 @@
 import { computed } from 'vue';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     steps: string[];
     modelValue: number;
-}>();
+    nextDisabled?: boolean;
+    nextDisabledMessage?: string;
+}>(), {
+    nextDisabled: false,
+    nextDisabledMessage: '',
+});
 
 const emit = defineEmits<{
     'update:modelValue': [value: number];
@@ -36,13 +41,17 @@ const isLast = computed(() => props.modelValue >= props.steps.length - 1);
                 <button
                     v-if="!isLast"
                     type="button"
-                    class="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                    :disabled="nextDisabled"
+                    class="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
                     @click="emit('update:modelValue', modelValue + 1)"
                 >
                     Next <ChevronRightIcon class="h-5 w-5" />
                 </button>
             </div>
         </div>
+        <p v-if="nextDisabled && nextDisabledMessage" class="mt-3 text-sm font-medium text-amber-700" role="status">
+            {{ nextDisabledMessage }}
+        </p>
         <div class="mt-3 flex gap-1.5">
             <span
                 v-for="(step, index) in steps"
