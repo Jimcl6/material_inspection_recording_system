@@ -72,3 +72,16 @@ yarn-error.log
 /.idea
 /.vscode
 *.pdf
+
+# Local build artifacts and scratch guides
+/.codex_ppt_build/
+/output/
+/tmp/
+Line_Leader_Approval_Guide*
+
+# Flutter mobile client build artifacts
+/mobile/build/
+/mobile/.dart_tool/
+/mobile/.flutter-plugins-dependencies
+/mobile/android/.gradle/
+/mobile/android/local.properties

@@ -29,8 +29,11 @@ class ProductionSecurityConfigurationTest extends TestCase
         $this->assertIsString($environmentTemplate);
         $this->assertIsString($nginx);
         $this->assertStringContainsString('APP_DEBUG=false', $environmentTemplate);
-        $this->assertStringContainsString('SESSION_SECURE_COOKIE=true', $environmentTemplate);
+        $this->assertStringContainsString('ASSET_URL=', $environmentTemplate);
+        $this->assertStringContainsString('SESSION_DOMAIN=null', $environmentTemplate);
+        $this->assertStringContainsString('SESSION_SECURE_COOKIE=null', $environmentTemplate);
         $this->assertStringContainsString('SESSION_HTTP_ONLY=true', $environmentTemplate);
+        $this->assertStringContainsString('MIRS_EMERGENCY_HOST=', $environmentTemplate);
         $this->assertStringContainsString('root /var/www/html/public;', $nginx);
         $this->assertStringContainsString('location = /index.php', $nginx);
         $this->assertStringContainsString('storage/(?:framework|logs)', $nginx);

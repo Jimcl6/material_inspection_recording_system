@@ -202,6 +202,45 @@ DB_USERNAME=your-database-user
 DB_PASSWORD=
 ```
 
+### Emergency direct-IP access
+
+MIRS can keep the normal HTTPS domain while also providing an HTTP direct-IP
+route for use during an Internet or Cloudflare outage. The production server's
+`.env` must keep generated assets on the current request origin and use
+host-only, request-aware cookies:
+
+```env
+MIRS_INTERNAL_HOST=mirs.hiblow.online
+MIRS_EMERGENCY_HOST=192.168.2.137
+APP_URL=https://${MIRS_INTERNAL_HOST}
+APP_PORT=8081
+ASSET_URL=
+VITE_APP_URL=${APP_URL}
+
+SESSION_DOMAIN=null
+SESSION_SECURE_COOKIE=null
+SESSION_HTTP_ONLY=true
+SESSION_SAME_SITE=lax
+
+CORS_ALLOWED_ORIGINS=${APP_URL},http://${MIRS_EMERGENCY_HOST}:${APP_PORT}
+SANCTUM_STATEFUL_DOMAINS=${MIRS_INTERNAL_HOST},${MIRS_EMERGENCY_HOST}:${APP_PORT}
+```
+
+With these values, domain responses retain `Secure` cookies because Cloudflare
+forwards the original HTTPS scheme. Direct requests to
+`http://192.168.2.137:8081` receive host-only cookies without the `Secure`
+attribute. The emergency HTTP route is intended only for the trusted company
+LAN and should not be exposed through router port forwarding.
+
+After changing the live `.env`, recreate the container and rebuild Laravel's
+configuration cache:
+
+```bash
+docker compose up -d --force-recreate app
+docker compose exec app php artisan optimize:clear
+docker compose exec app php artisan config:cache
+```
+
 Build and start the container:
 
 ```bash
