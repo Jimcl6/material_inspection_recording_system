@@ -1,7 +1,7 @@
 'use strict';
 
 // A changed build ID makes the browser install a waiting worker for each release.
-const BUILD_ID = '8f991d0831074c9e';
+const BUILD_ID = '34d3cb2bc6da4601';
 
 self.addEventListener('install', () => {
     void BUILD_ID;
