@@ -17,6 +17,7 @@ use App\Http\Controllers\TorqueRecordController;
 use App\Http\Controllers\UserBadgeController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\WeldingChecksheetController;
+use App\Http\Controllers\WeldingChecksheetPdfController;
 use App\Models\WeldingChecksheet;
 use Illuminate\Support\Facades\Route;
 
@@ -328,6 +329,9 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
     Route::get('welding-checksheets/export', [WeldingChecksheetController::class, 'export'])
         ->middleware('module.permission:welding,export')
         ->name('welding-checksheets.export');
+    Route::get('welding-checksheets/export/pdf', [WeldingChecksheetPdfController::class, 'monthly'])
+        ->middleware('module.permission:welding,export')
+        ->name('welding-checksheets.pdf.monthly');
     Route::middleware(['auth', 'feature:approvals', 'module.permission:welding,approve'])->group(function () {
         Route::get('welding-checksheets/approval', [WeldingChecksheetController::class, 'approval'])
             ->name('welding-checksheets.approval');
@@ -353,6 +357,10 @@ Route::middleware(['auth', 'password.changed'])->group(function () {
         ->middleware('module.permission:welding,create')
         ->whereNumber('welding_checksheet')
         ->name('welding-checksheets.duplicate');
+    Route::get('welding-checksheets/{welding_checksheet}/pdf', [WeldingChecksheetPdfController::class, 'show'])
+        ->middleware('module.permission:welding,export')
+        ->whereNumber('welding_checksheet')
+        ->name('welding-checksheets.pdf.show');
     Route::get('welding-checksheets/{welding_checksheet}', [WeldingChecksheetController::class, 'show'])
         ->middleware('module.permission:welding,view')
         ->whereNumber('welding_checksheet')

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { computed, ref } from 'vue';
+import { computed, h, ref } from 'vue';
 import { route } from 'ziggy-js';
 import { usePermissions } from '@/Composables/usePermissions';
 import { useSingleExpandedRow } from '@/Composables/useSingleExpandedRow';
@@ -9,6 +9,7 @@ import RecordDetailPanel from '@/Components/RecordDetailPanel.vue';
 import TabletRecordList from '@/Components/Tablet/TabletRecordList.vue';
 import { useTabletMode } from '@/Composables/useTabletMode';
 import DuplicateSequenceModal from './Partials/DuplicateSequenceModal.vue';
+import axios from 'axios';
 
 type DuplicateSequenceMode = 'next_letter' | 'same_letter_new_run';
 
@@ -40,16 +41,75 @@ interface Paginated<T> {
     total: number;
 }
 
+interface PdfItemOption {
+    value: string;
+    supported: boolean;
+    reason: string | null;
+}
+
 const props = withDefaults(defineProps<{
     checksheets: Paginated<Checksheet>;
     filters: Record<string, any>;
     types: any[];
     itemCodes: string[];
+    pdfItemOptions: PdfItemOption[];
 }>(), {
     filters: () => ({}),
     types: () => [],
     itemCodes: () => [],
+    pdfItemOptions: () => [],
 });
+
+const page = usePage();
+const pdfErrors = ref<Record<string, string>>({ ...(page.props.errors as Record<string, string>) });
+const pdfPanelOpen = ref(Boolean(pdfErrors.value.pdf || pdfErrors.value.month || pdfErrors.value.item_code));
+const pdfItemCode = ref(props.pdfItemOptions.some(option => option.value === props.filters.item_code && option.supported) ? props.filters.item_code : '');
+const currentDate = new Date();
+const pdfMonth = ref(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`);
+const pdfDownloading = ref(false);
+const PdfItemOptions = () => props.pdfItemOptions.map(option => h('option', {
+    key: option.value,
+    value: option.value,
+    disabled: !option.supported
+}, option.supported ? option.value : `${option.value} (${option.reason})`));
+
+const downloadMonthlyPdf = async () => {
+    pdfErrors.value = {};
+    pdfDownloading.value = true;
+    try {
+        const response = await axios.get(route('welding-checksheets.pdf.monthly'), {
+            params: { item_code: pdfItemCode.value, month: pdfMonth.value },
+            responseType: 'blob',
+            headers: { Accept: 'application/json' },
+        });
+        if (!String(response.headers['content-type']).includes('application/pdf')) {
+            throw new Error('Unexpected download response');
+        }
+        const url = URL.createObjectURL(response.data);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `casing-tank-${pdfItemCode.value.toLowerCase()}-${pdfMonth.value}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 422 && error.response.data instanceof Blob) {
+            try {
+                const payload = JSON.parse(await error.response.data.text());
+                for (const [key, messages] of Object.entries(payload.errors ?? {})) {
+                    pdfErrors.value[key] = Array.isArray(messages) ? String(messages[0]) : String(messages);
+                }
+            } catch {
+                pdfErrors.value.pdf = 'The PDF could not be downloaded. Please try again.';
+            }
+        } else {
+            pdfErrors.value.pdf = 'The PDF could not be downloaded. Please check your connection and access, then try again.';
+        }
+    } finally {
+        pdfDownloading.value = false;
+    }
+};
 
 const search = ref(props.filters.search || '');
 const typeId = ref(props.filters.checksheet_type_id || '');
@@ -169,12 +229,22 @@ const tabletFacts = (checksheet: Checksheet) => [
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">Welding Checksheet</h2>
                 <div class="space-x-2 flex items-end mx-3">
+                    <button
+                        v-if="canExport('welding')"
+                        type="button"
+                        :aria-expanded="pdfPanelOpen"
+                        aria-controls="welding-pdf-export"
+                        class="inline-flex min-h-11 items-center px-4 py-2 bg-indigo-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-800"
+                        @click="pdfPanelOpen = !pdfPanelOpen"
+                    >
+                        Monthly PDF
+                    </button>
                     <a
                         v-if="!isTabletMode && canExport('welding')"
                         :href="route('welding-checksheets.export')"
                         class="inline-flex items-center px-4 py-2 bg-gray-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-800"
                     >
-                        Export
+                        Export Excel
                     </a>
                     <Link
                         v-if="!isTabletMode && canImport('welding')"
@@ -196,6 +266,28 @@ const tabletFacts = (checksheet: Checksheet) => [
 
         <div class="py-6">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div v-if="canExport('welding') && pdfPanelOpen" id="welding-pdf-export" class="mb-6 rounded-lg bg-white p-6 shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-900">Monthly Casing-Tank PDF</h3>
+                    <p class="mt-1 text-sm text-gray-600">Five-sample forms. Includes all saved records for the selected item and month, regardless of approval status.</p>
+                    <p class="mt-1 text-sm text-gray-600">The list shows the same registered item codes as the record filter. Unavailable forms are disabled with a reason.</p>
+                    <form class="mt-4 flex flex-wrap items-end gap-4" @submit.prevent="downloadMonthlyPdf">
+                        <div>
+                            <label for="welding-pdf-item" class="block text-sm font-medium text-gray-700">Item Code</label>
+                            <select id="welding-pdf-item" v-model="pdfItemCode" name="item_code" required class="mt-1 min-h-11 rounded-md border-gray-300 text-sm">
+                                <option value="" disabled>Select item</option>
+                                <PdfItemOptions />
+                            </select>
+                            <p v-if="pdfErrors.item_code" class="mt-1 text-sm text-red-600">{{ pdfErrors.item_code }}</p>
+                        </div>
+                        <div>
+                            <label for="welding-pdf-month" class="block text-sm font-medium text-gray-700">Production Month</label>
+                            <input id="welding-pdf-month" v-model="pdfMonth" name="month" type="month" required class="mt-1 min-h-11 rounded-md border-gray-300 text-sm" />
+                            <p v-if="pdfErrors.month" class="mt-1 text-sm text-red-600">{{ pdfErrors.month }}</p>
+                        </div>
+                        <button type="submit" :disabled="pdfDownloading" :aria-busy="pdfDownloading" class="min-h-11 rounded-md bg-indigo-700 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-800 disabled:opacity-50">{{ pdfDownloading ? 'Preparing PDF...' : 'Download PDF' }}</button>
+                    </form>
+                    <p v-if="pdfErrors.pdf" role="alert" class="mt-3 text-sm text-red-600">{{ pdfErrors.pdf }}</p>
+                </div>
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6">
                         <div v-if="isTabletMode" class="mb-4 flex items-center justify-between">

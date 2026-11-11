@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { route } from 'ziggy-js';
 import { usePermissions } from '@/Composables/usePermissions';
@@ -8,11 +8,15 @@ import DuplicateSequenceModal from './Partials/DuplicateSequenceModal.vue';
 
 type DuplicateSequenceMode = 'next_letter' | 'same_letter_new_run';
 
-const { canCreate, canUpdate, approvalsEnabled } = usePermissions();
+const { canCreate, canUpdate, canExport, approvalsEnabled } = usePermissions();
 
 const props = defineProps<{
     checksheet: any;
+    pdfExportAvailable: boolean;
 }>();
+
+const page = usePage();
+const pdfError = computed(() => (page.props.errors as Record<string, string>).pdf);
 
 const showDuplicatePrompt = ref(false);
 const formatDate = (value?: string): string => value ? new Date(value).toLocaleDateString() : 'N/A';
@@ -47,6 +51,7 @@ const duplicateWithSequence = (mode: DuplicateSequenceMode) => {
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">Welding Checksheet Details</h2>
                 <div class="space-x-3">
+                    <a v-if="pdfExportAvailable && canExport('welding')" :href="route('welding-checksheets.pdf.show', checksheet.id)" class="inline-flex min-h-11 items-center font-semibold text-indigo-700 hover:text-indigo-900">Download PDF</a>
                     <button v-if="canCreate('welding')" type="button" class="text-emerald-600 hover:text-emerald-800" @click="showDuplicatePrompt = true">Duplicate</button>
                     <Link v-if="canUpdate('welding')" :href="route('welding-checksheets.edit', checksheet.id)" class="text-blue-600 hover:text-blue-800">Edit</Link>
                     <Link :href="route('welding-checksheets.index')" class="text-gray-600 hover:text-gray-800">&larr; Back to List</Link>
@@ -56,6 +61,7 @@ const duplicateWithSequence = (mode: DuplicateSequenceMode) => {
 
         <div class="py-6">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                <p v-if="pdfError" role="alert" class="rounded-md bg-red-50 p-4 text-sm text-red-700">{{ pdfError }}</p>
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Summary</h3>

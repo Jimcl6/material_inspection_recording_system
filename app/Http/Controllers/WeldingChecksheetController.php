@@ -15,6 +15,7 @@ use App\Services\ActivityService;
 use App\Services\ApprovalNotificationService;
 use App\Services\ApprovalWorkflowService;
 use App\Services\DuplicateRecordGuard;
+use App\Support\CasingTankPdfTemplates;
 use App\Support\SpreadsheetImportSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -64,11 +65,14 @@ class WeldingChecksheetController extends Controller
             $query->where('status', $request->input('status'));
         }
 
+        $itemConfigs = WeldingItemConfig::query()->active()->with('type')->orderBy('item_code')->get();
+
         return Inertia::render('WeldingChecksheets/Index', [
             'checksheets' => $query->orderByDesc('production_date')->orderByDesc('id')->paginate(15)->withQueryString(),
             'filters' => $request->only(['search', 'checksheet_type_id', 'item_code', 'machine_no', 'date_from', 'date_to', 'status']),
             'types' => $this->typesForForms(),
-            'itemCodes' => WeldingItemConfig::query()->active()->orderBy('item_code')->pluck('item_code')->unique()->values(),
+            'itemCodes' => $itemConfigs->pluck('item_code')->unique()->values(),
+            'pdfItemOptions' => app(CasingTankPdfTemplates::class)->optionsFor($itemConfigs),
         ]);
     }
 
@@ -177,9 +181,12 @@ class WeldingChecksheetController extends Controller
     public function show(WeldingChecksheet $welding_checksheet)
     {
         $welding_checksheet->load(['type', 'itemConfig', 'samples', 'operator', 'technician', 'checkedBy', 'createdBy', 'updatedBy']);
+        $type = $welding_checksheet->type;
 
         return Inertia::render('WeldingChecksheets/Show', [
             'checksheet' => $welding_checksheet,
+            'pdfExportAvailable' => $type instanceof WeldingChecksheetType && $type->key === 'casing_tank'
+                && app(CasingTankPdfTemplates::class)->supports($welding_checksheet->item_code),
         ]);
     }
 
