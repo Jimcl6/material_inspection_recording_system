@@ -234,7 +234,7 @@ const tabletFacts = (checksheet: Checksheet) => [
                         type="button"
                         :aria-expanded="pdfPanelOpen"
                         aria-controls="welding-pdf-export"
-                        class="inline-flex min-h-11 items-center px-4 py-2 bg-indigo-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-800"
+                        class="inline-flex items-center px-4 py-2 bg-indigo-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-800"
                         @click="pdfPanelOpen = !pdfPanelOpen"
                     >
                         Monthly PDF
