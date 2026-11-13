@@ -61,6 +61,8 @@ const props = withDefaults(defineProps<{
 });
 
 const page = usePage();
+// Park Monthly PDF exports until the feature is ready to resume.
+const monthlyPdfEnabled = false;
 const pdfErrors = ref<Record<string, string>>({ ...(page.props.errors as Record<string, string>) });
 const pdfPanelOpen = ref(Boolean(pdfErrors.value.pdf || pdfErrors.value.month || pdfErrors.value.item_code));
 const pdfItemCode = ref(props.pdfItemOptions.some(option => option.value === props.filters.item_code && option.supported) ? props.filters.item_code : '');
@@ -230,7 +232,7 @@ const tabletFacts = (checksheet: Checksheet) => [
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">Welding Checksheet</h2>
                 <div class="space-x-2 flex items-end mx-3">
                     <button
-                        v-if="canExport('welding')"
+                        v-if="monthlyPdfEnabled && canExport('welding')"
                         type="button"
                         :aria-expanded="pdfPanelOpen"
                         aria-controls="welding-pdf-export"
@@ -266,7 +268,7 @@ const tabletFacts = (checksheet: Checksheet) => [
 
         <div class="py-6">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div v-if="canExport('welding') && pdfPanelOpen" id="welding-pdf-export" class="mb-6 rounded-lg bg-white p-6 shadow-sm">
+                <div v-if="monthlyPdfEnabled && canExport('welding') && pdfPanelOpen" id="welding-pdf-export" class="mb-6 rounded-lg bg-white p-6 shadow-sm">
                     <h3 class="text-lg font-semibold text-gray-900">Monthly Casing-Tank PDF</h3>
                     <p class="mt-1 text-sm text-gray-600">Five-sample forms. Includes all saved records for the selected item and month, regardless of approval status.</p>
                     <p class="mt-1 text-sm text-gray-600">The list shows the same registered item codes as the record filter. Unavailable forms are disabled with a reason.</p>
