@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\WeldingChecksheet;
 use App\Models\WeldingChecksheetType;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class WeldingChecksheetDuplicateTest extends TestCase
@@ -144,68 +145,111 @@ class WeldingChecksheetDuplicateTest extends TestCase
         $this->assertSame('A', $props['sourceLetterCode']);
     }
 
-    public function test_next_letter_store_requires_changed_lot_quantity_and_at_least_one_lot_field(): void
+    #[DataProvider('unchangedNextLetterLots')]
+    public function test_next_letter_store_requires_a_quantity_or_configured_material_lot_change(array $overrides, bool $hasMaterialFields = true): void
     {
         $type = $this->createType();
+        if (! $hasMaterialFields) {
+            $type->update(['material_fields' => []]);
+        }
         $source = $this->createChecksheet($type, [
             'letter_code' => 'A',
             'quantity' => 50,
         ]);
-        $duplicatePayload = [
+        $sourceAttributes = $source->refresh()->getAttributes();
+        $payload = $this->payload($type, array_merge([
             'letter_code' => 'B',
             'quantity' => 50,
             'duplicate_sequence_mode' => 'next_letter',
             'source_checksheet_id' => $source->id,
-        ];
+        ], $overrides));
+        $message = $hasMaterialFields
+            ? 'Change Lot Quantity or at least one Material Lot Field before continuing.'
+            : 'Change the Lot Quantity before continuing.';
+        $errors = ['quantity' => $message];
+        if ($hasMaterialFields) {
+            $errors['material_fields'] = $message;
+        }
 
         $this->withoutMiddleware(CheckModulePermission::class)
             ->actingAs(User::factory()->create())
-            ->post(route('welding-checksheets.store'), $this->payload($type, $duplicatePayload))
-            ->assertSessionHasErrors(['quantity', 'material_fields']);
+            ->post(route('welding-checksheets.store'), $payload)
+            ->assertSessionHasErrors($errors);
 
-        $this->post(route('welding-checksheets.store'), $this->payload($type, array_merge($duplicatePayload, [
-            'quantity' => 51,
-        ])))
-            ->assertSessionHasErrors(['material_fields'])
-            ->assertSessionDoesntHaveErrors(['quantity']);
-
-        $this->post(route('welding-checksheets.store'), $this->payload($type, array_merge($duplicatePayload, [
-            'material_fields' => [
-                'material_lot' => 'MAT-2',
-                'rubber_lot' => 'RUB-1',
-            ],
-        ])))
-            ->assertSessionHasErrors(['quantity'])
-            ->assertSessionDoesntHaveErrors(['material_fields']);
+        $this->assertDatabaseMissing('welding_checksheets', [
+            'checksheet_type_id' => $type->id,
+            'letter_code' => 'B',
+        ]);
+        $this->assertSame($sourceAttributes, $source->fresh()->getAttributes());
     }
 
-    public function test_next_letter_store_accepts_changed_lot_quantity_and_one_changed_lot_field(): void
+    public static function unchangedNextLetterLots(): array
+    {
+        return [
+            'neither changed' => [[]],
+            'equivalent numeric quantity' => [['quantity' => '50']],
+            'whitespace-only lot edits' => [[
+                'material_fields' => ['material_lot' => ' MAT-1 ', 'rubber_lot' => ' RUB-1 '],
+            ]],
+            'unconfigured lot does not count' => [[
+                'material_fields' => [
+                    'material_lot' => 'MAT-1',
+                    'rubber_lot' => 'RUB-1',
+                    'unconfigured_lot' => 'NEW',
+                ],
+            ]],
+            'no configured fields' => [['material_fields' => ['unconfigured_lot' => 'NEW']], false],
+        ];
+    }
+
+    #[DataProvider('changedNextLetterLots')]
+    public function test_next_letter_store_accepts_quantity_or_material_lot_changes(array $overrides, bool $hasMaterialFields = true): void
     {
         $type = $this->createType();
+        if (! $hasMaterialFields) {
+            $type->update(['material_fields' => []]);
+        }
         $source = $this->createChecksheet($type, [
             'letter_code' => 'A',
             'quantity' => 50,
         ]);
+        $sourceAttributes = $source->refresh()->getAttributes();
+        $payload = $this->payload($type, array_merge([
+            'letter_code' => 'B',
+            'quantity' => 50,
+            'duplicate_sequence_mode' => 'next_letter',
+            'source_checksheet_id' => $source->id,
+        ], $overrides));
 
         $this->withoutMiddleware(CheckModulePermission::class)
             ->actingAs(User::factory()->create())
-            ->post(route('welding-checksheets.store'), $this->payload($type, [
-                'letter_code' => 'B',
-                'quantity' => 51,
-                'material_fields' => [
-                    'material_lot' => 'MAT-2',
-                    'rubber_lot' => 'RUB-1',
-                ],
-                'duplicate_sequence_mode' => 'next_letter',
-                'source_checksheet_id' => $source->id,
-            ]))
+            ->post(route('welding-checksheets.store'), $payload)
+            ->assertSessionHasNoErrors()
             ->assertRedirect(route('welding-checksheets.index'));
 
-        $this->assertDatabaseHas('welding_checksheets', [
-            'checksheet_type_id' => $type->id,
-            'letter_code' => 'B',
-            'quantity' => 51,
-        ]);
+        $copy = WeldingChecksheet::query()
+            ->where('checksheet_type_id', $type->id)
+            ->where('letter_code', 'B')
+            ->sole();
+        $this->assertSame($payload['quantity'], $copy->quantity);
+        $this->assertEquals($payload['material_fields'], $copy->material_fields);
+        $this->assertSame($payload['samples'][0]['sample_values'], $copy->samples->sole()->sample_values);
+        $this->assertSame($sourceAttributes, $source->fresh()->getAttributes());
+    }
+
+    public static function changedNextLetterLots(): array
+    {
+        return [
+            'quantity only' => [['quantity' => 51]],
+            'one material lot only' => [[
+                'material_fields' => ['material_lot' => 'MAT-2', 'rubber_lot' => 'RUB-1'],
+            ]],
+            'both changed' => [[
+                'quantity' => 51,
+                'material_fields' => ['material_lot' => 'MAT-2', 'rubber_lot' => 'RUB-1'],
+            ]],
+            'quantity with no configured fields' => [['quantity' => 51, 'material_fields' => []], false],
+        ];
     }
 
     public function test_same_letter_new_run_store_reuses_letter_with_new_job_number_and_copied_prod_qty(): void

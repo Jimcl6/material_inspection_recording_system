@@ -231,8 +231,8 @@ const normalizedLotQuantity = (value: number | string | null | undefined): numbe
     const numericValue = Number(value);
     return Number.isFinite(numericValue) ? numericValue : null;
 };
-const requiresLotFieldChange = computed(() => isNextLetterDuplicate.value && Boolean(selectedType.value?.material_fields?.length));
-const hasChangedLotField = computed(() => !requiresLotFieldChange.value || selectedType.value!.material_fields.some(field => (
+const hasConfiguredLotFields = computed(() => Boolean(selectedType.value?.material_fields?.length));
+const hasChangedLotField = computed(() => (selectedType.value?.material_fields || []).some(field => (
     normalizedLotFieldValue(form.material_fields?.[field.key])
         !== normalizedLotFieldValue(sourceMaterialFields[field.key])
 )));
@@ -240,7 +240,10 @@ const hasChangedLotQuantity = computed(() => (
     !isNextLetterDuplicate.value
     || normalizedLotQuantity(form.quantity) !== normalizedLotQuantity(sourceLotQuantity)
 ));
-const canAdvanceNextLetterLotStep = computed(() => hasChangedLotField.value && hasChangedLotQuantity.value);
+const canAdvanceNextLetterLotStep = computed(() => hasChangedLotField.value || hasChangedLotQuantity.value);
+const nextLetterLotChangeMessage = computed(() => hasConfiguredLotFields.value
+    ? 'Change the Lot Quantity or at least one Material Lot Field before continuing.'
+    : 'Change the Lot Quantity before continuing.');
 const nextStepDisabled = computed(() => (
     currentStep.value === 1
     && isNextLetterDuplicate.value
@@ -251,13 +254,7 @@ const nextStepDisabledMessage = computed(() => {
         return '';
     }
 
-    if (!hasChangedLotQuantity.value && !hasChangedLotField.value) {
-        return 'Change the Lot Quantity and at least one Lot Field before continuing.';
-    }
-
-    return !hasChangedLotQuantity.value
-        ? 'Change the Lot Quantity before continuing.'
-        : 'Change at least one Lot Field before continuing.';
+    return nextLetterLotChangeMessage.value;
 });
 
 const itemConfigs = computed(() => selectedType.value?.item_configs || []);
@@ -1022,10 +1019,10 @@ const sampleInputTitle = (sample: ChecksheetSample, index: number): string | und
             <div class="p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Production Details</h3>
                 <div v-if="isNextLetterDuplicate" class="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                    <p class="font-medium">Before continuing, update the Lot Quantity and at least one Lot Field.</p>
+                    <p class="font-medium">{{ nextLetterLotChangeMessage }}</p>
                     <ul class="mt-2 space-y-1">
-                        <li>{{ hasChangedLotQuantity ? 'Complete:' : 'Required:' }} Lot Quantity changed</li>
-                        <li v-if="requiresLotFieldChange">{{ hasChangedLotField ? 'Complete:' : 'Required:' }} At least one Lot Field changed</li>
+                        <li>Lot Quantity: {{ hasChangedLotQuantity ? 'Changed' : 'Unchanged' }}</li>
+                        <li v-if="hasConfiguredLotFields">Material Lot Fields: {{ hasChangedLotField ? 'At least one changed' : 'Unchanged' }}</li>
                     </ul>
                 </div>
                 <div v-if="isSameLetterNewRun" class="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
