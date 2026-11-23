@@ -169,13 +169,15 @@ class StoreWeldingChecksheetRequest extends FormRequest
             ? null
             : (int) $submittedQuantity;
 
-        if ($normalizedQuantity === $source->quantity) {
-            $validator->errors()->add('quantity', 'Change the Lot Quantity before continuing.');
+        if ($normalizedQuantity !== $source->quantity) {
+            return;
         }
 
         $sourceType = $source->type;
 
         if (! $sourceType instanceof WeldingChecksheetType) {
+            $validator->errors()->add('quantity', 'Change the Lot Quantity before continuing.');
+
             return;
         }
 
@@ -185,6 +187,8 @@ class StoreWeldingChecksheetRequest extends FormRequest
             ->values();
 
         if ($configuredLotFieldKeys->isEmpty()) {
+            $validator->errors()->add('quantity', 'Change the Lot Quantity before continuing.');
+
             return;
         }
 
@@ -195,7 +199,9 @@ class StoreWeldingChecksheetRequest extends FormRequest
         });
 
         if (! $hasChangedLotField) {
-            $validator->errors()->add('material_fields', 'Change at least one Lot Field before continuing.');
+            $message = 'Change Lot Quantity or at least one Material Lot Field before continuing.';
+            $validator->errors()->add('quantity', $message);
+            $validator->errors()->add('material_fields', $message);
         }
     }
 
